@@ -1,0 +1,7 @@
+# NetBeans specific
+dist/
+nb-configuration.xml
+
+
+# Maven
+target/
