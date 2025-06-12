@@ -61,7 +61,6 @@ CREATE TABLE Courses (
     Description NVARCHAR(MAX),
     Price DECIMAL(10, 2) NOT NULL,
     ImageUrl NVARCHAR(255),
-    IsActive BIT NOT NULL DEFAULT 1,
     Duration NVARCHAR(50), -- e.g., Based on video duration total
     Level NVARCHAR(20), -- e.g., "Beginner", "Intermediate", "Advanced"
     ApprovalStatus NVARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
@@ -241,7 +240,6 @@ CREATE TABLE Quizzes (
     Description NVARCHAR(MAX),
     TimeLimit INT NULL, -- Thời gian làm bài (phút), NULL nếu không giới hạn
     PassingScore INT NOT NULL DEFAULT 70, -- Điểm đạt (%)
-    IsActive BIT NOT NULL DEFAULT 1,
     FOREIGN KEY (LessonID) REFERENCES Lessons(LessonID) ON DELETE CASCADE
 );
 GO
@@ -378,13 +376,13 @@ GO
 -- 1. Insert Users
 INSERT INTO Users (Username, Password, Email, Role, IsActive, FullName, Phone, Address, Avatar)
 VALUES 
-('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin@example.com', 'admin', 1, 'Administrator', NULL, NULL, '/assets/img/avatars/admin.png'),
-('instructor1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor1@example.com', 'instructor', 1, 'John Deep', '9876543210', '456 Teaching Ave, Education City', '/assets/img/avatars/instructor1.png'),
-('instructor2', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor2@example.com', 'instructor', 1, 'Rose Bae', '0981972722', '123 Teaching Abc, NewYork City', '/assets/img/avatars/instructor2.png'),
-('user', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'user@example.com', 'user', 1, 'Test User', '1234567890', '123 Main St, City, Country', '/assets/img/avatars/default-user.png'),
-('student1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student1@example.com', 'user', 1, 'Alice Student', '1111111111', '111 Student St', '/assets/img/avatars/student1.png'),
-('student2', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student2@example.com', 'user', 1, 'Bob Learner', '2222222222', '222 Learning Ave', '/assets/img/avatars/student2.png'),
-('student3', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student3@example.com', 'user', 1, 'Charlie Scholar', '3333333333', '333 Scholar Blvd', '/assets/img/avatars/student3.png');
+('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin@example.com', 'admin', 1, 'Administrator', NULL, NULL, '/assets/imgs/avatars/admin.png'),
+('instructor1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor1@example.com', 'instructor', 1, 'John Deep', '9876543210', '456 Teaching Ave, Education City', '/assets/imgs/avatars/instructor1.png'),
+('instructor2', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor2@example.com', 'instructor', 1, 'Rose Bae', '0981972722', '123 Teaching Abc, NewYork City', '/assets/imgs/avatars/instructor2.png'),
+('user', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'user@example.com', 'customer', 1, 'Test User', '1234567890', '123 Main St, City, Country', '/assets/imgs/avatars/default-user.png'),
+('student1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student1@example.com', 'customer', 1, 'Alice Student', '1111111111', '111 Student St', '/assets/imgs/avatars/student1.png'),
+('student2', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student2@example.com', 'customer', 1, 'Bob Learner', '2222222222', '222 Learning Ave', '/assets/imgs/avatars/student2.png'),
+('student3', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student3@example.com', 'customer', 1, 'Charlie Scholar', '3333333333', '333 Scholar Blvd', '/assets/imgs/avatars/student3.png');
 
 -- 2. Insert Categories
 INSERT INTO Categories (Name, Description)
@@ -404,31 +402,31 @@ VALUES
 -- 4. Insert Courses
 INSERT INTO Courses (Name, Description, Price, ImageUrl, Duration, Level, ApprovalStatus, SubmissionDate, ApprovalDate)
 VALUES
-('Complete Web Development Bootcamp', 'Learn HTML, CSS, JavaScript, React, Node.js and more to become a full-stack web developer', 99.99, 'assets/img/courses/Complete-Web-Development-Bootcamp.png', '12 weeks', 'Beginner', 'APPROVED', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('Python for Data Science', 'Master Python for data analysis and visualization with pandas, numpy, and matplotlib', 89.99, 'assets/img/courses/Python-For-Data-Science.png', '8 weeks', 'Intermediate', 'APPROVED', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('React Native Mobile Apps', 'Build cross-platform mobile apps for iOS and Android using React Native', 79.99, 'assets/img/courses/React-Native-Mobile-Apps.png', '10 weeks', 'Intermediate', 'APPROVED', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('Game Development with Unity', 'Learn to build interactive 2D and 3D games using Unity game engine and C#', 59.99, 'assets/img/courses/Game-Development-Unity.png', '6 weeks', 'Beginner', 'APPROVED', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('UI/UX Design Principles', 'Master the principles of user interface and user experience design', 69.99, 'assets/img/courses/UIUX-Design-Principles.png', '8 weeks', 'Beginner', 'APPROVED', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('Advanced JavaScript', 'Deep dive into JavaScript concepts like closures, prototypes, and async programming', 109.99, 'assets/img/courses/Advanced-JavaScript.png', '10 weeks', 'Advanced', 'APPROVED', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('Machine Learning Fundamentals', 'Introduction to core machine learning algorithms and techniques', 129.99, 'assets/img/courses/Machine-Learning-Fundamentals.png', '12 weeks', 'Intermediate', 'APPROVED', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('iOS App Development with Swift', 'Learn to build iOS applications using Swift and SwiftUI', 99.99, 'assets/img/courses/iOS-App-Development-with-Swift.png', '10 weeks', 'Intermediate', 'APPROVED', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE()));
+('Complete Web Development Bootcamp', 'Learn HTML, CSS, JavaScript, React, Node.js and more to become a full-stack web developer', 1500000, 'assets/imgs/courses/Complete-Web-Development-Bootcamp.png', '12 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
+('Python for Data Science', 'Master Python for data analysis and visualization with pandas, numpy, and matplotlib', 1200000, 'assets/imgs/courses/Python-For-Data-Science.png', '8 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
+('React Native Mobile Apps', 'Build cross-platform mobile apps for iOS and Android using React Native', 1100050, 'assets/imgs/courses/React-Native-Mobile-Apps.png', '10 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
+('Game Development with Unity', 'Learn to build interactive 2D and 3D games using Unity game engine and C#', 1700000, 'assets/imgs/courses/Game-Development-Unity.png', '6 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
+('UI/UX Design Principles', 'Master the principles of user interface and user experience design', 1000050, 'assets/imgs/courses/UIUX-Design-Principles.png', '8 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
+('Advanced JavaScript', 'Deep dive into JavaScript concepts like closures, prototypes, and async programming', 1300000, 'assets/imgs/courses/Advanced-JavaScript.png', '10 weeks', 'Advanced', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
+('Machine Learning Fundamentals', 'Introduction to core machine learning algorithms and techniques', 1400000, 'assets/imgs/courses/Machine-Learning-Fundamentals.png', '12 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
+('iOS App Development with Swift', 'Learn to build iOS applications using Swift and SwiftUI', 950000, 'assets/imgs/courses/iOS-App-Development-with-Swift.png', '10 weeks', 'Intermediate', 'pending', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE()));
 
 -- 5. Insert Orders
 INSERT INTO Orders (UserID, OrderDate, TotalAmount, Status, PaymentMethod)
 VALUES 
-(4, DATEADD(day, -10, GETDATE()), 189.98, 'completed', 'Credit Card'),
-(4, DATEADD(day, -3, GETDATE()), 79.99, 'completed', 'PayPal'),
-(4, DATEADD(day, -20, GETDATE()), 99.99, 'completed', 'Credit Card'),
-(5, DATEADD(day, -15, GETDATE()), 99.99, 'completed', 'PayPal'),
-(6, DATEADD(day, -10, GETDATE()), 209.98, 'completed', 'VNPAY');
+(4, DATEADD(day, -10, GETDATE()), 2700000, 'completed', 'VNPAY'),
+(4, DATEADD(day, -3, GETDATE()), 1100050, 'completed', 'VNPAY'),
+(4, DATEADD(day, -20, GETDATE()), 1500000, 'completed', 'VNPAY'),
+(5, DATEADD(day, -15, GETDATE()), 1500000, 'completed', 'VNPAY'),
+(6, DATEADD(day, -10, GETDATE()), 2800000, 'completed', 'VNPAY');
 
 -- 6. Insert CartItems
 INSERT INTO CartItems (UserID, CourseID, Price, CreatedAt)
 VALUES
-(4, 1, 79.99, DATEADD(day, -1, GETDATE())),
-(4, 2, 59.99, DATEADD(day, -1, GETDATE())),
-(5, 2, 89.99, DATEADD(day, -2, GETDATE())),
-(6, 8, 99.99, GETDATE());
+(4, 1, 1500000, DATEADD(day, -1, GETDATE())),
+(4, 2, 1200000, DATEADD(day, -1, GETDATE())),
+(5, 2, 1200000, DATEADD(day, -2, GETDATE())),
+(6, 3, 1100050, GETDATE());
 
 -- 7. Insert CourseCategory
 INSERT INTO CourseCategory (CourseID, CategoryID)
@@ -457,13 +455,13 @@ VALUES
 -- 9. Insert OrderDetails
 INSERT INTO OrderDetails (OrderID, CourseID, Price)
 VALUES 
-(1, 1, 99.99),  -- User4's order1: Web Development Bootcamp
-(1, 2, 89.99),  -- User4's order1: Python for Data Science
-(2, 3, 79.99),  -- User4's order2: React Native Mobile Apps
-(3, 1, 99.99),  -- User4's order3: Web Development Bootcamp
-(4, 1, 99.99),  -- User5's order: Web Development Bootcamp
-(5, 1, 99.99),  -- User6's order: Web Development Bootcamp
-(5, 6, 109.99); -- User6's order: Advanced JavaScript
+(1, 1, 1500000),  -- User4's order1: Web Development Bootcamp
+(1, 2, 1200000),  -- User4's order1: Python for Data Science
+(2, 3, 1100050),  -- User4's order2: React Native Mobile Apps
+(3, 1, 1500000),  -- User4's order3: Web Development Bootcamp
+(4, 1, 1500000),  -- User5's order: Web Development Bootcamp
+(5, 1, 1500000),  -- User6's order: Web Development Bootcamp
+(5, 6, 1300000); -- User6's order: Advanced JavaScript
 
 -- 10. Insert Lessons
 INSERT INTO Lessons (CourseID, Title, OrderIndex)
@@ -551,31 +549,31 @@ VALUES
 INSERT INTO Videos (LessonID, Title, Description, VideoUrl, Duration)
 VALUES 
 -- HTML Lesson Videos
-(1, 'HTML Introduction', 'Basic HTML concepts and structure', 'assets/video/introduce-advance-js.mp4', 135),
-(1, 'HTML Tags and Elements', 'Working with different HTML elements', 'assets/video/introduce-advance-js.mp4', 135),
+(1, 'HTML Introduction', 'Basic HTML concepts and structure', 'assets/videos/introduce-advance-js.mp4', 135),
+(1, 'HTML Tags and Elements', 'Working with different HTML elements', 'assets/videos/introduce-advance-js.mp4', 135),
 -- CSS Lesson Videos
-(2, 'CSS Basics', 'Introduction to CSS styling', 'assets/video/introduce-advance-js.mp4', 135),
-(2, 'CSS Layout', 'Understanding CSS layout techniques', 'assets/video/introduce-advance-js.mp4', 135),
+(2, 'CSS Basics', 'Introduction to CSS styling', 'assets/videos/introduce-advance-js.mp4', 135),
+(2, 'CSS Layout', 'Understanding CSS layout techniques', 'assets/videos/introduce-advance-js.mp4', 135),
 -- JavaScript Lesson Videos
-(3, 'JavaScript Variables', 'Working with variables in JavaScript', 'assets/video/introduce-advance-js.mp4', 135),
-(3, 'JavaScript Functions', 'Understanding functions in JavaScript', 'assets/video/introduce-advance-js.mp4', 135),
+(3, 'JavaScript Variables', 'Working with variables in JavaScript', 'assets/videos/introduce-advance-js.mp4', 135),
+(3, 'JavaScript Functions', 'Understanding functions in JavaScript', 'assets/videos/introduce-advance-js.mp4', 135),
 -- Add videos for other lessons
-(5, 'Python Basics', 'Introduction to Python syntax', 'assets/video/introduce-advance-js.mp4', 135),
-(8, 'React Native Intro', 'Introduction to React Native', 'assets/video/introduce-advance-js.mp4', 135),
-(10, 'Unity Introduction', 'Introduction to Unity interface and workflow', 'assets/video/unity-introduction.mp4', 180),
-(15, 'Creating Game Objects', 'How to create and manipulate game objects in Unity', 'assets/video/unity-gameobjects.mp4', 150),
-(16, 'C# Scripting Basics', 'Introduction to C# scripting in Unity', 'assets/video/unity-csharp-basics.mp4', 165),
-(11, 'Design Principles', 'Introduction to design principles', 'assets/video/introduce-advance-js.mp4', 135),
-(12, 'Advanced JS Intro', 'Introduction to advanced JavaScript', 'assets/video/introduce-advance-js.mp4', 135),
-(13, 'Machine Learning Intro', 'Introduction to machine learning', 'assets/video/introduce-advance-js.mp4', 135),
-(14, 'Swift Intro', 'Introduction to Swift programming', 'assets/video/introduce-advance-js.mp4', 135);
+(5, 'Python Basics', 'Introduction to Python syntax', 'assets/videos/introduce-advance-js.mp4', 135),
+(8, 'React Native Intro', 'Introduction to React Native', 'assets/videos/introduce-advance-js.mp4', 135),
+(10, 'Unity Introduction', 'Introduction to Unity interface and workflow', 'assets/videos/unity-introduction.mp4', 180),
+(15, 'Creating Game Objects', 'How to create and manipulate game objects in Unity', 'assets/videos/unity-gameobjects.mp4', 150),
+(16, 'C# Scripting Basics', 'Introduction to C# scripting in Unity', 'assets/videos/unity-csharp-basics.mp4', 165),
+(11, 'Design Principles', 'Introduction to design principles', 'assets/videos/introduce-advance-js.mp4', 135),
+(12, 'Advanced JS Intro', 'Introduction to advanced JavaScript', 'assets/videos/introduce-advance-js.mp4', 135),
+(13, 'Machine Learning Intro', 'Introduction to machine learning', 'assets/videos/introduce-advance-js.mp4', 135),
+(14, 'Swift Intro', 'Introduction to Swift programming', 'assets/videos/introduce-advance-js.mp4', 135);
 
 -- 17. Insert Materials
 INSERT INTO Materials (LessonID, Title, Description, Content, FileUrl)
 VALUES 
 (1, 'HTML Reference Guide', 'Comprehensive HTML reference guide', 'This is a complete reference for HTML elements and attributes.', 'assets/materials/html-reference.pdf'),
 (2, 'CSS Cheat Sheet', 'Quick reference for CSS properties', 'A cheat sheet containing all common CSS properties and values.', 'assets/materials/css-cheatsheet.pdf'),
-(3, 'JavaScript Exercise Files', 'Practice exercises for JavaScript', 'A set of JavaScript exercises to practice your skills.', 'assets/materials/js-exercises.zip'),
+(3, 'JavaScript Exercise Files', 'Practice exercises for JavaScript', 'A set of JavaScript exercises to practice your skills.', 'assets/materials/js-exercises.pdf'),
 (5, 'Python Cheat Sheet', 'Quick reference for Python syntax', 'A complete reference for Python syntax and common functions.', 'assets/materials/python-cheatsheet.pdf'),
 (8, 'React Native Setup Guide', 'Guide for setting up React Native', 'Complete guide to set up your React Native development environment.', 'assets/materials/react-native-setup.pdf'),
 (10, 'Unity Installation Guide', 'Guide for setting up Unity', 'A comprehensive guide to install Unity and set up your game development environment.', 'assets/materials/unity-setup.pdf'),
@@ -587,24 +585,24 @@ VALUES
 (14, 'Swift Programming Guide', 'Guide to Swift programming', 'Comprehensive guide to Swift programming language.', 'assets/materials/swift-guide.pdf');
 
 -- 18. Insert Quizzes
-INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore, IsActive)
+INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore)
 VALUES
-(1, 'HTML Basics Quiz', 'Test your knowledge of HTML fundamentals', 20, 70, 1),
-(2, 'CSS Mastery Quiz', 'Check your understanding of CSS concepts', 25, 70, 1),
-(3, 'JavaScript Fundamentals Quiz', 'Test your JavaScript knowledge', 30, 75, 1),
-(4, 'Website Building Quiz', 'Final test for website building concepts', 45, 80, 1),
-(5, 'Python Syntax Quiz', 'Test your knowledge of Python syntax', 15, 70, 1),
-(6, 'Pandas Library Quiz', 'Check your understanding of Pandas', 30, 75, 1),
-(7, 'Data Visualization Quiz', 'Test your skills in data visualization', 25, 70, 1),
-(8, 'React Native Basics Quiz', 'Test your understanding of React Native setup', 20, 70, 1),
-(9, 'Mobile App Development Quiz', 'Final check on mobile app development concepts', 30, 75, 1),
-(10, 'Unity Basics Quiz', 'Test your understanding of Unity interface and components', 25, 70, 1),
-(15, 'Game Objects Quiz', 'Test your knowledge of game objects and prefabs', 20, 70, 1),
-(16, 'C# for Unity Quiz', 'Check your understanding of C# scripting in Unity', 30, 75, 1),
-(11, 'Design Principles Quiz', 'Test your knowledge of design principles', 20, 70, 1),
-(12, 'Advanced JS Quiz', 'Test your advanced JavaScript knowledge', 30, 75, 1),
-(13, 'Machine Learning Quiz', 'Test your understanding of ML concepts', 25, 70, 1),
-(14, 'Swift Programming Quiz', 'Test your Swift programming knowledge', 30, 70, 1);
+(1, 'HTML Basics Quiz', 'Test your knowledge of HTML fundamentals', 20, 70),
+(2, 'CSS Mastery Quiz', 'Check your understanding of CSS concepts', 25, 70),
+(3, 'JavaScript Fundamentals Quiz', 'Test your JavaScript knowledge', 30, 75),
+(4, 'Website Building Quiz', 'Final test for website building concepts', 45, 80),
+(5, 'Python Syntax Quiz', 'Test your knowledge of Python syntax', 15, 70),
+(6, 'Pandas Library Quiz', 'Check your understanding of Pandas', 30, 75),
+(7, 'Data Visualization Quiz', 'Test your skills in data visualization', 25, 70),
+(8, 'React Native Basics Quiz', 'Test your understanding of React Native setup', 20, 70),
+(9, 'Mobile App Development Quiz', 'Final check on mobile app development concepts', 30, 75),
+(10, 'Unity Basics Quiz', 'Test your understanding of Unity interface and components', 25, 70),
+(15, 'Game Objects Quiz', 'Test your knowledge of game objects and prefabs', 20, 70),
+(16, 'C# for Unity Quiz', 'Check your understanding of C# scripting in Unity', 30, 75),
+(11, 'Design Principles Quiz', 'Test your knowledge of design principles', 20, 70),
+(12, 'Advanced JS Quiz', 'Test your advanced JavaScript knowledge', 30, 75),
+(13, 'Machine Learning Quiz', 'Test your understanding of ML concepts', 25, 70),
+(14, 'Swift Programming Quiz', 'Test your Swift programming knowledge', 30, 70);
 
 -- 19. Insert LessonProgress
 INSERT INTO LessonProgress (UserID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
