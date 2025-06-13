@@ -24,7 +24,7 @@ import model.User;
  * @author DangPH - CE180896
  */
 public class CourseDAO extends DBContext {
-    
+
     private UserDAO userDAO;
     private RatingDAO ratingDAO;
     private LessonDAO lessonDAO;
@@ -197,13 +197,13 @@ public class CourseDAO extends DBContext {
 
         return count;
     }
-    
+
     /**
      * Get all courses with pagination.
-     * 
-     * @param offset    The offset (for pagination)
-     * @param limit     The limit (for pagination)
-     * @param sortBy    The field to sort by (optional)
+     *
+     * @param offset The offset (for pagination)
+     * @param limit The limit (for pagination)
+     * @param sortBy The field to sort by (optional)
      * @param sortOrder The sort order (ASC or DESC, optional)
      * @return List of courses
      */

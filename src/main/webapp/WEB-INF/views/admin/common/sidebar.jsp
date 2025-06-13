@@ -34,7 +34,7 @@
         </li>
         <li class="nav-item">
             <a class="nav-link ${activeMenu eq 'ratings' ? 'active' : ''}"
-               href="${pageContext.request.contextPath}/admin/rating">
+               href="${pageContext.request.contextPath}/admin/reviews">
                 <i class="fas fa-chalkboard-teacher"></i> Manage Reviews
             </a>
         </li>
