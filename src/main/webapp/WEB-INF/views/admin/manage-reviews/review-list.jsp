@@ -75,27 +75,18 @@
         <div class="admin-content">
             <div class="container-fluid">
                 <div class="admin-header d-flex justify-content-between align-items-center">
-                        <h2 class="mb-0">Manage Reviews</h2>
-                        <div class="d-flex align-items-center">
-                            <span class="me-3">Welcome,${sessionScope.user.username != null ? sessionScope.user.username : "Admin"}!</span>
+                    <h2 class="mb-0">Manage Reviews</h2>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3">Welcome,${sessionScope.user.username != null ? sessionScope.user.username : "Admin"}!</span>
 
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button"
                                     id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-user-circle me-1"></i> Admin
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">My
-                                            Profile</a></li>
-                                    <li>
-                                        <hr class="dropdown-divider">
-                                    </li>
-                                    <li><a class="dropdown-item"
-                                            href="${pageContext.request.contextPath}/logout">Logout</a></li>
-                                </ul>
-                            </div>
+                                <i class="fas fa-user-circle me-1"></i> Admin
+                            </button>
                         </div>
                     </div>
+                </div>
 
                 <!-- Success or Error Message -->
                 <c:if test="${param.success != null}">
@@ -190,10 +181,8 @@
                                                     </div>
                                                     <div class="mt-1">
                                                         <span class="fw-bold">${rating.username}</span> rated
-                                                        <a href="${pageContext.request.contextPath}/course/${rating.courseID}"
-                                                           target="_blank" class="text-primary">
-                                                            ${rating.courseName}
-                                                        </a>
+                                                        <span class="text-primary fw-bold">${rating.courseName}</span>
+
                                                     </div>
                                                 </div>
                                                 <form action="${pageContext.request.contextPath}/admin/ratings"
@@ -231,7 +220,7 @@
                     </c:choose>
                 </div>
             </div>
-                                   
+
             <jsp:include page="../common/scripts.jsp" />
         </body>
 
