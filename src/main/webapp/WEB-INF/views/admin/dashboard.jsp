@@ -1,11 +1,14 @@
+<%-- Document : dashboard Created on : Jun 12, 2025, 22:12:40 PM Author : DangPH - CE180896 --%>
+
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <fmt:setLocale value="vi_VN" />
 <!DOCTYPE html>
 <html lang="en">
+
     <head>
-        <title>Admin Dashboard - LightHouseCourse</title>
+        <title>Admin Dashboard - LightHouse Admin</title>
         <jsp:include page="./common/head.jsp" />
         <style>
             .stat-card {
@@ -45,22 +48,25 @@
             .bg-gradient-info {
                 background: linear-gradient(135deg, #17a2b8 0%, #0dcaf0 100%);
             }
-            
         </style>
     </head>
 
     <body>
-        <!-- Admin Sidebar -->
+        <%-- Admin Sidebar --%>
         <c:set var="activeMenu" value="dashboard" scope="request" />
         <jsp:include page="./common/sidebar.jsp" />
 
-        <!-- Admin Content -->
+        <%-- Admin Content --%>
         <div class="admin-content">
             <!-- Header -->
             <div class="admin-header d-flex justify-content-between align-items-center">
-                <h2 class="mb-0">Dashboard</h2>
+                <button class="btn d-lg-none" id="toggleSidebarBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 class="m-0 d-none d-lg-block">Dashboard</h2>
                 <div class="d-flex align-items-center">
-                    <span class="me-3">Welcome, ${sessionScope.user.username != null ? sessionScope.user.username : "Admin"}!</span>
+                    <span class="me-3">Welcome, ${sessionScope.user.username != null ?
+                                                  sessionScope.user.username : "Admin"}!</span>
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary dropdown-toggle" type="button"
                                 id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -101,7 +107,7 @@
                             </div>
                         </div>
                     </div>
-                </div>                
+                </div>
                 <div class="col-xl-3 col-md-6 mb-4">
                     <div class="card stat-card h-100">
                         <div class="card-body">
@@ -164,7 +170,8 @@
                                                                     pattern="yyyy-MM-dd HH:mm" />
                                                 </td>
                                                 <td>
-                                                        <fmt:formatNumber value="${order.totalAmount}" type="currency" />
+                                                    <fmt:formatNumber value="${order.totalAmount}"
+                                                                      type="currency" />
 
                                                 </td>
                                                 <td>
@@ -233,8 +240,10 @@
                                                 </td>
                                                 <td>${course.name}</td>
                                                 <td>
-                                                    <c:forEach var="i" items="${course.instructors}" varStatus="status">
-                                                        ${i.user.fullName}<c:if test="${!status.last}">, </c:if>
+                                                    <c:forEach var="i" items="${course.instructors}"
+                                                               varStatus="status">
+                                                        ${i.user.fullName}<c:if test="${!status.last}">,
+                                                        </c:if>
                                                     </c:forEach>
                                                 </td>
                                                 <td>
@@ -243,13 +252,16 @@
                                                 </td>
                                                 <td>
                                                     <c:choose>
-                                                        <c:when test="${course.approvalStatus eq 'pending'}">
+                                                        <c:when
+                                                            test="${course.approvalStatus eq 'pending'}">
                                                             <span class="badge pending">Pending</span>
                                                         </c:when>
-                                                        <c:when test="${course.approvalStatus eq 'approved'}">
+                                                        <c:when
+                                                            test="${course.approvalStatus eq 'approved'}">
                                                             <span class="badge approved">Approved</span>
                                                         </c:when>
-                                                        <c:when test="${course.approvalStatus eq 'rejected'}">
+                                                        <c:when
+                                                            test="${course.approvalStatus eq 'rejected'}">
                                                             <span class="badge rejected">Rejected</span>
                                                         </c:when>
                                                         <c:otherwise>
@@ -281,7 +293,8 @@
                                         <c:if test="${empty recentCourses}">
                                             <tr>
                                                 <td colspan="7" class="text-center py-3">
-                                                    <i class="fas fa-info-circle me-2"></i> No pending course
+                                                    <i class="fas fa-info-circle me-2"></i> No pending
+                                                    course
                                                     approvals found.
                                                 </td>
                                             </tr>
@@ -295,22 +308,6 @@
             </div>
         </div>
         <jsp:include page="./common/scripts.jsp" />
-        <script>
-            // Enable tooltips with vanilla JavaScript
-            document.addEventListener('DOMContentLoaded', function () {
-                // Initialize Bootstrap tooltips
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                });
-
-                // Initialize dropdown
-                var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
-                var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
-                    return new bootstrap.Dropdown(dropdownToggleEl);
-                });
-            });
-        </script>
     </body>
 
 </html>

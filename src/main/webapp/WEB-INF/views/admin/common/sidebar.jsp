@@ -2,10 +2,13 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <div class="admin-sidebar">
-    <a class="navbar-brand d-flex align-items-center" href="${pageContext.request.contextPath}/admin/dashboard">
-        <i class="fas fa-lighthouse me-2"></i>
+    <div class="navbar-brand d-flex align-items-center">
         LightHouse Admin
-    </a>
+        <button id="closeSidebarBtn" class="btn btn-sm d-lg-none">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
     <hr class="text-white-50">
     <ul class="nav flex-column">
         <li class="nav-item">
