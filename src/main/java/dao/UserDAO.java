@@ -85,6 +85,70 @@ public class UserDAO extends DBContext {
     }
     
     /**
+     * Get users by role.
+     * 
+     * @param role The role to filter by (e.g., "admin", "user", "instructor")
+     * @return List of users with the specified role
+     */
+    public List<User> getUsersByRole(String role) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<User> users = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM Users WHERE Role = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, role);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                User user = mapUser(rs);
+                users.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return users;
+    }
+    
+    /**
+     * Get all users.
+     * 
+     * @return List of all users
+     */
+    public List<User> getAllUsers() {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<User> users = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM Users";
+
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                User user = mapUser(rs);
+                users.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return users;
+    }
+    
+    /**
      * Map ResultSet to User object including social login fields.
      */
     private User mapUser(ResultSet rs) throws SQLException {

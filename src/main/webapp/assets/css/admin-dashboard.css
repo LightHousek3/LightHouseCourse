@@ -9,7 +9,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 
 /* Admin Dashboard Styles */
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: "Poppins", sans-serif;
     background-color: #f5f7fb;
 }
 
@@ -25,7 +25,7 @@ body {
     color: #fff;
     position: fixed;
     height: 100vh;
-    z-index: 1;
+    z-index: 101;
     overflow-y: auto;
 }
 
@@ -167,6 +167,11 @@ body {
     overflow-x: auto;
 }
 
+.table-responsive tr a i {
+    width: 15px;
+    height: 13px;
+}
+
 .table th {
     background-color: #f8f9fa;
     font-weight: 600;
@@ -188,9 +193,40 @@ table.dataTable {
     border: none !important;
 }
 
+#toggleSidebarBtn {
+    border: none;
+    background: none;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+#closeSidebarBtn {
+    border: none;
+    background: none;
+    color: white;
+    font-size: 1.2rem;
+}
+
+#toggleSidebarBtn:hover, #closeSidebarBtn:hover {
+    transform: scale(1.1);
+}
+
+#toggle-modal {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.toggle-modal.show {
+    display: block !important;
+}
 
 /* Responsive fixes */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .admin-sidebar {
         width: 0;
         overflow: hidden;
@@ -205,4 +241,16 @@ table.dataTable {
         margin-left: 0;
         width: 100%;
     }
-} 
+}
+
+@media (max-width: 600px) {
+    .admin-header-control {
+        display: flex;
+        flex-direction: column !important;
+        gap: 5px;
+    }
+    
+    .admin-header-control a {
+        width: 200px;
+    }
+}

@@ -12,4 +12,4 @@
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Admin Styles -->
-<link href="${pageContext.request.contextPath}/assets/css/admin-dashboard.css" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/assets/css/admin-dashboard.css?version=<%= System.currentTimeMillis() %>" rel="stylesheet">
