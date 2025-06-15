@@ -12,6 +12,7 @@ import java.sql.Timestamp;
  * @author DangPH - CE180896
  */
 public class RefundRequest {
+
     private int refundID;
     private int orderID;
     private int userID;
@@ -26,6 +27,7 @@ public class RefundRequest {
     private String refundData; // JSON response data from payment provider
     private int refundPercentage; // Default 80%
     private int courseID; // For course-specific refunds, null for full order refunds
+    private String courseName;
 
     // Additional information for display purposes
     private String userName;
@@ -42,10 +44,10 @@ public class RefundRequest {
 
     /**
      * Constructor with essential fields
-     * 
-     * @param orderID      The order ID
-     * @param userID       The user ID
-     * @param reason       The reason for refund request (required)
+     *
+     * @param orderID The order ID
+     * @param userID The user ID
+     * @param reason The reason for refund request (required)
      * @param refundAmount The amount to be refunded
      */
     public RefundRequest(int orderID, int userID, String reason, double refundAmount) {
@@ -195,6 +197,10 @@ public class RefundRequest {
         this.paymentMethod = paymentMethod;
     }
 
+    public String getCourseName() {
+        return courseName;
+    }
+
     public Timestamp getOrderDate() {
         return orderDate;
     }
@@ -211,10 +217,14 @@ public class RefundRequest {
         this.adminName = adminName;
     }
 
+    public void setCourseName(String courseName) {
+        this.courseName = courseName;
+    }
+
     // Helper methods
     /**
      * Checks if the refund request is pending
-     * 
+     *
      * @return true if status is 'pending', false otherwise
      */
     public boolean isPending() {
@@ -223,7 +233,7 @@ public class RefundRequest {
 
     /**
      * Checks if the refund request is approved
-     * 
+     *
      * @return true if status is 'approved', false otherwise
      */
     public boolean isApproved() {
@@ -232,7 +242,7 @@ public class RefundRequest {
 
     /**
      * Checks if the refund request is rejected
-     * 
+     *
      * @return true if status is 'rejected', false otherwise
      */
     public boolean isRejected() {
@@ -249,7 +259,7 @@ public class RefundRequest {
 
     @Override
     public String toString() {
-        return "RefundRequest{" + "refundID=" + refundID + ", orderID=" + orderID + ", userID=" + userID + ", requestDate=" + requestDate + ", status=" + status + ", refundAmount=" + refundAmount + ", reason=" + reason + ", processedDate=" + processedDate + ", processedBy=" + processedBy + ", adminMessage=" + adminMessage + ", refundTransactionID=" + refundTransactionID + ", refundData=" + refundData + ", refundPercentage=" + refundPercentage + ", courseID=" + courseID + ", userName=" + userName + ", originalAmount=" + originalAmount + ", paymentMethod=" + paymentMethod + ", orderDate=" + orderDate + ", adminName=" + adminName + '}';
-    }
-    
+        return "RefundRequest{" + "refundID=" + refundID + ", orderID=" + orderID + ", userID=" + userID + ", requestDate=" + requestDate + ", status=" + status + ", refundAmount=" + refundAmount + ", reason=" + reason + ", processedDate=" + processedDate + ", processedBy=" + processedBy + ", adminMessage=" + adminMessage + ", refundTransactionID=" + refundTransactionID + ", refundData=" + refundData + ", refundPercentage=" + refundPercentage + ", courseID=" + courseID + ", courseName=" + courseName + ", userName=" + userName + ", originalAmount=" + originalAmount + ", paymentMethod=" + paymentMethod + ", orderDate=" + orderDate + ", adminName=" + adminName + '}';
+    }  
+
 }
