@@ -357,7 +357,7 @@
                                                             </td>
                                                             <td>
                                                                 <div class="btn-group">
-                                                                    <a href="${pageContext.request.contextPath}/admin/users/view/${user.userID}"
+                                                                    <a href="${pageContext.request.contextPath}/admin/users/details/${user.userID}"
                                                                        class="btn btn-sm btn-primary action-btn">
                                                                         <i class="fas fa-eye"></i>
                                                                     </a>
@@ -365,7 +365,7 @@
                                                                        class="btn btn-sm btn-warning action-btn ms-1">
                                                                         <i class="fas fa-edit"></i>
                                                                     </a>
-                                                                    <button type="button"
+                                                                       <button type="button"
                                                                             class="btn btn-sm btn-danger action-btn ms-1"
                                                                             data-bs-toggle="modal"
                                                                             data-bs-target="#deleteModal${user.userID}">
@@ -378,8 +378,7 @@
                                                                                value="toggleStatus">
                                                                         <input type="hidden" name="userId"
                                                                                value="${user.userID}">
-                                                                        <button style="border-radius: 0"
-                                                                                type="submit"
+                                                                        <button type="submit"
                                                                                 class="btn btn-sm ${user.active ? 'btn-outline-danger' : 'btn-outline-success'} action-btn">
                                                                             <i
                                                                                 class="fas ${user.active ? 'fa-ban' : 'fa-check'}"></i>
