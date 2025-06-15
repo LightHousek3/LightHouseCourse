@@ -21,7 +21,7 @@ import model.Rating;
 
 /**
  *
- * @author TAN DAT
+ * @author DATLT-CE181501
  */
 @WebServlet(name = "AdminRatingServlet", urlPatterns = {"/admin/reviews"})
 public class AdminReviewServlet extends HttpServlet {
@@ -55,28 +55,35 @@ public class AdminReviewServlet extends HttpServlet {
         List<Rating> ratings;
 
         // Apply filters if provided
-        if (courseIdParam != null && !courseIdParam.isEmpty()) {
+        if (courseIdParam != null && !courseIdParam.isEmpty() && ratingParam != null && !ratingParam.isEmpty()) {
+            try {
+                int courseId = Integer.parseInt(courseIdParam);
+                int stars = Integer.parseInt(ratingParam);
+                ratings = ratingDAO.getRatingsByCourseIdAndStar(courseId, stars); 
+            } catch (NumberFormatException e) {
+                ratings = ratingDAO.getAllRatings();
+            }
+        } else if (courseIdParam != null && !courseIdParam.isEmpty()) {
             try {
                 int courseId = Integer.parseInt(courseIdParam);
                 ratings = ratingDAO.getRatingsByCourseId(courseId);
             } catch (NumberFormatException e) {
                 ratings = ratingDAO.getAllRatings();
             }
-        } else if (ratingParam != null && !courseIdParam.isEmpty()) {
+        } else if (ratingParam != null && !ratingParam.isEmpty()) {
             try {
-                int start = Integer.parseInt(ratingParam);
-                ratings = ratingDAO.getRatingsByStar(start);
+                int stars = Integer.parseInt(ratingParam);
+                ratings = ratingDAO.getRatingsByStar(stars);
             } catch (NumberFormatException e) {
                 ratings = ratingDAO.getAllRatings();
             }
         } else {
-            //Show all ratings
             ratings = ratingDAO.getAllRatings();
         }
 
         // Get all course for the dropdown
         List<Course> courses = courseDAO.getAllCoursesWithLimit(0, 0, null, null);
-        
+
         request.setAttribute("ratings", ratings);
         request.setAttribute("courses", courses);
         request.getRequestDispatcher("/WEB-INF/views/admin/manage-reviews/review-list.jsp").forward(request, response);
@@ -92,8 +99,37 @@ public class AdminReviewServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {       
-      
+            throws ServletException, IOException {
+        String action = request.getParameter("action");
+
+        if ("delete".equals(action)) {
+            // Delete a rating
+            handleDeleteRating(request, response);
+        } else {
+            // Unsupported operation
+            response.sendRedirect(request.getContextPath() + "/admin/manage-reviews/review-list.jsp?success=false&message=Unsupported+operation");
+        }
+    }
+
+    private void handleDeleteRating(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            int ratingId = Integer.parseInt(request.getParameter("ratingId"));
+
+            // Delete the rating
+            boolean deleted = ratingDAO.deleteReview(ratingId);
+
+            // Redirect back to ratings page with success/error message
+            String redirectUrl = request.getContextPath() + "/admin/reviews";
+            if (deleted) {
+                redirectUrl += "?success=true&message=Rating+deleted+successfully";
+            } else {
+                redirectUrl += "?success=false&message=Failed+to+delete+rating";
+            }
+
+            response.sendRedirect(redirectUrl);
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/admin/manage-reviews/review-list?success=false&message=Invalid+rating+ID");
+        }
     }
 
     /**

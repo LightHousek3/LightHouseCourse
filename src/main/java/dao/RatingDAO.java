@@ -15,13 +15,14 @@ import model.Rating;
 
 /**
  * Data Access Object for Rating entity.
- * @author DangPH - CE180896
+ *
+ * @author DATLT-CE181501
  */
 public class RatingDAO extends DBContext {
-    
+
     /**
      * Get the average rating for a course.
-     * 
+     *
      * @param courseId The ID of the course
      * @return The average rating (1-5), or 0 if no ratings
      */
@@ -50,10 +51,10 @@ public class RatingDAO extends DBContext {
 
         return average;
     }
-    
+
     /**
      * Get the count of ratings for a course.
-     * 
+     *
      * @param courseId The ID of the course
      * @return The count of ratings
      */
@@ -82,10 +83,10 @@ public class RatingDAO extends DBContext {
 
         return count;
     }
-    
+
     /**
      * Get all ratings for a course.
-     * 
+     *
      * @param courseId The ID of the course
      * @return List of ratings for the course
      */
@@ -97,11 +98,11 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r " +
-                    "JOIN Users u ON r.UserID = u.UserID " +
-                    "JOIN Courses c ON r.CourseID = c.CourseID " +
-                    "WHERE r.CourseID = ? " +
-                    "ORDER BY r.CreatedAt DESC";
+            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
+                    + "JOIN Users u ON r.UserID = u.UserID "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "WHERE r.CourseID = ? "
+                    + "ORDER BY r.CreatedAt DESC";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, courseId);
@@ -114,23 +115,15 @@ public class RatingDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-                if (ps != null)
-                    ps.close();
-                closeConnection(conn);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return ratings;
     }
-    
+
     /**
      * Helper method to map ResultSet to Rating object.
-     * 
+     *
      * @param rs The ResultSet to map
      * @return The mapped Rating object
      * @throws SQLException if an SQL error occurs
@@ -159,11 +152,10 @@ public class RatingDAO extends DBContext {
 
         return rating;
     }
-    
-    
+
     /**
      * Get all ratings in the system.
-     * 
+     *
      * @return List of all ratings
      */
     public List<Rating> getAllRatings() {
@@ -174,10 +166,10 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r " +
-                    "JOIN Users u ON r.UserID = u.UserID " +
-                    "JOIN Courses c ON r.CourseID = c.CourseID " +
-                    "ORDER BY r.CreatedAt DESC";
+            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
+                    + "JOIN Users u ON r.UserID = u.UserID "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "ORDER BY r.CreatedAt DESC";
 
             ps = conn.prepareStatement(sql);
 
@@ -189,24 +181,15 @@ public class RatingDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-                if (ps != null)
-                    ps.close();
-                closeConnection(conn);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return ratings;
     }
-    
-    
+
     /**
      * Get all ratings with a specific star rating.
-     * 
+     *
      * @param stars The star rating to filter by (1-5)
      * @return List of ratings with the specified star rating
      */
@@ -218,11 +201,11 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r " +
-                    "JOIN Users u ON r.UserID = u.UserID " +
-                    "JOIN Courses c ON r.CourseID = c.CourseID " +
-                    "WHERE r.Stars = ? " +
-                    "ORDER BY r.CreatedAt DESC";
+            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
+                    + "JOIN Users u ON r.UserID = u.UserID "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "WHERE r.Stars = ? "
+                    + "ORDER BY r.CreatedAt DESC";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, stars);
@@ -235,33 +218,69 @@ public class RatingDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-                if (ps != null)
-                    ps.close();
-                closeConnection(conn);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return ratings;
     }
-    
-    
+
     /**
-     * Close a connection, ignoring any errors.
-     * 
-     * @param connection The connection to close
+     * Delete a rating from the database.
+     *
+     * @param ratingId The ID of the rating to deleteReview
+     * @return true if deletion was successful, false otherwise
      */
-    public static void closeConnection(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                System.out.println("Error closing connection: " + e.getMessage());
-            }
+    public boolean deleteReview(int ratingId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "DELETE FROM Ratings WHERE RatingID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, ratingId);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
         }
     }
+
+    public List<Rating> getRatingsByCourseIdAndStar(int courseId, int stars) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Rating> ratings = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
+                    + "JOIN Users u ON r.UserID = u.UserID "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "WHERE r.CourseID = ? AND r.Stars = ? "
+                    + "ORDER BY r.CreatedAt DESC";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, courseId);
+            ps.setInt(2, stars);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Rating rating = mapRating(rs);
+                ratings.add(rating);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return ratings;
+    }
+
 }
