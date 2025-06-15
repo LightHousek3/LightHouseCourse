@@ -24,7 +24,7 @@ import model.User;
  * @author DangPH - CE180896
  */
 public class CourseDAO extends DBContext {
-    
+
     private UserDAO userDAO;
     private RatingDAO ratingDAO;
     private LessonDAO lessonDAO;
@@ -155,8 +155,9 @@ public class CourseDAO extends DBContext {
                 }
 
                 // Set User from user data
-                User user = userDAO.getUserById(instructor.getUserID());
-                instructor.setUser(user);
+                String fullName = rs.getString("FullName");
+                instructor.setName(fullName);
+                instructor.setEmail(rs.getString("Email"));
 
                 instructors.add(instructor);
             }
@@ -197,13 +198,13 @@ public class CourseDAO extends DBContext {
 
         return count;
     }
-    
+
     /**
      * Get all courses with pagination.
-     * 
-     * @param offset    The offset (for pagination)
-     * @param limit     The limit (for pagination)
-     * @param sortBy    The field to sort by (optional)
+     *
+     * @param offset The offset (for pagination)
+     * @param limit The limit (for pagination)
+     * @param sortBy The field to sort by (optional)
      * @param sortOrder The sort order (ASC or DESC, optional)
      * @return List of courses
      */
@@ -297,6 +298,554 @@ public class CourseDAO extends DBContext {
     }
 
     /**
+     * Delete course instructors
+     *
+     * @param conn The database connection
+     * @param courseId The course ID
+     * @throws SQLException If a database error occurs
+     */
+    private void deleteCourseInstructors(Connection conn, int courseId) throws SQLException {
+        String sql = "DELETE FROM CourseInstructors WHERE CourseID = ?";
+
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, courseId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Insert course instructors
+     *
+     * @param conn The database connection
+     * @param courseId The course ID
+     * @param instructors The list of instructors to insert
+     * @throws SQLException If a database error occurs
+     */
+    private void insertCourseInstructors(Connection conn, int courseId, List<Instructor> instructors)
+            throws SQLException {
+        String sql = "INSERT INTO CourseInstructors (CourseID, InstructorID) VALUES (?, ?)";
+
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (Instructor instructor : instructors) {
+                ps.setInt(1, courseId);
+                ps.setInt(2, instructor.getInstructorID());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    private void insertCourseCategories(Connection conn, int courseId, List<Category> categories) throws SQLException {
+        String sql = "INSERT INTO CourseCategory (CourseID, CategoryID) VALUES (?, ?)";
+
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (Category category : categories) {
+                ps.setInt(1, courseId);
+                ps.setInt(2, category.getCategoryID());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    /**
+     * Delete course categories
+     *
+     * @param conn The database connection
+     * @param courseId The course ID
+     * @throws SQLException If a database error occurs
+     */
+    private void deleteCourseCategories(Connection conn, int courseId) throws SQLException {
+        String sql = "DELETE FROM CourseCategory WHERE CourseID = ?";
+
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, courseId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Get all courses.
+     *
+     * @return List of all courses
+     */
+    public List<Course> getAllCourses() {
+        return getAllCoursesWithLimit(0, 0, null, null); // 0, 0 means no limit
+    }
+
+    /**
+     * Update course information in the database.
+     *
+     * @param course The course to updateLesson
+     * @return true if updateLesson successful, false otherwise
+     */
+    public boolean updateCourse(Course course) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false); // Start transaction
+
+            String sql = "UPDATE Courses SET Name = ?, Description = ?, Price = ?, "
+                    + "ImageUrl = ?, Duration = ?, Level = ?, "
+                    + "ApprovalStatus = ?, SubmissionDate = ?, ApprovalDate = ?, "
+                    + "RejectionReason = ? WHERE CourseID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, course.getName());
+            ps.setString(2, course.getDescription());
+            ps.setDouble(3, course.getPrice());
+            ps.setString(4, course.getImageUrl());
+            ps.setString(5, course.getDuration());
+            ps.setString(6, course.getLevel());
+            ps.setString(7, course.getApprovalStatus());
+            ps.setTimestamp(8, course.getSubmissionDate());
+            ps.setTimestamp(9, course.getApprovalDate());
+            ps.setString(10, course.getRejectionReason());
+            ps.setInt(11, course.getCourseID());
+
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 1) {
+                // Delete old categories and insert new ones
+                if (course.getCategories() != null) {
+                    deleteCourseCategories(conn, course.getCourseID());
+                    insertCourseCategories(conn, course.getCourseID(), course.getCategories());
+                }
+
+                // Delete old instructors and insert new ones
+                if (course.getInstructors() != null) {
+                    deleteCourseInstructors(conn, course.getCourseID());
+                    insertCourseInstructors(conn, course.getCourseID(), course.getInstructors());
+                } else if (course.getInstructorId() > 0) {
+                    // Handle case where we have only instructorId but no instructors list
+                    deleteCourseInstructors(conn, course.getCourseID());
+                    Instructor instructor = new Instructor();
+                    instructor.setInstructorID(course.getInstructorId());
+                    List<Instructor> instructors = new ArrayList<>();
+                    instructors.add(instructor);
+                    insertCourseInstructors(conn, course.getCourseID(), instructors);
+                }
+
+                // Update lessons
+                if (course.getLessons() != null) {
+                    // First delete existing lessons
+                    lessonDAO.deleteByCourseId(course.getCourseID());
+
+                    // Then insert new ones
+                    for (Lesson lesson : course.getLessons()) {
+                        lesson.setCourseID(course.getCourseID());
+                        lessonDAO.createLesson(lesson);
+                    }
+                }
+
+                conn.commit();
+                return true;
+            } else {
+                conn.rollback();
+                return false;
+            }
+        } catch (SQLException e) {
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    public boolean banCourse(int courseID) {
+        String checkSql = "SELECT ApprovalStatus FROM Courses WHERE CourseID = ?";
+        String updateSql = "UPDATE Courses SET ApprovalStatus = 'banned' WHERE CourseID = ?";
+
+        try ( Connection conn = getConnection();  PreparedStatement checkStmt = conn.prepareStatement(checkSql);  PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+
+            checkStmt.setInt(1, courseID);
+            try ( ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && "approved".equalsIgnoreCase(rs.getString("ApprovalStatus"))) {
+                    updateStmt.setInt(1, courseID);
+                    return updateStmt.executeUpdate() == 1;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean unbanCourse(int courseID) {
+        String checkSql = "SELECT ApprovalStatus FROM Courses WHERE CourseID = ?";
+        String updateSql = "UPDATE Courses SET ApprovalStatus = 'approved' WHERE CourseID = ?";
+
+        try ( Connection conn = getConnection();  PreparedStatement checkStmt = conn.prepareStatement(checkSql);  PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+
+            checkStmt.setInt(1, courseID);
+            try ( ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && "banned".equalsIgnoreCase(rs.getString("ApprovalStatus"))) {
+                    updateStmt.setInt(1, courseID);
+                    return updateStmt.executeUpdate() == 1;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<Course> getAllCoursesWithLimit(int offset, int limit, String status) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Course> courses = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+
+            String sql;
+            if (limit > 0) {
+                if (status != null) {
+                    sql = "SELECT * FROM Courses WHERE ApprovalStatus = ? ORDER BY CourseID OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+                    ps = conn.prepareStatement(sql);
+                    ps.setString(1, status);
+                    ps.setInt(2, offset);
+                    ps.setInt(3, limit);
+                } else {
+                    sql = "SELECT * FROM Courses ORDER BY CourseID OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+                    ps = conn.prepareStatement(sql);
+                    ps.setInt(1, offset);
+                    ps.setInt(2, limit);
+                }
+
+            } else {
+                sql = "SELECT * FROM Courses";
+                ps = conn.prepareStatement(sql);
+            }
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Course course = mapCourse(rs);
+                courses.add(course);
+            }
+
+            // Lấy dữ liệu phụ thêm nếu có
+            for (Course course : courses) {
+                try {
+                    List<Category> categories = getCourseCategories(course.getCourseID());
+                    course.setCategories(categories);
+
+                    List<Instructor> instructors = getInstructorsForCourse(course.getCourseID());
+                    course.setInstructors(instructors);
+
+                    double avgRating = ratingDAO.getAverageRatingForCourse(course.getCourseID());
+                    int ratingCount = ratingDAO.getRatingCountForCourse(course.getCourseID());
+                    course.setAverageRating(avgRating);
+                    course.setRatingCount(ratingCount);
+
+                    List<Lesson> lessons = lessonDAO.getLessonsByCourseId(course.getCourseID());
+                    course.setLessons(lessons);
+
+                } catch (Exception e) {
+                    System.err.println("Error getting additional data for course ID " + course.getCourseID() + ": "
+                            + e.getMessage());
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("SQL Error in getAllCoursesWithLimit: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return courses;
+    }
+
+    public int countAllCourses(String status) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = getConnection();
+            if (status != null) {
+                String sql = "SELECT COUNT(*) AS total FROM Courses WHERE ApprovalStatus = ?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, status);
+            } else {
+                String sql = "SELECT COUNT(*) AS total FROM Courses";
+                ps = conn.prepareStatement(sql);
+            }
+
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting courses: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return count;
+    }
+
+    public List<Course> searchCoursesByNameOrInstructor(String keyword, int offset, int limit) {
+        List<Course> courses = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        String sql = "SELECT DISTINCT c.*\n"
+                + "        FROM Courses c\n"
+                + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
+                + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
+                + "        LEFT JOIN Users u ON i.UserID = u.UserID\n"
+                + "        WHERE c.Name LIKE ? OR u.FullName LIKE ?\n"
+                + "        ORDER BY c.CourseID\n"
+                + "        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+
+            String likeKeyword = "%" + keyword + "%";
+            ps.setString(1, likeKeyword);
+            ps.setString(2, likeKeyword);
+            ps.setInt(3, offset);
+            ps.setInt(4, limit);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Course course = mapCourse(rs); // method để ánh xạ từ ResultSet sang Course
+                courses.add(course);
+            }
+            // Lấy dữ liệu phụ thêm nếu có
+            for (Course course : courses) {
+                try {
+                    List<Category> categories = getCourseCategories(course.getCourseID());
+                    course.setCategories(categories);
+
+                    List<Instructor> instructors = getInstructorsForCourse(course.getCourseID());
+                    course.setInstructors(instructors);
+
+                    double avgRating = ratingDAO.getAverageRatingForCourse(course.getCourseID());
+                    int ratingCount = ratingDAO.getRatingCountForCourse(course.getCourseID());
+                    course.setAverageRating(avgRating);
+                    course.setRatingCount(ratingCount);
+
+                    List<Lesson> lessons = lessonDAO.getLessonsByCourseId(course.getCourseID());
+                    course.setLessons(lessons);
+
+                } catch (Exception e) {
+                    System.err.println("Error getting additional data for course ID " + course.getCourseID() + ": "
+                            + e.getMessage());
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn); // method đóng connection, statement, resultset
+        }
+
+        return courses;
+    }
+
+    public int countCoursesByKeyword(String keyword) {
+        String sql = "SELECT COUNT(DISTINCT c.CourseID)\n"
+                + "        FROM Courses c\n"
+                + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
+                + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
+                + "        LEFT JOIN Users u ON i.UserID = u.UserID\n"
+                + "        WHERE c.Name LIKE ? OR u.FullName LIKE ?";
+
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String likeKeyword = "%" + keyword + "%";
+            ps.setString(1, likeKeyword);
+            ps.setString(2, likeKeyword);
+
+            try ( ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<Course> advancedSearchCourses(
+            String keyword, Integer categoryId, String approvalStatus,
+            String sortBy, String sortOrder, int offset, int limit) {
+
+        List<Course> courses = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        StringBuilder sql = new StringBuilder("SELECT DISTINCT c.*\n"
+                + "        FROM Courses c\n"
+                + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
+                + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
+                + "        LEFT JOIN Users u ON i.UserID = u.UserID\n"
+                + "        LEFT JOIN CourseCategory cc ON c.CourseID = cc.CourseID\n"
+                + "        WHERE 1 = 1"
+        );
+
+        List<Object> params = new ArrayList<>();
+        String likeKeyword = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+
+        // Search keyword
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (c.Name LIKE ? OR u.FullName LIKE ?) ");
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+        }
+
+        // Filter category
+        if (categoryId != null && categoryId > 0) {
+            sql.append(" AND cc.CategoryID = ? ");
+            params.add(categoryId);
+        }
+
+        // Filter approval status
+        if (approvalStatus != null && !approvalStatus.isEmpty()) {
+            sql.append(" AND c.ApprovalStatus = ? ");
+            params.add(approvalStatus);
+        }
+
+        // Sorting
+        String orderColumn;
+        switch (sortBy != null ? sortBy.toLowerCase() : "") {
+            case "name":
+                orderColumn = "c.Name";
+                break;
+            case "price":
+                orderColumn = "c.Price";
+                break;
+            case "submissiondate":
+                orderColumn = "c.SubmissionDate";
+                break;
+            default:
+                orderColumn = "c.CourseID";
+                break;
+        }
+
+        String orderDirection = (sortOrder != null && sortOrder.equalsIgnoreCase("desc")) ? "DESC" : "ASC";
+        sql.append(" ORDER BY ").append(orderColumn).append(" ").append(orderDirection);
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        params.add(offset);
+        params.add(limit);
+
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+
+            // Bind parameters
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Course course = mapCourse(rs);
+                courses.add(course);
+            }
+            // Lấy dữ liệu phụ thêm nếu có
+            for (Course course : courses) {
+                try {
+                    List<Category> categories = getCourseCategories(course.getCourseID());
+                    course.setCategories(categories);
+
+                    List<Instructor> instructors = getInstructorsForCourse(course.getCourseID());
+                    course.setInstructors(instructors);
+
+                    double avgRating = ratingDAO.getAverageRatingForCourse(course.getCourseID());
+                    int ratingCount = ratingDAO.getRatingCountForCourse(course.getCourseID());
+                    course.setAverageRating(avgRating);
+                    course.setRatingCount(ratingCount);
+
+                    List<Lesson> lessons = lessonDAO.getLessonsByCourseId(course.getCourseID());
+                    course.setLessons(lessons);
+
+                } catch (Exception e) {
+                    System.err.println("Error getting additional data for course ID " + course.getCourseID() + ": "
+                            + e.getMessage());
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return courses;
+    }
+
+    public int countCoursesForAdvancedSearch(String keyword, Integer categoryId, String approvalStatus) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT c.CourseID)\n"
+                + "        FROM Courses c\n"
+                + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
+                + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
+                + "        LEFT JOIN Users u ON i.UserID = u.UserID\n"
+                + "        LEFT JOIN CourseCategory cc ON c.CourseID = cc.CourseID\n"
+                + "        WHERE 1=1"
+        );
+
+        List<Object> params = new ArrayList<>();
+        String likeKeyword = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (c.Name LIKE ? OR u.FullName LIKE ?) ");
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+        }
+
+        if (categoryId != null && categoryId > 0) {
+            sql.append(" AND cc.CategoryID = ? ");
+            params.add(categoryId);
+        }
+
+        if (approvalStatus != null && !approvalStatus.isEmpty()) {
+            sql.append(" AND c.ApprovalStatus = ? ");
+            params.add(approvalStatus);
+        }
+
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try ( ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    /**
      * Map a ResultSet row to a Course object
      *
      * @param rs The ResultSet containing course data
@@ -330,4 +879,30 @@ public class CourseDAO extends DBContext {
 
         return course;
     }
+
+    public static void main(String[] args) {
+        CourseDAO aO = new CourseDAO();
+        System.out.println(aO.countCoursesByKeyword(""));
+        for (Course course : aO.searchCoursesByNameOrInstructor("", 0, 8)) {
+            System.out.println(course.toString());
+        }
+    }
+
+    public boolean isCourseStatus(int courseId, String status) {
+        String sql = "SELECT 1 FROM Courses WHERE CourseID = ? AND ApprovalStatus = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, courseId);
+            stmt.setString(2, status);
+
+            try ( ResultSet rs = stmt.executeQuery()) {
+                return rs.next(); // true nếu tồn tại 1 record phù hợp
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 }

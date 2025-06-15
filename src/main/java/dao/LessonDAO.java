@@ -4,7 +4,6 @@
  */
 package dao;
 
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import model.Lesson;
 import db.DBContext;
+import static db.DBContext.getConnection;
+import java.sql.Statement;
 
 /**
  * Data Access Object for Lesson entity.
@@ -49,6 +50,62 @@ public class LessonDAO extends DBContext {
         }
 
         return lessons;
+    }
+
+    /**
+     * Create a new lesson in the database.
+     *
+     * @param lesson The lesson to createLesson
+     * @re/turn true if creation was successful, false otherwise
+     */
+    public boolean createLesson(Lesson lesson) {
+        String sql = "INSERT INTO lessons (CourseID, Title, OrderIndex, CreatedAt, UpdatedAt) VALUES (?, ?, ?, GETDATE(), GETDATE())";
+
+        try ( Connection conn = getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setInt(1, lesson.getCourseID());
+            stmt.setString(2, lesson.getTitle());
+            stmt.setInt(3, lesson.getOrderIndex());
+
+            int affectedRows = stmt.executeUpdate();
+
+            if (affectedRows == 0) {
+                return false;
+            }
+
+            try ( ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    lesson.setLessonID(generatedKeys.getInt(1));
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Delete all lessons from the database for a specific course.
+     *
+     * @param courseId The ID of the course to delete lessons for
+     * @return true if deletion was successful, false otherwise
+     */
+    public boolean deleteByCourseId(int courseId) {
+        String sql = "DELETE FROM lessons WHERE CourseID = ?";
+
+        try ( Connection conn = getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, courseId);
+
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
