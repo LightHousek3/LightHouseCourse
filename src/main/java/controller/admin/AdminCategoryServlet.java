@@ -217,6 +217,36 @@ public class AdminCategoryServlet extends HttpServlet {
                 return;
             }
 
+            if (name.length() > 50) {
+                System.out.println("Category name too long in update: " + name.length() + " characters");
+                String redirectUrl = request.getContextPath() + "/admin/categories?action=edit&id=" + categoryIdStr
+                        + "&error=name_too_long"
+                        + "&name=" + encodedName
+                        + "&description=" + encodedDescription;
+
+                if (currentPageStr != null && !currentPageStr.trim().isEmpty()) {
+                    redirectUrl += "&page=" + currentPageStr;
+                }
+
+                response.sendRedirect(redirectUrl);
+                return;
+            }
+
+            if (description.length() > 150) {
+                System.out.println("Description too long in update: " + description.length() + " characters");
+                String redirectUrl = request.getContextPath() + "/admin/categories?action=edit&id=" + categoryIdStr
+                        + "&error=description_too_long"
+                        + "&name=" + encodedName
+                        + "&description=" + encodedDescription;
+
+                if (currentPageStr != null && !currentPageStr.trim().isEmpty()) {
+                    redirectUrl += "&page=" + currentPageStr;
+                }
+
+                response.sendRedirect(redirectUrl);
+                return;
+            }
+
             try {
                 int categoryId = Integer.parseInt(categoryIdStr);
 
@@ -274,8 +304,8 @@ public class AdminCategoryServlet extends HttpServlet {
                 System.out.println("Invalid category ID: " + categoryIdStr);
                 response.sendRedirect(request.getContextPath() + "/admin/categories?error=invalid_id");
             }
-
-        } else if ("delete".equals(action)) {
+        }
+        else if ("delete".equals(action)) {
             // Delete category logic remains the same
             String categoryIdStr = request.getParameter("categoryId");
             String currentPageStr = request.getParameter("currentPage");
