@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import model.RefundRequest;
-
 /**
  * Admin controller for managing refund requests (No authorization required)
  */
@@ -40,6 +39,7 @@ public class AdminRefundServlet extends HttpServlet {
 
         String pathInfo = request.getPathInfo();
         String status = request.getParameter("status");
+        String search = request.getParameter("search"); // Lấy tham số search
 
         int page = 1;
         try {
@@ -58,12 +58,12 @@ public class AdminRefundServlet extends HttpServlet {
             List<RefundRequest> refundRequests;
             int totalRequests;
 
-            if (status != null && !status.trim().isEmpty()) {
-                // Filter by status with pagination
-                totalRequests = refundDAO.getTotalRequestsByStatus(status);
-                refundRequests = refundDAO.getByStatus(status, page, PAGE_SIZE);
+            if ((status != null && !status.trim().isEmpty()) || (search != null && !search.trim().isEmpty())) {
+                // Có filter status hoặc search
+                totalRequests = refundDAO.getTotalRequestsByStatusAndSearch(status, search);
+                refundRequests = refundDAO.getByStatusAndSearch(status, search, page, PAGE_SIZE);
             } else {
-                // Get all with pagination
+                // Không filter
                 totalRequests = refundDAO.getTotalRequests();
                 refundRequests = refundDAO.getAll(page, PAGE_SIZE);
             }
@@ -74,6 +74,7 @@ public class AdminRefundServlet extends HttpServlet {
             request.setAttribute("selectedStatus", status);
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
+            request.setAttribute("search", search);
 
             request.getRequestDispatcher("/WEB-INF/views/admin/manage-refunds/view-refund-requests.jsp")
                     .forward(request, response);
@@ -162,6 +163,7 @@ public class AdminRefundServlet extends HttpServlet {
 
         try {
             int refundId = Integer.parseInt(refundIdParam);
+            int adminId = 1; // You should get this from session/authentication
 
             // Get refund request details before updating status
             RefundRequest refundRequest = refundDAO.getById(refundId);
@@ -170,27 +172,28 @@ public class AdminRefundServlet extends HttpServlet {
                 return;
             }
 
-            // Process the refund request (uncomment and implement as needed)
-            /*
-            boolean success = refundDAO.processRequest(refundId, status, adminMessage);
-
-            if (success && "approved".equals(status)) {
-                // If the refund was approved, add the amount to user's wallet
-                // Implement wallet credit logic here
+            // Check if request is already processed
+            if (!refundRequest.getStatus().equals("pending")) {
+                response.sendRedirect(request.getContextPath()
+                        + "/admin/refunds/details/" + refundId + "?error=already_processed");
+                return;
             }
+
+            // Process the refund request using RefundRequestDAO
+            boolean success = refundDAO.processRequest(refundId, status, adminId, adminMessage);
 
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/refunds?success=processed");
+                response.sendRedirect(request.getContextPath()
+                        + "/admin/refunds/details/" + refundId + "?success=true");
             } else {
-                response.sendRedirect(request.getContextPath() + "/admin/refunds?error=processing_failed");
+                response.sendRedirect(request.getContextPath()
+                        + "/admin/refunds/details/" + refundId + "?error=processing_failed");
             }
-             */
-            // Temporary redirect until processing logic is implemented
-            response.sendRedirect(request.getContextPath() + "/admin/refunds?info=processing_not_implemented");
 
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/refunds?error=invalid_refund_id");
         } catch (Exception e) {
+            e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin/refunds?error=processing_error");
         }
     }

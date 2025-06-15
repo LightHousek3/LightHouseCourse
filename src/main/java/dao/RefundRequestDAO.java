@@ -239,12 +239,14 @@ public class RefundRequestDAO {
 
         try {
             conn = DBContext.getConnection();
-            String sql = "SELECT r.*, c.[Name] AS CourseName, u.FullName as UserName, o.OrderDate, o.TotalAmount as OriginalAmount, o.PaymentMethod, a.FullName as AdminName\n"
-                    + "FROM RefundRequests r \n"
-                    + "JOIN Users u ON r.UserID = u.UserID\n"
-                    + "JOIN Orders o ON r.OrderID = o.OrderID \n"
-                    + "LEFT JOIN Courses c ON r.CourseID = c.CourseID\n"
-                    + "LEFT JOIN Users a ON r.ProcessedBy = a.UserID \n"
+            String sql = "SELECT r.*, c.[Name] AS CourseName, u.FullName as UserName, "
+                    + "o.OrderDate, o.TotalAmount as OriginalAmount, o.PaymentMethod, "
+                    + "a.FullName as AdminName "
+                    + "FROM RefundRequests r "
+                    + "JOIN Users u ON r.UserID = u.UserID "
+                    + "JOIN Orders o ON r.OrderID = o.OrderID "
+                    + "LEFT JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "LEFT JOIN Users a ON r.ProcessedBy = a.UserID "
                     + "WHERE r.RefundID = ?";
 
             ps = conn.prepareStatement(sql);
@@ -311,7 +313,6 @@ public class RefundRequestDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            // Đóng các kết nối
             try {
                 if (rs != null) {
                     rs.close();
@@ -329,20 +330,40 @@ public class RefundRequestDAO {
         return refunds;
     }
 
-    // Add new method to get total requests by status
-    public int getTotalRequestsByStatus(String status) {
+    /**
+     * Get count total requests by status
+     *
+     * @param status
+     * @return total
+     */
+    public int getTotalRequestsByStatusAndSearch(String status, String search) {
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         int total = 0;
-
         try {
             conn = DBContext.getConnection();
-            String sql = "SELECT COUNT(*) FROM RefundRequests WHERE Status = ?";
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, status);
+            StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM RefundRequests r "
+                    + "JOIN Users u ON r.UserID = u.UserID "
+                    + "LEFT JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "WHERE 1=1 ");
+            List<Object> params = new ArrayList<>();
+            if (status != null && !status.trim().isEmpty()) {
+                sql.append("AND r.Status = ? ");
+                params.add(status);
+            }
+            if (search != null && !search.trim().isEmpty()) {
+                sql.append("AND (u.FullName LIKE ? OR c.Name LIKE ? OR r.Reason LIKE ?) ");
+                String keyword = "%" + search.trim() + "%";
+                params.add(keyword);
+                params.add(keyword);
+                params.add(keyword);
+            }
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             rs = ps.executeQuery();
-
             if (rs.next()) {
                 total = rs.getInt(1);
             }
@@ -366,6 +387,78 @@ public class RefundRequestDAO {
         return total;
     }
 
+    public List<RefundRequest> getByStatusAndSearch(String status, String search, int page, int pageSize) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<RefundRequest> refunds = new ArrayList<>();
+        try {
+            conn = DBContext.getConnection();
+            StringBuilder sql = new StringBuilder(
+                    "SELECT r.*, c.[Name] AS CourseName, u.FullName as UserName, o.OrderDate, "
+                    + "o.TotalAmount as OriginalAmount, o.PaymentMethod, a.FullName as AdminName "
+                    + "FROM RefundRequests r "
+                    + "JOIN Users u ON r.UserID = u.UserID "
+                    + "JOIN Orders o ON r.OrderID = o.OrderID "
+                    + "LEFT JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "LEFT JOIN Users a ON r.ProcessedBy = a.UserID "
+                    + "WHERE 1=1 "
+            );
+            List<Object> params = new ArrayList<>();
+            if (status != null && !status.trim().isEmpty()) {
+                sql.append("AND r.Status = ? ");
+                params.add(status);
+            }
+            if (search != null && !search.trim().isEmpty()) {
+                sql.append("AND (u.FullName LIKE ? OR c.Name LIKE ? OR r.Reason LIKE ?) ");
+                String keyword = "%" + search.trim() + "%";
+                params.add(keyword);
+                params.add(keyword);
+                params.add(keyword);
+            }
+            sql.append("ORDER BY r.RequestDate ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            params.add((page - 1) * pageSize);
+            params.add(pageSize);
+
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                RefundRequest refund = mapRefundRequest(rs);
+                refund.setCourseName(rs.getString("CourseName"));
+                refund.setUserName(rs.getString("UserName"));
+                refund.setOriginalAmount(rs.getDouble("OriginalAmount"));
+                refund.setPaymentMethod(rs.getString("PaymentMethod"));
+                refund.setAdminName(rs.getString("AdminName"));
+                refunds.add(refund);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return refunds;
+    }
+
+    /**
+     * Get count total requests
+     *
+     * @return total
+     */
     public int getTotalRequests() {
         Connection conn = null;
         PreparedStatement ps = null;
@@ -725,6 +818,7 @@ public class RefundRequestDAO {
         refund.setProcessedBy(rs.getInt("ProcessedBy"));
         refund.setAdminMessage(rs.getString("AdminMessage"));
         refund.setRefundPercentage(rs.getInt("RefundPercentage"));
+        refund.setCourseName(rs.getString("CourseName"));
 
         // Handle course-specific refunds
         int courseId = rs.getInt("CourseID");

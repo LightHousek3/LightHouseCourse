@@ -6,7 +6,6 @@
 <html>
 
     <head>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
         <jsp:include page="../common/head.jsp" />
         <title>Manage Refund Requests</title>
     </head>
@@ -25,40 +24,6 @@
                 </button>
                 <h2 class="m-0 d-none d-lg-block">Refund Requests Management</h2>
                 <div class="d-flex align-items-center">
-                    <span class="me-3">Welcome, ${sessionScope.user.username != null ?
-                                                  sessionScope.user.username : "Admin"}!</span>
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button"
-                                id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1"></i> Admin
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <c:if test="${param.success eq 'true'}">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    Refund request has been processed successfully.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </c:if>
-
-            <c:if test="${param.error eq 'true' || param.error eq 'invalid'}">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <c:choose>
-                        <c:when test="${param.error eq 'invalid'}">Invalid request parameters.</c:when>
-                        <c:otherwise>Failed to process the refund request.</c:otherwise>
-                    </c:choose>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </c:if>
-
-            <!-- Status Filter -->
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Filter Refund Requests</h5>
-                </div>
-                <div class="card-body">
                     <form action="${pageContext.request.contextPath}/admin/refunds" method="get"
                           class="row g-3 align-items-center">
                         <div class="col-auto">
@@ -82,6 +47,42 @@
                 </div>
             </div>
 
+            <!-- Status Filter -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Search Refund Requests</h5>
+                </div>
+                <div class="card-body">
+                    <form action="${pageContext.request.contextPath}/admin/refunds" method="get"
+                          class="row g-3 align-items-center">
+                        <!-- ...existing status filter... -->
+                        <div class="col-auto">
+                            <input type="text" class="form-control" name="search" id="search"
+                                   placeholder="Search by user, course" value="${param.search}" />
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <c:if test="${param.success eq 'true'}">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Refund request has been processed successfully.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </c:if>
+
+            <c:if test="${param.error eq 'true' || param.error eq 'invalid'}">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <c:choose>
+                        <c:when test="${param.error eq 'invalid'}">Invalid request parameters.</c:when>
+                        <c:otherwise>Failed to process the refund request.</c:otherwise>
+                    </c:choose>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </c:if>
             <div class="card shadow">
                 <div class="card-body">
                     <c:choose>
@@ -115,7 +116,7 @@
                                                 <td>${refund.userName}</td>
                                                 <td>${refund.courseName}</td>
 
-                                                <td>$
+                                                <td>
                                                     <fmt:formatNumber value="${refund.refundAmount}" type="currency" />
                                                 </td>
                                                 <td>
@@ -220,7 +221,6 @@
                 </div>
             </div>
         </div>
-
         <jsp:include page="../common/scripts.jsp" />
     </body>
 
