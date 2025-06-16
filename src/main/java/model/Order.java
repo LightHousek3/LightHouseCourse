@@ -20,9 +20,6 @@ public class Order {
     private Timestamp orderDate;
     private double totalAmount;
     private String status; // 'pending', 'completed', 'refunded'
-    private String paymentMethod; // 'VNPAY'
-    private String paymentTransactionID; // ID transaction from VNPAY
-    private String paymentData; // Response data from payment gateway in JSON format
 
     // Additional information
     private List<OrderDetail> orderDetails = new ArrayList<>();
@@ -33,10 +30,9 @@ public class Order {
         this.orderDetails = new ArrayList<>();
     }
 
-    public Order(int userID, double totalAmount, String paymentMethod) {
+    public Order(int userID, double totalAmount) {
         this.userID = userID;
         this.totalAmount = totalAmount;
-        this.paymentMethod = paymentMethod;
         this.orderDate = new Timestamp(System.currentTimeMillis());
         this.status = "pending";
         this.orderDetails = new ArrayList<>();
@@ -83,30 +79,6 @@ public class Order {
         this.status = status;
     }
 
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
-    public String getPaymentTransactionID() {
-        return paymentTransactionID;
-    }
-
-    public void setPaymentTransactionID(String paymentTransactionID) {
-        this.paymentTransactionID = paymentTransactionID;
-    }
-
-    public String getPaymentData() {
-        return paymentData;
-    }
-
-    public void setPaymentData(String paymentData) {
-        this.paymentData = paymentData;
-    }
-
     public List<OrderDetail> getOrderDetails() {
         return orderDetails;
     }
@@ -149,7 +121,8 @@ public class Order {
 
     @Override
     public String toString() {
-        return "Order{" + "orderID=" + orderID + ", userID=" + userID + ", orderDate=" + orderDate + ", totalAmount=" + totalAmount + ", status=" + status + ", paymentMethod=" + paymentMethod + ", paymentTransactionID=" + paymentTransactionID + ", paymentData=" + paymentData + ", orderDetails=" + orderDetails + ", user=" + user + '}';
+        return "Order{" + "orderID=" + orderID + ", userID=" + userID + ", orderDate=" + orderDate + ", totalAmount="
+                + totalAmount + ", status=" + status + ", orderDetails=" + orderDetails + ", user=" + user + '}';
     }
 
 }

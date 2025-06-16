@@ -16,32 +16,29 @@ public class PaymentTransaction {
     private Integer orderID; // Can be null if it is a refund transaction
     private Integer refundRequestID; // Can be null if it is a payment transaction
     private String transactionType; // 'payment', 'refund'
-    private double amount;
     private String provider; // 'VNPAY'
     private String providerTransactionID; // Transaction ID from the provider
-    private String status; // 'pending', 'completed', 'failed'
+    private String bankAccountInfo; // Bank account information for refunds
     private String responseData; // Response data from payment gateway
     private String requestData; // Request data sent to payment gateway
     private Timestamp createdAt;
     private Timestamp updatedAt;
-    
+
     // Additional information
     private String userName;
     private String courseName;
-    
+
     // Constructors
     public PaymentTransaction() {
     }
-    
-    public PaymentTransaction(String transactionType, double amount, String provider) {
+
+    public PaymentTransaction(String transactionType, String provider) {
         this.transactionType = transactionType;
-        this.amount = amount;
         this.provider = provider;
-        this.status = "pending";
         this.createdAt = new Timestamp(System.currentTimeMillis());
         this.updatedAt = new Timestamp(System.currentTimeMillis());
     }
-    
+
     // Getters and Setters
     public int getTransactionID() {
         return transactionID;
@@ -75,14 +72,6 @@ public class PaymentTransaction {
         this.transactionType = transactionType;
     }
 
-    public double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
     public String getProvider() {
         return provider;
     }
@@ -99,12 +88,12 @@ public class PaymentTransaction {
         this.providerTransactionID = providerTransactionID;
     }
 
-    public String getStatus() {
-        return status;
+    public String getBankAccountInfo() {
+        return bankAccountInfo;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setBankAccountInfo(String bankAccountInfo) {
+        this.bankAccountInfo = bankAccountInfo;
     }
 
     public String getResponseData() {
@@ -154,31 +143,22 @@ public class PaymentTransaction {
     public void setCourseName(String courseName) {
         this.courseName = courseName;
     }
-    
+
     // Helper methods
     public boolean isPayment() {
         return "payment".equals(transactionType);
     }
-    
+
     public boolean isRefund() {
         return "refund".equals(transactionType);
-    }
-    
-    public boolean isPending() {
-        return "pending".equals(status);
-    }
-    
-    public boolean isCompleted() {
-        return "completed".equals(status);
-    }
-    
-    public boolean isFailed() {
-        return "failed".equals(status);
     }
 
     @Override
     public String toString() {
-        return "PaymentTransaction{" + "transactionID=" + transactionID + ", orderID=" + orderID + ", refundRequestID=" + refundRequestID + ", transactionType=" + transactionType + ", amount=" + amount + ", provider=" + provider + ", providerTransactionID=" + providerTransactionID + ", status=" + status + ", responseData=" + responseData + ", requestData=" + requestData + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", userName=" + userName + ", courseName=" + courseName + '}';
+        return "PaymentTransaction{" + "transactionID=" + transactionID + ", orderID=" + orderID + ", refundRequestID="
+                + refundRequestID + ", transactionType=" + transactionType + ", provider=" + provider
+                + ", providerTransactionID=" + providerTransactionID + ", bankAccountInfo=" + bankAccountInfo
+                + ", responseData=" + responseData + ", requestData=" + requestData + ", createdAt=" + createdAt
+                + ", updatedAt=" + updatedAt + ", userName=" + userName + ", courseName=" + courseName + '}';
     }
-    
 }
