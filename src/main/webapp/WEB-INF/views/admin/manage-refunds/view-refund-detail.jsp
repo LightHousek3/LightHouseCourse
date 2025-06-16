@@ -141,11 +141,7 @@
                                         <div class="info-label">Course Name: ${refundRequest.courseName}</div>
                                     </div>
                                     <div class="info-row">
-                                        <div class="info-label">Order Date:
-                                            <i class="far fa-calendar-alt me-1 text-muted"></i>
-                                            <fmt:formatDate value="${refundRequest.orderDate}"
-                                                            pattern="dd MMM yyyy" />
-                                        </div>
+                                        
                                     </div>
                                 </div>
                             </div>

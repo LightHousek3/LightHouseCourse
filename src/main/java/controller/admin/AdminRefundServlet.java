@@ -65,7 +65,7 @@ public class AdminRefundServlet extends HttpServlet {
             } else {
                 // Không filter
                 totalRequests = refundDAO.getTotalRequests();
-                refundRequests = refundDAO.getAll(page, PAGE_SIZE);
+                refundRequests = refundDAO.getAllRefundRequests(page, PAGE_SIZE);
             }
 
             int totalPages = (int) Math.ceil((double) totalRequests / PAGE_SIZE);
@@ -81,12 +81,12 @@ public class AdminRefundServlet extends HttpServlet {
             return;
         }
 
-        if (pathInfo.startsWith("/details/")) {
+        if (pathInfo.startsWith("/view/")) {
             // Show refund request details
-            String refundIdStr = pathInfo.substring("/details/".length());
+            String refundIdStr = pathInfo.substring("/view/".length());
             try {
                 int refundId = Integer.parseInt(refundIdStr);
-                RefundRequest refundRequest = refundDAO.getById(refundId);
+                RefundRequest refundRequest = refundDAO.getRefundById(refundId);
 
                 if (refundRequest == null) {
                     request.setAttribute("error", "Refund request not found with ID: " + refundId);
@@ -166,7 +166,7 @@ public class AdminRefundServlet extends HttpServlet {
             int adminId = 1; // You should get this from session/authentication
 
             // Get refund request details before updating status
-            RefundRequest refundRequest = refundDAO.getById(refundId);
+            RefundRequest refundRequest = refundDAO.getRefundById(refundId);
             if (refundRequest == null) {
                 response.sendRedirect(request.getContextPath() + "/admin/refunds?error=refund_not_found");
                 return;

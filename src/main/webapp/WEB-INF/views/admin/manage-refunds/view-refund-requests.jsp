@@ -137,63 +137,9 @@
                                                     <!-- Container for Buttons -->
                                                     <div class="d-flex flex-column flex-lg-row gap-2" >
                                                         <!-- Details Button -->
-                                                        <a href="${pageContext.request.contextPath}/admin/refunds/details/${refund.refundID}"
-                                                           class="btn btn-info btn-sm">Details</a>  
+                                                        <a href="${pageContext.request.contextPath}/admin/refunds/view/${refund.refundID}"
+                                                           class="btn btn-info btn-sm">View</a>  
                                                     </div>
-
-                                                    <!-- Approve Modal -->
-                                                    <div class="modal fade" id="approveModal${refund.refundID}" tabindex="-1" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title">Approve Refund Request</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <p>Are you sure you want to approve this refund request?</p>
-                                                                    <p><strong>Amount:</strong> $<fmt:formatNumber value="${refund.refundAmount}" pattern="#0.00" /></p>
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <form action="${pageContext.request.contextPath}/admin/refunds" method="post">
-                                                                        <input type="hidden" name="action" value="processRefund">
-                                                                        <input type="hidden" name="refundId" value="${refund.refundID}">
-                                                                        <input type="hidden" name="status" value="approved">
-                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                                        <button type="submit" class="btn btn-success">Approve Refund</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Reject Modal -->
-                                                    <div class="modal fade" id="rejectModal${refund.refundID}" tabindex="-1" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title">Reject Refund Request</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <p>Are you sure you want to reject this refund request?</p>
-                                                                    <p><strong>Amount:</strong> $<fmt:formatNumber value="${refund.refundAmount}" pattern="#0.00" /></p>
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <form action="${pageContext.request.contextPath}/admin/refunds" method="post">
-                                                                        <input type="hidden" name="action" value="processRefund">
-                                                                        <input type="hidden" name="refundId" value="${refund.refundID}">
-                                                                        <input type="hidden" name="status" value="rejected">
-                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                                        <button type="submit" class="btn btn-danger">Reject Refund</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-
-
                                             </tr>
                                         </c:forEach>
                                     </tbody>

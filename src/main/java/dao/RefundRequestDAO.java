@@ -16,24 +16,24 @@ import db.DBContext;
  * Data Access Object for RefundRequest entities. Handles database operations
  * related to refund requests.
  */
-public class RefundRequestDAO {
+public class RefundRequestDAO extends DBContext {
 
     /**
      * Inserts a new refund request into the database.
      *
-     * @param request The RefundRequest object to insert
+     * @param request The RefundRequest object to insertRefundRequests
      * @return The generated refund ID if successful, -1 if failed
      */
-    public int insert(RefundRequest request) {
+    public int insertRefundRequests(RefundRequest request) {
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         int refundId = -1;
 
         try {
-            conn = DBContext.getConnection();
-            String sql = "INSERT INTO RefundRequests (OrderID, UserID, RequestDate, Status, RefundAmount, Reason, RefundPercentage, CourseID) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            conn = getConnection();
+            String sql = "INSERT INTO RefundRequests (OrderID, UserID, RequestDate, Status, RefundAmount, Reason, RefundPercentage) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, request.getOrderID());
@@ -45,13 +45,6 @@ public class RefundRequestDAO {
             ps.setString(6, request.getReason()); // Ensure reason is saved
             ps.setInt(7, request.getRefundPercentage() > 0 ? request.getRefundPercentage() : 80);
 
-            // Handle course-specific refunds
-            if (request.getCourseID() != null) {
-                ps.setInt(8, request.getCourseID());
-            } else {
-                ps.setNull(8, java.sql.Types.INTEGER);
-            }
-
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 1) {
                 rs = ps.getGeneratedKeys();
@@ -62,19 +55,7 @@ public class RefundRequestDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return refundId;
@@ -96,7 +77,7 @@ public class RefundRequestDAO {
         boolean success = false;
 
         try {
-            conn = DBContext.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false); // Start transaction
 
             // Check if adminMessage is not empty
@@ -166,10 +147,7 @@ public class RefundRequestDAO {
 
         try {
             // Get order information
-            String getInfoSql = "SELECT r.OrderID, o.TotalAmount, o.PaymentMethod "
-                    + "FROM RefundRequests r "
-                    + "JOIN Orders o ON r.OrderID = o.OrderID "
-                    + "WHERE r.RefundID = ?";
+            String getInfoSql = "SELECT r.OrderID FROM RefundRequests r WHERE r.RefundID = ?";
 
             ps = conn.prepareStatement(getInfoSql);
             ps.setInt(1, refundId);
@@ -177,7 +155,6 @@ public class RefundRequestDAO {
 
             if (rs.next()) {
                 int orderId = rs.getInt("OrderID");
-                String paymentMethod = rs.getString("PaymentMethod");
 
                 // Update order status to "refunded"
                 rs.close();
@@ -203,15 +180,13 @@ public class RefundRequestDAO {
                     ps.close();
 
                     String insertTransactionSql = "INSERT INTO PaymentTransactions "
-                            + "(RefundRequestID, TransactionType, Amount, Provider, ProviderTransactionID, Status, RequestData, CreatedAt, UpdatedAt) "
-                            + "VALUES (?, 'refund', ?, ?, ?, 'completed', ?, GETDATE(), GETDATE())";
+                            + "(RefundRequestID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo, CreatedAt) "
+                            + "VALUES (?, 'refund', ?, ?, NULL, GETDATE())";
 
                     ps = conn.prepareStatement(insertTransactionSql);
                     ps.setInt(1, refundId);
-                    ps.setDouble(2, refundAmount);
-                    ps.setString(3, paymentMethod);
-                    ps.setString(4, "REFUND_" + refundId);
-                    ps.setString(5, "{\"refund_id\": " + refundId + ", \"auto_processed\": true}");
+                    ps.setString(2, "VNPAY"); // Default provider
+                    ps.setString(3, "REFUND_" + refundId);
                     ps.executeUpdate();
                 }
             }
@@ -231,21 +206,25 @@ public class RefundRequestDAO {
      * @param refundId The ID of the refund request
      * @return RefundRequest object, null if not found
      */
-    public RefundRequest getById(int refundId) {
+    public RefundRequest getRefundById(int refundId) {
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         RefundRequest refund = null;
 
         try {
-            conn = DBContext.getConnection();
-            String sql = "SELECT r.*, c.[Name] AS CourseName, u.FullName as UserName, "
-                    + "o.OrderDate, o.TotalAmount as OriginalAmount, o.PaymentMethod, "
-                    + "a.FullName as AdminName "
+            conn = getConnection();
+            String sql = "SELECT r.*, u.FullName as UserName, "
+                    + "o.TotalAmount as OriginalAmount, "
+                    + "a.FullName as AdminName, "
+                    + "STUFF((SELECT ', ' + c.Name "
+                    + "       FROM OrderDetails od "
+                    + "       JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "       WHERE od.OrderID = r.OrderID "
+                    + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
                     + "FROM RefundRequests r "
                     + "JOIN Users u ON r.UserID = u.UserID "
                     + "JOIN Orders o ON r.OrderID = o.OrderID "
-                    + "LEFT JOIN Courses c ON r.CourseID = c.CourseID "
                     + "LEFT JOIN Users a ON r.ProcessedBy = a.UserID "
                     + "WHERE r.RefundID = ?";
 
@@ -259,19 +238,7 @@ public class RefundRequestDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return refund;
@@ -282,22 +249,26 @@ public class RefundRequestDAO {
      *
      * @return List of RefundRequest objects
      */
-    public List<RefundRequest> getAll(int page, int pageSize) {
+    public List<RefundRequest> getAllRefundRequests(int page, int pageSize) {
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<RefundRequest> refunds = new ArrayList<>();
 
         try {
-            conn = DBContext.getConnection();
-            String sql = "SELECT r.*, c.[Name] AS CourseName, u.FullName as UserName, o.OrderDate, "
-                    + "o.TotalAmount as OriginalAmount, o.PaymentMethod, a.FullName as AdminName "
+            conn = getConnection();
+            String sql = "SELECT r.*, u.FullName as UserName, "
+                    + "o.TotalAmount as OriginalAmount, a.FullName as AdminName, "
+                    + "STUFF((SELECT ', ' + c.Name "
+                    + "       FROM OrderDetails od "
+                    + "       JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "       WHERE od.OrderID = r.OrderID "
+                    + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
                     + "FROM RefundRequests r "
                     + "JOIN Users u ON r.UserID = u.UserID "
                     + "JOIN Orders o ON r.OrderID = o.OrderID "
-                    + "LEFT JOIN Courses c ON r.CourseID = c.CourseID "
                     + "LEFT JOIN Users a ON r.ProcessedBy = a.UserID "
-                    + "ORDER BY r.RequestDate ASC "
+                    + "ORDER BY r.RequestDate DESC "
                     + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
             ps = conn.prepareStatement(sql);
@@ -307,25 +278,12 @@ public class RefundRequestDAO {
 
             while (rs.next()) {
                 RefundRequest refund = mapRefundRequest(rs);
-                refund.setCourseName(rs.getString("CourseName"));
                 refunds.add(refund);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
         return refunds;
     }
@@ -342,47 +300,46 @@ public class RefundRequestDAO {
         ResultSet rs = null;
         int total = 0;
         try {
-            conn = DBContext.getConnection();
-            StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM RefundRequests r "
+            conn = getConnection();
+            StringBuilder sql = new StringBuilder(
+                    "SELECT COUNT(*) AS total "
+                    + "FROM RefundRequests r "
                     + "JOIN Users u ON r.UserID = u.UserID "
-                    + "LEFT JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "JOIN Orders o ON r.OrderID = o.OrderID "
                     + "WHERE 1=1 ");
+
             List<Object> params = new ArrayList<>();
+
             if (status != null && !status.trim().isEmpty()) {
                 sql.append("AND r.Status = ? ");
                 params.add(status);
             }
+
             if (search != null && !search.trim().isEmpty()) {
-                sql.append("AND (u.FullName LIKE ? OR c.Name LIKE ? OR r.Reason LIKE ?) ");
+                sql.append("AND (u.FullName LIKE ? OR EXISTS ( "
+                        + "    SELECT 1 FROM OrderDetails od "
+                        + "    JOIN Courses c ON od.CourseID = c.CourseID "
+                        + "    WHERE od.OrderID = r.OrderID AND c.Name LIKE ? "
+                        + ") OR CAST(r.RefundID as VARCHAR) LIKE ?) ");
                 String keyword = "%" + search.trim() + "%";
                 params.add(keyword);
                 params.add(keyword);
                 params.add(keyword);
             }
+
             ps = conn.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
+
             rs = ps.executeQuery();
             if (rs.next()) {
-                total = rs.getInt(1);
+                total = rs.getInt("total");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
         return total;
     }
@@ -393,63 +350,63 @@ public class RefundRequestDAO {
         ResultSet rs = null;
         List<RefundRequest> refunds = new ArrayList<>();
         try {
-            conn = DBContext.getConnection();
+            conn = getConnection();
             StringBuilder sql = new StringBuilder(
-                    "SELECT r.*, c.[Name] AS CourseName, u.FullName as UserName, o.OrderDate, "
-                    + "o.TotalAmount as OriginalAmount, o.PaymentMethod, a.FullName as AdminName "
+                    "SELECT r.*, u.FullName as UserName, o.OrderDate, "
+                    + "o.TotalAmount as OriginalAmount, a.FullName as AdminName, "
+                    + "STUFF((SELECT ', ' + c.Name "
+                    + "       FROM OrderDetails od "
+                    + "       JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "       WHERE od.OrderID = r.OrderID "
+                    + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
                     + "FROM RefundRequests r "
                     + "JOIN Users u ON r.UserID = u.UserID "
                     + "JOIN Orders o ON r.OrderID = o.OrderID "
-                    + "LEFT JOIN Courses c ON r.CourseID = c.CourseID "
                     + "LEFT JOIN Users a ON r.ProcessedBy = a.UserID "
-                    + "WHERE 1=1 "
-            );
+                    + "WHERE 1=1 ");
+
             List<Object> params = new ArrayList<>();
+
+            // Add status filter
             if (status != null && !status.trim().isEmpty()) {
                 sql.append("AND r.Status = ? ");
                 params.add(status);
             }
+
+            // Add search filter
             if (search != null && !search.trim().isEmpty()) {
-                sql.append("AND (u.FullName LIKE ? OR c.Name LIKE ? OR r.Reason LIKE ?) ");
+                sql.append("AND (u.FullName LIKE ? OR EXISTS ( "
+                        + "    SELECT 1 FROM OrderDetails od "
+                        + "    JOIN Courses c ON od.CourseID = c.CourseID "
+                        + "    WHERE od.OrderID = r.OrderID AND c.Name LIKE ? "
+                        + ") OR CAST(r.RefundID as VARCHAR) LIKE ?) ");
                 String keyword = "%" + search.trim() + "%";
-                params.add(keyword);
-                params.add(keyword);
-                params.add(keyword);
+                params.add(keyword); // for FullName
+                params.add(keyword); // for CourseName
+                params.add(keyword); // for RefundID
             }
-            sql.append("ORDER BY r.RequestDate ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+            // Add order by and pagination
+            sql.append("ORDER BY r.RequestDate DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
             params.add((page - 1) * pageSize);
             params.add(pageSize);
 
             ps = conn.prepareStatement(sql.toString());
+
+            // Set parameters
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
+
             rs = ps.executeQuery();
             while (rs.next()) {
                 RefundRequest refund = mapRefundRequest(rs);
-                refund.setCourseName(rs.getString("CourseName"));
-                refund.setUserName(rs.getString("UserName"));
-                refund.setOriginalAmount(rs.getDouble("OriginalAmount"));
-                refund.setPaymentMethod(rs.getString("PaymentMethod"));
-                refund.setAdminName(rs.getString("AdminName"));
                 refunds.add(refund);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
         return refunds;
     }
@@ -466,7 +423,7 @@ public class RefundRequestDAO {
         int total = 0;
 
         try {
-            conn = DBContext.getConnection();
+            conn = getConnection();
             String sql = "SELECT COUNT(*) FROM RefundRequests";
             ps = conn.prepareStatement(sql);
             rs = ps.executeQuery();
@@ -477,19 +434,7 @@ public class RefundRequestDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
         return total;
     }
@@ -507,16 +452,20 @@ public class RefundRequestDAO {
         List<RefundRequest> refunds = new ArrayList<>();
 
         try {
-            conn = DBContext.getConnection();
-            String sql = "SELECT r.*, c.[Name] AS CourseName, u.FullName as UserName, o.OrderDate, "
-                    + "o.TotalAmount as OriginalAmount, o.PaymentMethod, a.FullName as AdminName "
+            conn = getConnection();
+            String sql = "SELECT r.*, u.FullName as UserName, "
+                    + "o.TotalAmount as OriginalAmount, a.FullName as AdminName, "
+                    + "STUFF((SELECT ', ' + c.Name "
+                    + "       FROM OrderDetails od "
+                    + "       JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "       WHERE od.OrderID = r.OrderID "
+                    + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
                     + "FROM RefundRequests r "
                     + "JOIN Users u ON r.UserID = u.UserID "
                     + "JOIN Orders o ON r.OrderID = o.OrderID "
-                    + "LEFT JOIN Courses c ON r.CourseID = c.CourseID "
                     + "LEFT JOIN Users a ON r.ProcessedBy = a.UserID "
                     + "WHERE r.Status = ? "
-                    + "ORDER BY r.RequestDate ASC "
+                    + "ORDER BY r.RequestDate DESC "
                     + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
             ps = conn.prepareStatement(sql);
@@ -527,29 +476,12 @@ public class RefundRequestDAO {
 
             while (rs.next()) {
                 RefundRequest refund = mapRefundRequest(rs);
-                refund.setCourseName(rs.getString("CourseName"));
-                refund.setUserName(rs.getString("UserName"));
-                refund.setOriginalAmount(rs.getDouble("OriginalAmount"));
-                refund.setPaymentMethod(rs.getString("PaymentMethod"));
-                refund.setAdminName(rs.getString("AdminName"));
                 refunds.add(refund);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
         return refunds;
     }
@@ -567,9 +499,14 @@ public class RefundRequestDAO {
         List<RefundRequest> refunds = new ArrayList<>();
 
         try {
-            conn = DBContext.getConnection();
-            String sql = "SELECT r.*, u.FullName as UserName, o.OrderDate, "
-                    + "o.TotalAmount as OriginalAmount, o.PaymentMethod, a.FullName as AdminName "
+            conn = getConnection();
+            String sql = "SELECT r.*, u.FullName as UserName, "
+                    + "o.TotalAmount as OriginalAmount, a.FullName as AdminName, "
+                    + "STUFF((SELECT ', ' + c.Name "
+                    + "       FROM OrderDetails od "
+                    + "       JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "       WHERE od.OrderID = r.OrderID "
+                    + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
                     + "FROM RefundRequests r "
                     + "JOIN Users u ON r.UserID = u.UserID "
                     + "JOIN Orders o ON r.OrderID = o.OrderID "
@@ -588,19 +525,7 @@ public class RefundRequestDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return refunds;
@@ -620,7 +545,7 @@ public class RefundRequestDAO {
         boolean hasPending = false;
 
         try {
-            conn = DBContext.getConnection();
+            conn = getConnection();
             String sql = "SELECT COUNT(*) FROM RefundRequests WHERE UserID = ? AND OrderID = ? AND Status = 'pending'";
 
             ps = conn.prepareStatement(sql);
@@ -634,19 +559,7 @@ public class RefundRequestDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return hasPending;
@@ -666,7 +579,7 @@ public class RefundRequestDAO {
         boolean hasApproved = false;
 
         try {
-            conn = DBContext.getConnection();
+            conn = getConnection();
             String sql = "SELECT COUNT(*) FROM RefundRequests WHERE UserID = ? AND OrderID = ? AND Status = 'approved'";
 
             ps = conn.prepareStatement(sql);
@@ -680,119 +593,7 @@ public class RefundRequestDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return hasApproved;
-    }
-
-    /**
-     * Checks if a user has a pending refund request for a specific course
-     *
-     * @param userId The user ID
-     * @param courseId The course ID
-     * @return true if there's a pending refund request, false otherwise
-     */
-    public boolean hasPendingRefundForCourse(int userId, int courseId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        boolean hasPending = false;
-
-        try {
-            conn = DBContext.getConnection();
-            // Join with OrderDetails to find refund requests for this specific course
-            String sql = "SELECT COUNT(*) FROM RefundRequests r "
-                    + "JOIN Orders o ON r.OrderID = o.OrderID "
-                    + "JOIN OrderDetails od ON o.OrderID = od.OrderID "
-                    + "WHERE r.UserID = ? AND od.CourseID = ? AND r.Status = 'pending'";
-
-            ps = conn.prepareStatement(sql);
-            ps.setInt(1, userId);
-            ps.setInt(2, courseId);
-            rs = ps.executeQuery();
-
-            if (rs.next()) {
-                hasPending = rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return hasPending;
-    }
-
-    /**
-     * Checks if a user has an approved refund request for a specific course
-     *
-     * @param userId The user ID
-     * @param courseId The course ID
-     * @return true if there's an approved refund request, false otherwise
-     */
-    public boolean hasApprovedRefundForCourse(int userId, int courseId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        boolean hasApproved = false;
-
-        try {
-            conn = DBContext.getConnection();
-            // Join with OrderDetails to find refund requests for this specific course
-            String sql = "SELECT COUNT(*) FROM RefundRequests r "
-                    + "JOIN Orders o ON r.OrderID = o.OrderID "
-                    + "JOIN OrderDetails od ON o.OrderID = od.OrderID "
-                    + "WHERE r.UserID = ? AND od.CourseID = ? AND r.Status = 'approved'";
-
-            ps = conn.prepareStatement(sql);
-            ps.setInt(1, userId);
-            ps.setInt(2, courseId);
-            rs = ps.executeQuery();
-
-            if (rs.next()) {
-                hasApproved = rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return hasApproved;
@@ -814,17 +615,25 @@ public class RefundRequestDAO {
         refund.setStatus(rs.getString("Status"));
         refund.setRefundAmount(rs.getDouble("RefundAmount"));
         refund.setReason(rs.getString("Reason"));
-        refund.setProcessedDate(rs.getTimestamp("ProcessedDate"));
-        refund.setProcessedBy(rs.getInt("ProcessedBy"));
-        refund.setAdminMessage(rs.getString("AdminMessage"));
-        refund.setRefundPercentage(rs.getInt("RefundPercentage"));
-        refund.setCourseName(rs.getString("CourseName"));
 
-        // Handle course-specific refunds
-        int courseId = rs.getInt("CourseID");
-        if (!rs.wasNull()) {
-            refund.setCourseID(courseId);
+        // Process nullable columns
+        Timestamp processedDate = rs.getTimestamp("ProcessedDate");
+        if (processedDate != null) {
+            refund.setProcessedDate(processedDate);
         }
+
+        // ProcessedBy can be NULL in the database
+        int processedBy = rs.getInt("ProcessedBy");
+        if (!rs.wasNull()) {
+            refund.setProcessedBy(processedBy);
+        }
+
+        String adminMessage = rs.getString("AdminMessage");
+        if (adminMessage != null) {
+            refund.setAdminMessage(adminMessage);
+        }
+
+        refund.setRefundPercentage(rs.getInt("RefundPercentage"));
 
         // Set additional display fields if available in the result set
         try {
@@ -840,23 +649,70 @@ public class RefundRequestDAO {
         }
 
         try {
-            refund.setOrderDate(rs.getTimestamp("OrderDate"));
-        } catch (SQLException e) {
-            // Column not in result set, ignore
-        }
-
-        try {
             refund.setOriginalAmount(rs.getDouble("OriginalAmount"));
         } catch (SQLException e) {
             // Column not in result set, ignore
         }
 
         try {
-            refund.setPaymentMethod(rs.getString("PaymentMethod"));
+            refund.setCourseName(rs.getString("CourseName"));
         } catch (SQLException e) {
             // Column not in result set, ignore
         }
 
         return refund;
+    }
+
+    /**
+     * Retrieves all refund requests with a limit.
+     *
+     * @param limit Maximum number of refund requests to retrieve
+     * @return List of RefundRequest objects
+     */
+    public List<RefundRequest> getAllRefundRequestsWithLimit(int limit) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<RefundRequest> refundRequests = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT r.RefundID, r.OrderID, r.UserID, r.RequestDate, r.Status, r.RefundAmount, "
+                    + "r.Reason, r.ProcessedDate, r.ProcessedBy, r.AdminMessage, r.RefundPercentage, "
+                    + "u.Username AS UserName, o.TotalAmount AS OriginalAmount, "
+                    + "admin.Username AS AdminName, "
+                    + "STUFF((SELECT ', ' + c.Name "
+                    + "       FROM OrderDetails od "
+                    + "       JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "       WHERE od.OrderID = r.OrderID "
+                    + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
+                    + "FROM RefundRequests r "
+                    + "JOIN Users u ON r.UserID = u.UserID "
+                    + "JOIN Orders o ON r.OrderID = o.OrderID "
+                    + "LEFT JOIN Users admin ON r.ProcessedBy = admin.UserID "
+                    + "ORDER BY r.RequestDate DESC";
+
+            if (limit > 0) {
+                sql += " OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
+            }
+
+            ps = conn.prepareStatement(sql);
+
+            if (limit > 0) {
+                ps.setInt(1, limit);
+            }
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                refundRequests.add(mapRefundRequest(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return refundRequests;
     }
 }
