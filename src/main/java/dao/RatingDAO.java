@@ -9,8 +9,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import db.DBContext;
+import static db.DBContext.closeResources;
+import static db.DBContext.getConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import model.Course;
 import model.Rating;
 
 /**
@@ -282,5 +287,135 @@ public class RatingDAO extends DBContext {
         }
         return ratings;
     }
+    
+    /**
+     * Get average ratings for all courses by year
+     * 
+     * @param year The year to filter by (or 0 for all years)
+     * @return Map of course names to average ratings
+     * @throws SQLException If a database error occurs
+     */
+    public Map<String, Double> getAverageRatingsByYear(int year) throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Map<String, Double> averageRatings = new HashMap<>();
 
+        CourseDAO courseDAO = new CourseDAO();
+        List<Course> courses = courseDAO.getAllCourses();
+
+        // Initialize all courses with 0.0 rating
+        for (Course course : courses) {
+            averageRatings.put(course.getName(), 0.0);
+        }
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.Name, AVG(r.Stars) as AvgRating FROM Ratings r " +
+                    "JOIN Courses c ON r.CourseID = c.CourseID ";
+
+            if (year > 0) {
+                sql += "WHERE YEAR(r.CreatedAt) = ? ";
+            }
+
+            sql += "GROUP BY c.CourseID, c.Name ORDER BY c.Name";
+
+            ps = conn.prepareStatement(sql);
+
+            if (year > 0) {
+                ps.setInt(1, year);
+            }
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String courseName = rs.getString("Name");
+                double avgRating = rs.getDouble("AvgRating");
+                averageRatings.put(courseName, avgRating);
+            }
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return averageRatings;
+    }
+    
+    /**
+     * Get average ratings for all courses by month for a specific year
+     * 
+     * @param year The year to filter by
+     * @return Map where key is course name and value is array of 12 monthly average
+     *         ratings
+     * @throws SQLException If a database error occurs
+     */
+    public Map<String, double[]> getAverageRatingsByMonth(int year) throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Map<String, double[]> ratingsByMonth = new HashMap<>();
+
+        // First get all courses to ensure we have entries for each course
+        CourseDAO courseDAO = new CourseDAO();
+        List<Course> courses = courseDAO.getAllCourses();
+        for (Course course : courses) {
+            ratingsByMonth.put(course.getName(), new double[12]); // Initialize array for each month (0-11)
+        }
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.Name, MONTH(r.CreatedAt) as RatingMonth, AVG(r.Stars) as AvgRating " +
+                    "FROM Ratings r " +
+                    "JOIN Courses c ON r.CourseID = c.CourseID " +
+                    "WHERE YEAR(r.CreatedAt) = ? " +
+                    "GROUP BY c.CourseID, c.Name, MONTH(r.CreatedAt) " +
+                    "ORDER BY c.Name, MONTH(r.CreatedAt)";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, year);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String courseName = rs.getString("Name");
+                int month = rs.getInt("RatingMonth") - 1; // Convert 1-12 to 0-11
+                double avgRating = rs.getDouble("AvgRating");
+
+                // Update the month rating for this course
+                if (ratingsByMonth.containsKey(courseName)) {
+                    ratingsByMonth.get(courseName)[month] = avgRating;
+                }
+            }
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return ratingsByMonth;
+    }
+
+    /**
+     * Get list of distinct years that have ratings
+     * 
+     * @return List of years
+     * @throws SQLException If a database error occurs
+     */
+    public List<Integer> getRatingYears() throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Integer> years = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT DISTINCT YEAR(CreatedAt) as Year FROM Ratings ORDER BY Year DESC";
+
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                years.add(rs.getInt("Year"));
+            }
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return years;
+    }
 }

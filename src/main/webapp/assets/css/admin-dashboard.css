@@ -7,6 +7,70 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     Author     : DangPH - CE180896
 */
 
+:root {
+    /* Primary brand colors - Pink theme */
+    --primary-color: #e83e8c;
+    --primary-dark: #d6336c;
+    --primary-light: #f06595;
+    --secondary-color: #20c997;
+    --secondary-dark: #12b886;
+    --secondary-light: #63e6be;
+
+    /* Background colors */
+    --bg-light: #fff5f8;
+    --bg-white: #ffffff;
+    --bg-dark: #343a40;
+
+    /* Text colors */
+    --text-dark: #343a40;
+    --text-medium: #495057;
+    --text-light: #868e96;
+    --text-white: #ffffff;
+
+    /* Additional colors */
+    --success: #40c057;
+    --info: #339af0;
+    --warning: #fd7e14;
+    --danger: #fa5252;
+
+    /* Other variables */
+    --box-shadow: 0 4px 20px rgba(232, 62, 140, 0.15);
+    --box-shadow-hover: 0 8px 25px rgba(232, 62, 140, 0.25);
+    --box-shadow-focus: 0 0 0 0.25rem rgba(232, 62, 140, 0.25);
+    --transition-speed: 0.3s;
+    --border-radius: 10px;
+    --bg-banner: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);
+}
+
+.btn-primary {
+    background: linear-gradient(60deg, var(--primary-color), var(--primary-light)) !important;
+    color: var(--text-white) !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, var(--primary-dark), var(--primary-color));
+}
+
+.btn-secondary {
+    background: linear-gradient(45deg, var(--secondary-color), var(--secondary-light)) !important;
+    color: var(--text-white) !important;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(45deg, var(--secondary-dark), var(--secondary-color));
+}
+
+.btn-outline-primary {
+    background: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: var(--text-white);
+}
+
 /* Admin Dashboard Styles */
 body {
     font-family: "Poppins", sans-serif;
