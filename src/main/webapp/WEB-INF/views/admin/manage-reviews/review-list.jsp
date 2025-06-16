@@ -13,9 +13,11 @@
                 color: #ffc107;
                 font-size: 1.1rem;
             }
+
             .empty-star {
                 color: #e4e5e9;
             }
+
             .rating-card {
                 border-radius: 8px;
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -23,49 +25,64 @@
                 transition: all 0.3s ease;
                 display: flex;
                 flex-direction: column;
-                height: 100%; /* Đảm bảo tất cả card có chiều cao bằng nhau - sẽ tự động căn theo box cao nhất */
+                height: 100%;
+                /* Make sure all cards have equal height - will automatically identify the highest box */
             }
+
             .rating-card:hover {
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
                 transform: translateY(-2px);
             }
+
             .rating-header {
                 background-color: #f8f9fa;
                 padding: 15px;
                 border-radius: 8px 8px 0 0;
                 border-bottom: 1px solid #e9ecef;
-                flex-shrink: 0; /* Không cho phép co lại */
+                flex-shrink: 0;
+                /* Do not allow shrinking */
             }
+
             .rating-body {
                 padding: 15px;
-                flex-grow: 1; /* Chiếm hết không gian còn lại */
+                flex-grow: 1;
+                /* Occupy the remaining space */
                 display: flex;
                 flex-direction: column;
             }
+
             .rating-comment {
                 background-color: #f8f9fa;
                 padding: 15px;
                 border-radius: 6px;
                 margin-top: 10px;
-                flex-grow: 1; /* Cho phép comment mở rộng */
+                flex-grow: 1;
+                /* Allow expanded comments */
                 display: flex;
-                align-items: flex-start; /* Căn text từ trên xuống */
+                align-items: flex-start;
+                /* Text from top to */
             }
+
             .rating-comment p {
                 margin: 0;
                 line-height: 1.5;
             }
+
             .rating-meta {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-top: auto; /* Đẩy xuống dưới cùng */
+                margin-top: auto;
+               /* Push to the bottom */
                 padding-top: 15px;
                 font-size: 0.85rem;
                 color: #6c757d;
-                flex-shrink: 0; /* Không cho phép co lại */
-                border-top: 1px solid #e9ecef; /* Thêm đường viền để tách biệt */
+                flex-shrink: 0;
+               /* Do not allow shrinking */
+                border-top: 1px solid #e9ecef;
+               /* Add borders to separate */
             }
+
             .rating-filter {
                 background-color: white;
                 padding: 15px;
@@ -74,14 +91,36 @@
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             }
 
-            /* Đảm bảo các col có chiều cao bằng nhau - tự động căn theo box cao nhất */
+            .search-container {
+                position: relative;
+                max-width: 300px;
+            }
+
+            .search-container i {
+                position: absolute;
+                left: 10px;
+                top: 10px;
+                color: #6c757d;
+            }
+
+            .search-input {
+                padding-left: 30px;
+                border-radius: 5px;
+                border: 1px solid #ced4da;
+                width: 100%;
+                padding: 0.375rem 0.75rem 0.375rem 30px;
+            }
+
+           /* Make sure Cols have equal heights - Automatic according to the highest box */
             .row {
                 display: flex;
                 flex-wrap: wrap;
             }
-            .row > [class*="col-"] {
+
+            .row>[class*="col-"] {
                 display: flex;
-                align-items: stretch; /* Kéo giãn các card để có chiều cao bằng nhau */
+                align-items: stretch;
+                /* Stretch the cards to have equal height */
             }
 
             /* Fix cho responsive - vẫn giữ chiều cao auto trên mobile */
@@ -92,16 +131,33 @@
                     gap: 5px;
                 }
             }
+
             @media (max-width: 1200px) {
                 .rating-filter .row {
-                    flex-direction: column; /* stack tất cả col lại */
+                    flex-direction: column;
                 }
-                .rating-filter .row > [class*="col-"] {
-                    width: 100% !important; /* mỗi col chiếm full width */
-                    margin-bottom: 10px; /* thêm khoảng cách giữa các ô */
+
+                .rating-filter .row>[class*="col-"] {
+                    width: 100% !important;
+                    margin-bottom: 10px;
                 }
             }
-            
+
+            /* Style for hiding reviews */
+            .review-item.hidden {
+                display: none !important;
+            }
+
+            /* Style for the no results message */
+            #noResultsMessage {
+                display: none;
+                padding: 30px;
+                text-align: center;
+                width: 100%;
+                background-color: #f8f9fa;
+                border-radius: 8px;
+                margin-top: 20px;
+            }
         </style>
     </head>
 
@@ -118,6 +174,11 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <h2 class="m-0 d-none d-lg-block">Manage Reviews</h2>
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" class="search-input"
+                               placeholder="Search comments...">
+                    </div>
                 </div>
 
                 <!-- Success or Error Message -->
@@ -147,108 +208,175 @@
                             <select class="form-select" id="courseFilter" name="courseId">
                                 <option value="">All Courses</option>
                                 <c:forEach var="course" items="${courses}">
-                                    <option value="${course.courseID}" ${param.courseId eq course.courseID.toString() ? 'selected' : '' }>
-                                        ${course.name}
-                                    </option>
+                                    <option value="${course.courseID}" ${param.courseId eq
+                                                     course.courseID.toString() ? 'selected' : '' }>
+                                                ${course.name}
+                                            </option>
 
-                                </c:forEach>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="ratingFilter" class="form-label">Filter by Rating</label>
-                            <select class="form-select" id="ratingFilter" name="rating">
-                                <option value="">All Ratings</option>
-                                <option value="5" ${param.rating eq '5' ? 'selected' : '' }>5 Stars</option>
-                                <option value="4" ${param.rating eq '4' ? 'selected' : '' }>4 Stars</option>
-                                <option value="3" ${param.rating eq '3' ? 'selected' : '' }>3 Stars</option>
-                                <option value="2" ${param.rating eq '2' ? 'selected' : '' }>2 Stars</option>
-                                <option value="1" ${param.rating eq '1' ? 'selected' : '' }>1 Star</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-filter me-2"></i>Apply Filter
-                            </button>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <a href="${pageContext.request.contextPath}/admin/reviews"
-                               class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-sync-alt me-2"></i>Reset Filters
-                            </a>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Ratings List -->
-                <c:choose>
-                    <c:when test="${empty ratings}">
-                        <div class="card">
-                            <div class="card-body text-center py-5">
-                                <i class="fas fa-star-half-alt fa-4x mb-3 text-muted"></i>
-                                <h3>No Ratings Found</h3>
-                                <p class="text-muted">There are no course ratings available at this time.</p>
+                                    </c:forEach>
+                                </select>
                             </div>
-                        </div>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="row">
-                            <c:forEach var="rating" items="${ratings}">
-                                <div class="col-md-6 mb-4 d-flex">
-                                    <div class="rating-card flex-fill">
-                                        <div
-                                            class="rating-header d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <div class="rating">
-                                                    <c:forEach begin="1" end="5" var="i">
-                                                        <c:choose>
-                                                            <c:when test="${i <= rating.stars}">
-                                                                <i class="fas fa-star"></i>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <i class="fas fa-star empty-star"></i>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                    </c:forEach>
-                                                    <span class="ms-2 text-dark">${rating.stars}.0</span>
-                                                </div>
-                                                <div class="mt-1">
-                                                    <span class="fw-bold">${rating.username}</span> rated
-                                                    <span class="text-primary fw-bold">${rating.courseName}</span>
+                            <div class="col-md-3">
+                                <label for="ratingFilter" class="form-label">Filter by Rating</label>
+                                <select class="form-select" id="ratingFilter" name="rating">
+                                    <option value="">All Ratings</option>
+                                    <option value="5" ${param.rating eq '5' ? 'selected' : '' }>5 Stars</option>
+                                    <option value="4" ${param.rating eq '4' ? 'selected' : '' }>4 Stars</option>
+                                    <option value="3" ${param.rating eq '3' ? 'selected' : '' }>3 Stars</option>
+                                    <option value="2" ${param.rating eq '2' ? 'selected' : '' }>2 Stars</option>
+                                    <option value="1" ${param.rating eq '1' ? 'selected' : '' }>1 Star</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-filter me-2"></i>Apply Filter
+                                </button>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <a href="${pageContext.request.contextPath}/admin/reviews"
+                                   class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-sync-alt me-2"></i>Reset Filters
+                                </a>
+                            </div>
+                        </form>
+                    </div>
 
+                    <!-- Ratings List -->
+                    <c:choose>
+                        <c:when test="${empty ratings}">
+                            <div class="card">
+                                <div class="card-body text-center py-5">
+                                    <i class="fas fa-star-half-alt fa-4x mb-3 text-muted"></i>
+                                    <h3>No Ratings Found</h3>
+                                    <p class="text-muted">There are no course ratings available at this time.</p>
+                                </div>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="row" id="reviewsContainer">
+                                <c:forEach var="rating" items="${ratings}">
+                                    <div class="col-md-6 mb-4 d-flex review-item" data-comment="${rating.comment}"
+                                         data-username="${rating.username}" data-course="${rating.courseName}">
+                                        <div class="rating-card flex-fill">
+                                            <div
+                                                class="rating-header d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="rating">
+                                                        <c:forEach begin="1" end="5" var="i">
+                                                            <c:choose>
+                                                                <c:when test="${i <= rating.stars}">
+                                                                    <i class="fas fa-star"></i>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <i class="fas fa-star empty-star"></i>
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </c:forEach>
+                                                        <span class="ms-2 text-dark">${rating.stars}.0</span>
+                                                    </div>
+                                                    <div class="mt-1">
+                                                        <span class="fw-bold">${rating.username}</span> rated
+                                                        <span
+                                                            class="text-primary fw-bold">${rating.courseName}</span>
+
+                                                    </div>
                                                 </div>
+                                                <form action="${pageContext.request.contextPath}/admin/reviews"
+                                                      method="post"
+                                                      onsubmit="return confirm('Are you sure you want to delete this rating?');">
+                                                    <input type="hidden" name="action" value="delete">
+                                                    <input type="hidden" name="ratingId" value="${rating.ratingID}">
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
                                             </div>
-                                            <form action="${pageContext.request.contextPath}/admin/reviews"
-                                                  method="post"
-                                                  onsubmit="return confirm('Are you sure you want to delete this rating?');">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="ratingId" value="${rating.ratingID}">
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                        <div class="rating-body">
-                                            <div class="rating-comment">
-                                                <p class="mb-0">${rating.comment}</p>
-                                            </div>
-                                            <div class="rating-meta">
-                                                <span>
-                                                    <i class="far fa-calendar-alt me-1"></i>
-                                                    <fmt:formatDate value="${rating.createdAt}"
-                                                                    pattern="MMM dd, yyyy 'at' hh:mm a" />
-                                                </span>
+                                            <div class="rating-body">
+                                                <div class="rating-comment">
+                                                    <p class="mb-0">${rating.comment}</p>
+                                                </div>
+                                                <div class="rating-meta">
+                                                    <span>
+                                                        <i class="far fa-calendar-alt me-1"></i>
+                                                        <fmt:formatDate value="${rating.createdAt}"
+                                                                        pattern="MMM dd, yyyy 'at' hh:mm a" />
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </c:forEach>
-                        </div>
-                    </c:otherwise>
-                </c:choose>
+                                </c:forEach>
+                            </div>
+                            <!-- No Results Message -->
+                            <div id="noResultsMessage" class="my-4">
+                                <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+                                <h3>No Matching Reviews</h3>
+                                <p class="text-muted">No reviews match your search criteria. Try different keywords.
+                                </p>
+                                <button id="clearSearchBtn" class="btn btn-outline-secondary mt-2">
+                                    <i class="fas fa-times me-2"></i>Clear Search
+                                </button>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
             </div>
-        </div>
 
-        <jsp:include page="../common/scripts.jsp" />
-    </body>
+            <jsp:include page="../common/scripts.jsp" />
 
-</html>
+            <!-- Search functionality script -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const searchInput = document.getElementById('searchInput');
+                    const reviewItems = document.querySelectorAll('.review-item');
+                    const noResultsMessage = document.getElementById('noResultsMessage');
+                    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+                    if (!searchInput || reviewItems.length === 0)
+                        return;
+
+                    // Function to filter reviews based on search input
+                    function filterReviews() {
+                        const searchTerm = searchInput.value.trim().toLowerCase();
+                        let visibleCount = 0;
+
+                        reviewItems.forEach(item => {
+                            const comment = item.dataset.comment.toLowerCase();
+                            const username = item.dataset.username.toLowerCase();
+                            const course = item.dataset.course.toLowerCase();
+
+                            // Check if the search term matches any of the review data
+                            if (comment.includes(searchTerm) ||
+                                    username.includes(searchTerm) ||
+                                    course.includes(searchTerm)) {
+                                item.classList.remove('hidden');
+                                visibleCount++;
+                            } else {
+                                item.classList.add('hidden');
+                            }
+                        });
+
+                        // Show/hide no results message
+                        if (visibleCount === 0 && searchTerm !== '') {
+                            noResultsMessage.style.display = 'block';
+                        } else {
+                            noResultsMessage.style.display = 'none';
+                        }
+                    }
+
+                    // Add event listener for search input
+                    searchInput.addEventListener('input', filterReviews);
+
+                    // Clear search function
+                    if (clearSearchBtn) {
+                        clearSearchBtn.addEventListener('click', function () {
+                            searchInput.value = '';
+                            filterReviews();
+                            searchInput.focus();
+                        });
+                    }
+                });
+            </script>
+        </body>
+
+    </html>
