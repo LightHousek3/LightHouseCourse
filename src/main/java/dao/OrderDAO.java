@@ -127,9 +127,6 @@ public class OrderDAO extends DBContext {
         order.setOrderDate(rs.getTimestamp("OrderDate"));
         order.setTotalAmount(rs.getDouble("TotalAmount"));
         order.setStatus(rs.getString("Status"));
-        order.setPaymentMethod(rs.getString("PaymentMethod"));
-        order.setPaymentTransactionID(rs.getString("PaymentTransactionID"));
-        order.setPaymentData(rs.getString("PaymentData"));
         return order;
     }
 

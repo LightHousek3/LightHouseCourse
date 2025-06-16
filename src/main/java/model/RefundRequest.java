@@ -23,18 +23,13 @@ public class RefundRequest {
     private Timestamp processedDate;
     private int processedBy; // Admin who processed the request
     private String adminMessage; // Required message from admin when processing
-    private String refundTransactionID; // Transaction ID from payment provider
-    private String refundData; // JSON response data from payment provider
     private int refundPercentage; // Default 80%
-    private int courseID; // For course-specific refunds, null for full order refunds
-    private String courseName;
 
     // Additional information for display purposes
     private String userName;
     private double originalAmount;
-    private String paymentMethod;
-    private Timestamp orderDate;
     private String adminName;
+    private String courseName; // For display purposes, showing affected course(s)
 
     /**
      * Default constructor
@@ -45,9 +40,9 @@ public class RefundRequest {
     /**
      * Constructor with essential fields
      *
-     * @param orderID The order ID
-     * @param userID The user ID
-     * @param reason The reason for refund request (required)
+     * @param orderID      The order ID
+     * @param userID       The user ID
+     * @param reason       The reason for refund request (required)
      * @param refundAmount The amount to be refunded
      */
     public RefundRequest(int orderID, int userID, String reason, double refundAmount) {
@@ -141,36 +136,12 @@ public class RefundRequest {
         this.adminMessage = adminMessage;
     }
 
-    public String getRefundTransactionID() {
-        return refundTransactionID;
-    }
-
-    public void setRefundTransactionID(String refundTransactionID) {
-        this.refundTransactionID = refundTransactionID;
-    }
-
-    public String getRefundData() {
-        return refundData;
-    }
-
-    public void setRefundData(String refundData) {
-        this.refundData = refundData;
-    }
-
     public int getRefundPercentage() {
         return refundPercentage;
     }
 
     public void setRefundPercentage(int refundPercentage) {
         this.refundPercentage = refundPercentage;
-    }
-
-    public Integer getCourseID() {
-        return courseID;
-    }
-
-    public void setCourseID(Integer courseID) {
-        this.courseID = courseID;
     }
 
     public String getUserName() {
@@ -189,26 +160,6 @@ public class RefundRequest {
         this.originalAmount = originalAmount;
     }
 
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
-    public String getCourseName() {
-        return courseName;
-    }
-
-    public Timestamp getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(Timestamp orderDate) {
-        this.orderDate = orderDate;
-    }
-
     public String getAdminName() {
         return adminName;
     }
@@ -217,8 +168,16 @@ public class RefundRequest {
         this.adminName = adminName;
     }
 
+    public String getCourseName() {
+        return courseName;
+    }
+
     public void setCourseName(String courseName) {
         this.courseName = courseName;
+    }
+
+    public void setProcessedBy(int processedBy) {
+        this.processedBy = processedBy;
     }
 
     // Helper methods
@@ -249,17 +208,13 @@ public class RefundRequest {
         return "rejected".equals(status);
     }
 
-    public void setProcessedBy(int processedBy) {
-        this.processedBy = processedBy;
-    }
-
-    public void setCourseID(int courseID) {
-        this.courseID = courseID;
-    }
-
     @Override
     public String toString() {
-        return "RefundRequest{" + "refundID=" + refundID + ", orderID=" + orderID + ", userID=" + userID + ", requestDate=" + requestDate + ", status=" + status + ", refundAmount=" + refundAmount + ", reason=" + reason + ", processedDate=" + processedDate + ", processedBy=" + processedBy + ", adminMessage=" + adminMessage + ", refundTransactionID=" + refundTransactionID + ", refundData=" + refundData + ", refundPercentage=" + refundPercentage + ", courseID=" + courseID + ", courseName=" + courseName + ", userName=" + userName + ", originalAmount=" + originalAmount + ", paymentMethod=" + paymentMethod + ", orderDate=" + orderDate + ", adminName=" + adminName + '}';
-    }  
-
+        return "RefundRequest{" + "refundID=" + refundID + ", orderID=" + orderID + ", userID=" + userID
+                + ", requestDate=" + requestDate + ", status=" + status + ", refundAmount=" + refundAmount + ", reason="
+                + reason + ", processedDate=" + processedDate + ", processedBy=" + processedBy + ", adminMessage="
+                + adminMessage + ", refundPercentage=" + refundPercentage
+                + ", userName=" + userName + ", originalAmount=" + originalAmount
+                + ", adminName=" + adminName + ", courseName=" + courseName + '}';
+    }
 }

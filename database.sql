@@ -77,9 +77,6 @@ CREATE TABLE Orders (
     OrderDate DATETIME NOT NULL,
     TotalAmount DECIMAL(10, 2) NOT NULL,
     Status NVARCHAR(20) NOT NULL, -- 'pending', 'completed', 'refunded'
-    PaymentTransactionID NVARCHAR(100) NULL, -- ID giao dịch từ VNPAY
-    PaymentMethod NVARCHAR(20) NULL, -- 'VNPAY'
-    PaymentData NVARCHAR(MAX) NULL, -- Lưu trữ dữ liệu phản hồi từ cổng thanh toán dưới dạng JSON
     FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
 GO
@@ -174,20 +171,16 @@ CREATE TABLE RefundRequests (
     RefundID INT IDENTITY(1,1) PRIMARY KEY,
     OrderID INT NOT NULL,
     UserID INT NOT NULL,
-    CourseID INT NULL, -- For course-specific refunds, null for full order refunds
     RequestDate DATETIME DEFAULT GETDATE(),
     Status NVARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
     RefundAmount DECIMAL(10,2) NOT NULL,
     Reason NVARCHAR(500) NOT NULL,
     ProcessedDate DATETIME NULL,
     AdminMessage NVARCHAR(500) NULL,
-    RefundTransactionID NVARCHAR(100) NULL,
-    RefundData NVARCHAR(MAX) NULL,
     RefundPercentage INT NOT NULL DEFAULT 80, -- Default refund percentage
     ProcessedBy INT NULL,
     CONSTRAINT FK_RefundRequests_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
     CONSTRAINT FK_RefundRequests_Users FOREIGN KEY (UserID) REFERENCES Users(UserID),
-    CONSTRAINT FK_RefundRequests_Courses FOREIGN KEY (CourseID) REFERENCES Courses(CourseID),
     CONSTRAINT FK_RefundRequests_ProcessedBy FOREIGN KEY (ProcessedBy) REFERENCES Users(UserID)
 );
 GO
@@ -264,14 +257,10 @@ CREATE TABLE PaymentTransactions (
     OrderID INT NULL, -- Có thể NULL nếu là giao dịch hoàn tiền
     RefundRequestID INT NULL, -- Có thể NULL nếu là giao dịch thanh toán
     TransactionType NVARCHAR(20) NOT NULL, -- 'payment', 'refund'
-    Amount DECIMAL(10, 2) NOT NULL,
     Provider NVARCHAR(20) NOT NULL, -- 'VNPAY'
     ProviderTransactionID NVARCHAR(100) NOT NULL, -- ID giao dịch từ nhà cung cấp
-    Status NVARCHAR(20) NOT NULL, -- 'pending', 'completed', 'failed'
-    ResponseData NVARCHAR(MAX) NULL, -- Dữ liệu phản hồi từ cổng thanh toán
-    RequestData NVARCHAR(MAX) NULL, -- Dữ liệu yêu cầu gửi đến cổng thanh toán
+    BankAccountInfo NVARCHAR(255) NULL, -- Bank account information used for transaction
     CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
     FOREIGN KEY (RefundRequestID) REFERENCES RefundRequests(RefundID)
 );
@@ -412,13 +401,13 @@ VALUES
 ('iOS App Development with Swift', 'Learn to build iOS applications using Swift and SwiftUI', 950000, 'assets/imgs/courses/iOS-App-Development-with-Swift.png', '10 weeks', 'Intermediate', 'pending', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE()));
 
 -- 5. Insert Orders
-INSERT INTO Orders (UserID, OrderDate, TotalAmount, Status, PaymentMethod)
+INSERT INTO Orders (UserID, OrderDate, TotalAmount, Status)
 VALUES 
-(4, DATEADD(day, -10, GETDATE()), 2700000, 'completed', 'VNPAY'),
-(4, DATEADD(day, -3, GETDATE()), 1100050, 'completed', 'VNPAY'),
-(4, DATEADD(day, -20, GETDATE()), 1500000, 'completed', 'VNPAY'),
-(5, DATEADD(day, -15, GETDATE()), 1500000, 'completed', 'VNPAY'),
-(6, DATEADD(day, -10, GETDATE()), 2800000, 'completed', 'VNPAY');
+(4, DATEADD(day, -10, GETDATE()), 2700000, 'completed'),
+(4, DATEADD(day, -3, GETDATE()), 1100050, 'completed'),
+(4, DATEADD(day, -20, GETDATE()), 1500000, 'completed'),
+(5, DATEADD(day, -15, GETDATE()), 1500000, 'completed'),
+(6, DATEADD(day, -10, GETDATE()), 2800000, 'completed');
 
 -- 6. Insert CartItems
 INSERT INTO CartItems (UserID, CourseID, Price, CreatedAt)
@@ -527,8 +516,8 @@ VALUES
 -- 13. Insert RefundRequests
 INSERT INTO RefundRequests (OrderID, UserID, RequestDate, Status, RefundAmount, Reason, ProcessedDate, AdminMessage, ProcessedBy)
 VALUES
-(1, 4, DATEADD(day, -8, GETDATE()), 'rejected', 89.99, 'Course content not as expected', DATEADD(day, -7, GETDATE()), 'Course content aligns with description', 1),
-(3, 4, DATEADD(day, -3, GETDATE()), 'pending', 99.99, 'Found a better course for free', NULL, NULL, NULL);
+(1, 4, DATEADD(day, -8, GETDATE()), 'rejected', 1200000, 'Course content not as expected', DATEADD(day, -7, GETDATE()), 'Course content aligns with description', 1),
+(3, 4, DATEADD(day, -3, GETDATE()), 'pending', 1500000, 'Found a better course for free', NULL, NULL, NULL);
 
 -- 15. Insert Discussions
 INSERT INTO Discussions (CourseID, LessonID, UserID, Content, IsResolved)
@@ -627,13 +616,18 @@ VALUES
 (6, 7, 0, NULL, DATEADD(day, -3, GETDATE()));                           -- Data Viz in progress
 
 -- 20. Insert PaymentTransactions
-INSERT INTO PaymentTransactions (OrderID, TransactionType, Amount, Provider, ProviderTransactionID, Status, ResponseData)
+INSERT INTO PaymentTransactions (OrderID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo)
 VALUES
-(1, 'payment', 189.98, 'Credit Card', 'TXN123456789', 'completed', '{"transaction_id": "TXN123456789", "status": "success"}'),
-(2, 'payment', 79.99, 'PayPal', 'PP987654321', 'completed', '{"transaction_id": "PP987654321", "status": "success"}'),
-(3, 'payment', 99.99, 'Credit Card', 'TXN234567890', 'completed', '{"transaction_id": "TXN234567890", "status": "success"}'),
-(4, 'payment', 99.99, 'PayPal', 'PP876543210', 'completed', '{"transaction_id": "PP876543210", "status": "success"}'),
-(5, 'payment', 209.98, 'VNPAY', 'VN345678901', 'completed', '{"transaction_id": "VN345678901", "status": "success"}');
+(1, 'payment', 'VNPAY', 'TXN123456789', NULL),
+(2, 'payment', 'VNPAY', 'PP987654321', NULL),
+(3, 'payment', 'VNPAY', 'TXN234567890', NULL),
+(4, 'payment', 'VNPAY', 'PP876543210', NULL),
+(5, 'payment', 'VNPAY', 'VN345678901', NULL);
+
+-- Add sample refund transaction
+INSERT INTO PaymentTransactions (RefundRequestID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo)
+VALUES
+(1, 'refund', 'VNPAY', 'RF123456789', '19034857623901 - NGUYEN VAN A - Techcombank');
 
 -- 21. Insert DiscussionReplies
 INSERT INTO DiscussionReplies (DiscussionID, UserID, Content, IsInstructorReply, IsAcceptedAnswer)

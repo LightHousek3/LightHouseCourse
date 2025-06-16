@@ -18,7 +18,7 @@ import util.Validator;
 
 /**
  * Admin dashboard controller.
- * @author DangPH - CE180896
+ * @author DATLT-CE181501
  */
 @WebServlet(name = "AdminUserServlet", urlPatterns = {"/admin/users"})
 public class AdminUserServlet extends HttpServlet {
