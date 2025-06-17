@@ -116,7 +116,7 @@ public class RatingDAO extends DBContext {
             while (rs.next()) {
                 Rating rating = mapRating(rs);
                 ratings.add(rating);
-            }
+}
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
