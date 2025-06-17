@@ -116,7 +116,7 @@ public class RatingDAO extends DBContext {
             while (rs.next()) {
                 Rating rating = mapRating(rs);
                 ratings.add(rating);
-}
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -287,7 +287,7 @@ public class RatingDAO extends DBContext {
         }
         return ratings;
     }
-    
+
     /**
      * Get average ratings for all courses by year
      * 
@@ -338,7 +338,7 @@ public class RatingDAO extends DBContext {
 
         return averageRatings;
     }
-    
+
     /**
      * Get average ratings for all courses by month for a specific year
      * 
