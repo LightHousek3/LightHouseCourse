@@ -15,27 +15,24 @@ public class DiscussionReply {
 
     private int replyID;
     private int discussionID;
-    private int userID;
+    private int authorID;
+    private String authorType; // "customer" or "instructor"
     private String content;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-    private boolean isInstructorReply;
-    private boolean isAcceptedAnswer;
 
     // Additional fields not in database
-    private String userName;
+    private String authorName;
 
     // Constructors
     public DiscussionReply() {
     }
 
-    public DiscussionReply(int discussionID, int userID, String content, boolean isInstructorReply,
-            boolean isAcceptedAnswer) {
+    public DiscussionReply(int discussionID, int authorID, String authorType, String content) {
         this.discussionID = discussionID;
-        this.userID = userID;
+        this.authorID = authorID;
+        this.authorType = authorType;
         this.content = content;
-        this.isInstructorReply = isInstructorReply;
-        this.isAcceptedAnswer = isAcceptedAnswer;
     }
 
     // Getters and setters
@@ -55,12 +52,32 @@ public class DiscussionReply {
         this.discussionID = discussionID;
     }
 
+    public int getAuthorID() {
+        return authorID;
+    }
+
+    public void setAuthorID(int authorID) {
+        this.authorID = authorID;
+    }
+
+    public String getAuthorType() {
+        return authorType;
+    }
+
+    public void setAuthorType(String authorType) {
+        this.authorType = authorType;
+    }
+
+    // Legacy methods for backward compatibility
     public int getUserID() {
-        return userID;
+        return authorID;
     }
 
     public void setUserID(int userID) {
-        this.userID = userID;
+        this.authorID = userID;
+        if (this.authorType == null) {
+            this.authorType = "customer"; // Default to customer for backward compatibility
+        }
     }
 
     public String getContent() {
@@ -87,57 +104,27 @@ public class DiscussionReply {
         this.updatedAt = updatedAt;
     }
 
-    public boolean getIsInstructorReply() {
-        return isInstructorReply;
+    // Updated from userName to authorName
+    public String getAuthorName() {
+        return authorName;
     }
 
-    public void setIsInstructorReply(boolean isInstructorReply) {
-        this.isInstructorReply = isInstructorReply;
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
     }
 
-    // Property accessors for EL expressions
-    public boolean isInstructorReply() {
-        return isInstructorReply;
-    }
-
-    public void setInstructorReply(boolean instructorReply) {
-        this.isInstructorReply = instructorReply;
-    }
-
-    public boolean getIsAcceptedAnswer() {
-        return isAcceptedAnswer;
-    }
-
-    public void setIsAcceptedAnswer(boolean isAcceptedAnswer) {
-        this.isAcceptedAnswer = isAcceptedAnswer;
-    }
-
-    // Property accessors for EL expressions
-    public boolean isAcceptedAnswer() {
-        return isAcceptedAnswer;
-    }
-
-    public void setAcceptedAnswer(boolean acceptedAnswer) {
-        this.isAcceptedAnswer = acceptedAnswer;
-    }
-
+    // Legacy methods for backward compatibility
     public String getUserName() {
-        return userName;
+        return authorName;
     }
 
     public void setUserName(String userName) {
-        this.userName = userName;
+        this.authorName = userName;
     }
 
     @Override
     public String toString() {
-        return "DiscussionReply{"
-                + "replyID=" + replyID
-                + ", discussionID=" + discussionID
-                + ", userID=" + userID
-                + ", isInstructorReply=" + isInstructorReply
-                + ", isAcceptedAnswer=" + isAcceptedAnswer
-                + ", createdAt=" + createdAt
-                + '}';
+        return "DiscussionReply{" + "replyID=" + replyID + ", discussionID=" + discussionID + ", authorID=" + authorID + ", authorType=" + authorType + ", content=" + content + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", authorName=" + authorName + '}';
     }
+
 }

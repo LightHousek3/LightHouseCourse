@@ -36,10 +36,6 @@
                 margin-right: 15px;
             }
 
-            .action-btn {
-                margin-right: 8px;
-            }
-
             .table th, .table td {
                 vertical-align: middle !important;
             }
@@ -88,8 +84,8 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <h2 class="m-0 d-none d-lg-block">Manage Categories</h2>
-                <a href="${pageContext.request.contextPath}/admin/categories?action=create" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add New Category
+                <a href="${pageContext.request.contextPath}/admin/categories?action=create" class="btn btn-lg btn-primary">
+                    <i class="fas fa-plus me-2"></i> Add New Category
                 </a>
             </div>
 
@@ -133,7 +129,7 @@
 
 
                         <div class="table-responsive">
-                            <table class="table table-bordered table-hover align-middle">
+                            <table class="table table-hover align-middle">
                                 <thead class="table-light">
                                     <tr>
                                         <th style="width: 5%;">ID</th>
@@ -149,16 +145,18 @@
                                             <td><strong>${category.name}</strong></td>
                                             <td>${category.description}</td>
                                             <td>
-                                                <a href="${pageContext.request.contextPath}/admin/categories?action=edit&id=${category.categoryID}&page=${currentPage}" 
-                                                   class="btn btn-sm btn-warning action-btn" 
-                                                   title="Edit Category">
-                                                    <i class="fas fa-edit"></i> Edit
-                                                </a>
-                                                <button class="btn btn-sm btn-danger" 
-                                                        onclick="confirmDelete(${category.categoryID}, ${currentPage})"
-                                                        title="Delete Category">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </button>
+                                                <div class="btn-group">
+                                                    <a href="${pageContext.request.contextPath}/admin/categories?action=edit&id=${category.categoryID}&page=${currentPage}" 
+                                                       class="btn btn btn-warning" 
+                                                       title="Edit Category">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button class="btn btn-sm btn-danger" 
+                                                            onclick="confirmDelete(${category.categoryID}, ${currentPage})"
+                                                            title="Delete Category">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -184,7 +182,7 @@
                                         <!-- First Page -->
                                         <c:if test="${currentPage > 1}">
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=1" title="First Page">
+                                                <a class="page-link btn btn-outline-primary" href="?page=1" title="First Page">
                                                     <i class="fas fa-angle-double-left"></i>
                                                 </a>
                                             </li>
@@ -206,11 +204,11 @@
                                         <!-- Show ellipsis if there are pages before startPage -->
                                         <c:if test="${startPage > 1}">
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=1">1</a>
+                                                <a class="page-link btn btn-outline-primary" href="?page=1">1</a>
                                             </li>
                                             <c:if test="${startPage > 2}">
                                                 <li class="page-item disabled">
-                                                    <span class="page-link">...</span>
+                                                    <span class="page-link btn btn-outline-primary">...</span>
                                                 </li>
                                             </c:if>
                                         </c:if>
@@ -220,10 +218,10 @@
                                             <li class="page-item ${i == currentPage ? 'active' : ''}">
                                                 <c:choose>
                                                     <c:when test="${i == currentPage}">
-                                                        <span class="page-link">${i}</span>
+                                                        <span class="page-link btn btn-primary">${i}</span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <a class="page-link" href="?page=${i}">${i}</a>
+                                                        <a class="page-link btn btn-outline-primary" href="?page=${i}">${i}</a>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </li>
@@ -233,18 +231,18 @@
                                         <c:if test="${endPage < totalPages}">
                                             <c:if test="${endPage < totalPages - 1}">
                                                 <li class="page-item disabled">
-                                                    <span class="page-link">...</span>
+                                                    <span class="page-link btn btn-outline-primary">...</span>
                                                 </li>
                                             </c:if>
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=${totalPages}">${totalPages}</a>
+                                                <a class="page-link btn btn-outline-primary" href="?page=${totalPages}">${totalPages}</a>
                                             </li>
                                         </c:if>
 
                                         <!-- Last Page -->
                                         <c:if test="${currentPage < totalPages}">
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=${totalPages}" title="Last Page">
+                                                <a class="page-link btn btn-outline-primary" href="?page=${totalPages}" title="Last Page">
                                                     <i class="fas fa-angle-double-right"></i>
                                                 </a>
                                             </li>

@@ -11,9 +11,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import model.Course;
+import model.Customer;
 import model.Order;
 import model.OrderDetail;
-import model.User;
 import db.DBContext;
 
 /**
@@ -23,11 +23,11 @@ import db.DBContext;
  */
 public class OrderDAO extends DBContext {
 
-    private UserDAO userDAO;
+    private CustomerDAO customerDAO;
     private CourseDAO courseDAO;
 
     public OrderDAO() {
-        this.userDAO = new UserDAO();
+        this.customerDAO = new CustomerDAO();
         this.courseDAO = new CourseDAO();
     }
 
@@ -62,9 +62,9 @@ public class OrderDAO extends DBContext {
                 List<OrderDetail> details = getOrderDetails(order.getOrderID());
                 order.setOrderDetails(details);
 
-                // Get user information
-                User user = userDAO.getUserById(order.getUserID());
-                order.setUser(user);
+                // Get customer information
+                Customer customer = customerDAO.getCustomerById(order.getCustomerID());
+                order.setCustomer(customer);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -123,7 +123,7 @@ public class OrderDAO extends DBContext {
     private Order mapOrder(ResultSet rs) throws SQLException {
         Order order = new Order();
         order.setOrderID(rs.getInt("OrderID"));
-        order.setUserID(rs.getInt("UserID"));
+        order.setCustomerID(rs.getInt("CustomerID"));
         order.setOrderDate(rs.getTimestamp("OrderDate"));
         order.setTotalAmount(rs.getDouble("TotalAmount"));
         order.setStatus(rs.getString("Status"));

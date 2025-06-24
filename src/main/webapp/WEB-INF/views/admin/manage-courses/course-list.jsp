@@ -16,29 +16,6 @@
                 object-fit: cover;
                 border-radius: 5px;
             }
-
-            .badge.pending {
-                background-color: #ffc107;
-                color: #212529;
-            }
-
-            .badge.approved {
-                background-color: #28a745;
-            }
-
-            .badge.rejected {
-                background-color: #dc3545;
-            }
-
-            .badge.banned {
-                background-color: #6c757d; /* màu xám trung tính */
-                color: #fff;
-            }
-
-            .pagination li{
-                z-index: 10;
-            }
-
         </style>
     </head>
 
@@ -67,13 +44,13 @@
                 <div class="d-flex align-items-center">
                     <c:if test="${not isPendingView}">
                         <a href="${pageContext.request.contextPath}/admin/course/pending"
-                           class="btn btn-warning me-2">
-                            <i class="fas fa-clock me-2"></i> Pending Approvals
+                           class="btn btn-lg btn-warning me-2">
+                            <i class="fas fa-clock me-2"></i>View All Pending
                         </a>
                     </c:if>
                     <c:if test="${isPendingView}">
-                        <a href="${pageContext.request.contextPath}/admin/courses" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i> Back to All Courses
+                        <a href="${pageContext.request.contextPath}/admin/courses" class="btn btn-lg btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i> Back
                         </a>
                     </c:if>
                 </div>
@@ -104,7 +81,7 @@
                                        value="${param.keyword}" placeholder="Course name or instructor">
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-outline-primary w-100">Search</button>
+                                <button type="submit" class="btn btn-md btn-outline-primary w-100">Search</button>
                             </div>
                         </form>
                     </div>
@@ -151,7 +128,7 @@
                             </div>
 
                             <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-outline-success w-100">Apply Filter</button>
+                                <button type="submit" class="btn btn-md btn-outline-success w-100">Apply Filter</button>
                             </div>
                         </form>
                     </div>
@@ -170,7 +147,6 @@
                                     <th>Image</th>
                                     <th>Course Name</th>
                                     <th>Instructor</th>
-                                    <th>Categories</th>
                                     <th>Price</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -186,40 +162,30 @@
                                         </td>
                                         <td>${course.name}</td>
                                         <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                            data-bs-toggle="tooltip" title="${course.instructor}">
-                                            ${course.instructor}
-                                        </td>
-                                        <td>
-                                            <c:forEach var="category" items="${course.categories}"
-                                                       varStatus="loop">
-                                                <span style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                                      data-bs-toggle="tooltip" title="${category.name}" class="badge bg-light text-dark">${category.name}</span>
+                                            data-bs-toggle="tooltip">
+                                            <c:forEach var="i" items="${course.instructors}" varStatus="status">
+                                                ${i.name}<c:if test="${!status.last}">, </c:if>
                                             </c:forEach>
                                         </td>
                                         <td>
-                                            <fmt:formatNumber value="${course.price}" type="currency" />
+                                            <fmt:formatNumber value="${course.price}" type="number" groupingUsed="true" />đ
                                         </td>
                                         <td>
                                             <c:choose>
                                                 <c:when test="${course.approvalStatus eq 'banned'}">
-                                                    <span class="badge banned">Banned</span>
+                                                    <span class="status-badge status-banned">Banned</span>
                                                 </c:when>
                                                 <c:when test="${course.approvalStatus eq 'pending'}">
-                                                    <span class="badge pending">Pending</span>
+                                                    <span class="status-badge status-pending">Pending</span>
                                                 </c:when>
                                                 <c:when test="${course.approvalStatus eq 'approved'}">
-                                                    <span class="badge approved">Approved</span>
+                                                    <span class="status-badge status-approved">Approved</span>
                                                 </c:when>
                                                 <c:when test="${course.approvalStatus eq 'rejected'}">
-                                                    <span class="badge rejected">Rejected</span>
-                                                    <button type="button" class="btn btn-sm btn-link p-0 ms-1"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="${course.rejectionReason}">
-                                                        <i class="fas fa-info-circle text-muted"></i>
-                                                    </button>
+                                                    <span class="status-badge status-rejected">Rejected</span>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span class="badge bg-secondary">Unknown</span>
+                                                    <span class="status-badge status-cus">Unknown</span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
@@ -292,16 +258,16 @@
                                     <li class="page-item">
                                         <c:choose>
                                             <c:when test="${isPendingView}">
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/course/pending?page=${currentPage - 1}">Previous</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/course/pending?page=${currentPage - 1}">&laquo;</a>
                                             </c:when>
                                             <c:when test="${searchView}">
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${currentPage - 1}">Previous</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${currentPage - 1}">&laquo;</a>
                                             </c:when>
                                             <c:when test="${filterView}">
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${currentPage - 1}">Previous</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${currentPage - 1}">&laquo;</a>
                                             </c:when>
                                             <c:otherwise>
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/courses?page=${currentPage - 1}">Previous</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses?page=${currentPage - 1}">&laquo;</a>
                                             </c:otherwise>
                                         </c:choose>
                                     </li>
@@ -311,16 +277,16 @@
                                     <li class="page-item ${i == currentPage ? 'active' : ''}">
                                         <c:choose>
                                             <c:when test="${isPendingView}">
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/course/pending?page=${i}">${i}</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/course/pending?page=${i}">${i}</a>
                                             </c:when>
                                             <c:when test="${searchView}">
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${i}">${i}</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${i}">${i}</a>
                                             </c:when>
                                             <c:when test="${filterView}">
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${i}">${i}</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${i}">${i}</a>
                                             </c:when>
                                             <c:otherwise>
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/courses?page=${i}">${i}</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses?page=${i}">${i}</a>
                                             </c:otherwise>
                                         </c:choose>
                                     </li>
@@ -330,16 +296,16 @@
                                     <li class="page-item">
                                         <c:choose>
                                             <c:when test="${isPendingView}">
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/course/pending?page=${currentPage + 1}">Next</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/course/pending?page=${currentPage + 1}">&raquo;</a>
                                             </c:when>
                                             <c:when test="${searchView}">
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${currentPage + 1}">Next</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${currentPage + 1}">&raquo;</a>
                                             </c:when>
                                             <c:when test="${filterView}">
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${currentPage + 1}">Next</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${currentPage + 1}">&raquo;</a>
                                             </c:when>
                                             <c:otherwise>
-                                                <a class="page-link" href="${pageContext.request.contextPath}/admin/courses?page=${currentPage + 1}">Next</a>
+                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses?page=${currentPage + 1}">&raquo;</a>
                                             </c:otherwise>
                                         </c:choose>
                                     </li>

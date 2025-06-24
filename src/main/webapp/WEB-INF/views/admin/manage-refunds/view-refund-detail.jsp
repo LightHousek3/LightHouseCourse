@@ -26,8 +26,8 @@
                     <h2 class="m-0 d-none d-lg-block">Refund Requests Management</h2>
                     <div class="d-flex align-items-center">
                         <a href="${pageContext.request.contextPath}/admin/refunds"
-                       class="btn btn-outline-success me-3">
-                        <i class="fas fa-arrow-left me-1"></i> Back to List
+                       class="btn btn-lg btn-primary me-3">
+                        <i class="fas fa-arrow-left me-2"></i> Back
                     </a>
                     </div>
                 </div>
@@ -78,20 +78,20 @@
                                         <div class="info-label">Request ID: #${refundRequest.refundID}</div>
                                     </div>
                                     <div class="info-row">
-                                        <div class="info-label">Status:
+                                        <div class="info-label d-flex align-items-center gap-2"><span>Status:</span>
                                             <c:choose>
                                                 <c:when test="${refundRequest.status eq 'pending'}">
-                                                    <span class="badge bg-warning text-dark">
+                                                    <span class="status-badge status-pending">
                                                         <i class="fas fa-clock me-1"></i> Pending
                                                     </span>
                                                 </c:when>
                                                 <c:when test="${refundRequest.status eq 'approved'}">
-                                                    <span class="badge bg-success">
+                                                    <span class="status-badge status-approved">
                                                         <i class="fas fa-check-circle me-1"></i> Approved
                                                     </span>
                                                 </c:when>
                                                 <c:when test="${refundRequest.status eq 'rejected'}">
-                                                    <span class="badge bg-danger">
+                                                    <span class="status-badge status-rejected">
                                                         <i class="fas fa-times-circle me-1"></i> Rejected
                                                     </span>
                                                 </c:when>
@@ -109,7 +109,7 @@
                                         <div class="info-label">Refund Amount:
                                             <span class="fw-bold text-success">
                                                 <fmt:formatNumber value="${refundRequest.refundAmount}"
-                                                                  type="currency" />
+                                                                  type="number" />đ
                                             </span>
                                         </div>
                                     </div>

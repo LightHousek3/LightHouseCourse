@@ -5,44 +5,39 @@
 package model;
 
 /**
- * Represents a user in the system.
+ * Represents a SuperUser in the system (Admin or Instructor).
  *
  * @author DangPH - CE180896
  */
-public class User {
+public class SuperUser {
 
-    private int userID;
+    private int superUserID;
     private String username;
     private String password;
     private String email;
-    private String role; // 'admin', 'user', or 'instructor'
+    private String role; // 'admin' or 'instructor'
     private boolean isActive;
     private String fullName;
-    private String phone; // Matches 'Phone' column in database
+    private String phone;
     private String address;
     private String avatar;
-    private String token; // Added to match 'Token' column in database
-    private String authProvider; // 'local', 'google', 'facebook'
-    private String authProviderId; // Provider's unique user ID
 
-    public User() {
-        this.authProvider = "local"; // Default to local authentication
+    public SuperUser() {
         this.isActive = true; // Default to active user
     }
 
-    public User(int userID, String username, String password, String email, String role, boolean isActive) {
-        this.userID = userID;
+    public SuperUser(int superUserID, String username, String password, String email, String role, boolean isActive) {
+        this.superUserID = superUserID;
         this.username = username;
         this.password = password;
         this.email = email;
         this.role = role;
         this.isActive = isActive;
-        this.authProvider = "local";
     }
 
-    public User(int userID, String username, String password, String email, String role,
+    public SuperUser(int superUserID, String username, String password, String email, String role,
             boolean isActive, String fullName, String phone, String address) {
-        this.userID = userID;
+        this.superUserID = superUserID;
         this.username = username;
         this.password = password;
         this.email = email;
@@ -51,13 +46,11 @@ public class User {
         this.fullName = fullName;
         this.phone = phone;
         this.address = address;
-        this.authProvider = "local";
     }
 
-    public User(int userID, String username, String password, String email, String role,
-            boolean isActive, String fullName, String phone, String address,
-            String authProvider, String authProviderId) {
-        this.userID = userID;
+    public SuperUser(int superUserID, String username, String password, String email, String role,
+            boolean isActive, String fullName, String phone, String address, String avatar) {
+        this.superUserID = superUserID;
         this.username = username;
         this.password = password;
         this.email = email;
@@ -66,25 +59,24 @@ public class User {
         this.fullName = fullName;
         this.phone = phone;
         this.address = address;
-        this.authProvider = authProvider;
-        this.authProviderId = authProviderId;
+        this.avatar = avatar;
     }
 
-    public int getUserID() {
-        return userID;
+    public int getSuperUserID() {
+        return superUserID;
     }
 
-    public void setUserID(int userID) {
-        this.userID = userID;
+    public void setSuperUserID(int superUserID) {
+        this.superUserID = superUserID;
     }
 
-    // Alias for getUserID for consistency in both naming conventions
-    public int getUserId() {
-        return userID;
+    // Alias for getSuperUserID for consistency in both naming conventions
+    public int getSuperUserId() {
+        return superUserID;
     }
 
-    public void setUserId(int userID) {
-        this.userID = userID;
+    public void setSuperUserId(int superUserID) {
+        this.superUserID = superUserID;
     }
 
     public String getUsername() {
@@ -167,76 +159,32 @@ public class User {
         this.avatar = avatar;
     }
 
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public String getAuthProvider() {
-        return authProvider;
-    }
-
-    public void setAuthProvider(String authProvider) {
-        this.authProvider = authProvider;
-    }
-
-    public String getAuthProviderId() {
-        return authProviderId;
-    }
-
-    public void setAuthProviderId(String authProviderId) {
-        this.authProviderId = authProviderId;
-    }
-
     /**
-     * Check if the user has admin role.
+     * Check if the superuser has admin role.
      *
-     * @return true if user is an admin, false otherwise
+     * @return true if superuser is an admin, false otherwise
      */
     public boolean isAdmin() {
         return "admin".equalsIgnoreCase(this.role);
     }
 
     /**
-     * Check if the user has instructor role.
+     * Check if the superuser has instructor role.
      *
-     * @return true if user is an instructor, false otherwise
+     * @return true if superuser is an instructor, false otherwise
      */
     public boolean isInstructor() {
         return "instructor".equalsIgnoreCase(this.role);
     }
 
-    /**
-     * Check if the user has regular user/student role.
-     *
-     * @return true if user is a regular user/student, false otherwise
-     */
-    public boolean isCustomer() {
-        return "user".equalsIgnoreCase(this.role);
-    }
-
-    /**
-     * Check if the user is authenticated through social login.
-     *
-     * @return true if authenticated via social login, false if local
-     * authentication
-     */
-    public boolean isSocialLogin() {
-        return !"local".equalsIgnoreCase(this.authProvider);
-    }
-
     @Override
     public String toString() {
-        return "User{"
-                + "userID=" + userID
+        return "SuperUser{"
+                + "superUserID=" + superUserID
                 + ", username='" + username + '\''
                 + ", email='" + email + '\''
                 + ", role='" + role + '\''
                 + ", isActive=" + isActive
-                + ", authProvider='" + authProvider + '\''
                 + '}';
     }
 }

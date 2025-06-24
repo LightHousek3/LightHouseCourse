@@ -26,24 +26,21 @@ public class Course {
     private Timestamp submissionDate;
     private Timestamp approvalDate;
     private String rejectionReason;
-    private String requirements;
-    private int instructorId; // Single instructor ID for backward compatibility
 
     // Relationships
     private List<Instructor> instructors;
     private List<Category> categories;
-    private List<Video> videos;
     private List<Lesson> lessons;
 
     // Additional fields for display
     private double averageRating;
     private int ratingCount;
+    private int enrollmentCount;
 
     // Default constructor
     public Course() {
         this.instructors = new ArrayList<>();
         this.categories = new ArrayList<>();
-        this.videos = new ArrayList<>();
         this.lessons = new ArrayList<>();
     }
 
@@ -144,6 +141,30 @@ public class Course {
         this.instructors = instructors;
     }
 
+    /**
+     * Add an instructor to this course
+     * 
+     * @param instructor The instructor to add
+     */
+    public void addInstructor(Instructor instructor) {
+        if (this.instructors == null) {
+            this.instructors = new ArrayList<>();
+        }
+        this.instructors.add(instructor);
+    }
+
+    /**
+     * Get the primary instructor (first in the list) for backward compatibility
+     * 
+     * @return The primary instructor ID or 0 if no instructors
+     */
+    public int getInstructorId() {
+        if (this.instructors != null && !this.instructors.isEmpty()) {
+            return this.instructors.get(0).getInstructorID();
+        }
+        return 0;
+    }
+
     public List<Category> getCategories() {
         return categories;
     }
@@ -189,56 +210,19 @@ public class Course {
         this.ratingCount = ratingCount;
     }
 
-    public List<Video> getVideos() {
-        return videos;
+    public int getEnrollmentCount() {
+        return enrollmentCount;
     }
 
-    public void setVideos(List<Video> videos) {
-        this.videos = videos;
-    }
-
-    public int getInstructorId() {
-        return instructorId;
-    }
-
-    public void setInstructorId(int instructorId) {
-        this.instructorId = instructorId;
-    }
-
-    // For backward compatibility with existing code
-    public String getInstructor() {
-        if (instructors == null || instructors.isEmpty()) {
-            return "No instructor assigned";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < instructors.size(); i++) {
-            sb.append(instructors.get(i).getName());
-            if (i < instructors.size() - 1) {
-                sb.append(", ");
-            }
-        }
-        return sb.toString();
-    }
-
-    public void setInstructor(String instructor) {
-        // This is a compatibility method, it doesn't actually set anything
-        // since we now use a list of instructor objects
-    }
-
-    public String getRequirements() {
-        return requirements;
-    }
-
-    public void setRequirements(String requirements) {
-        this.requirements = requirements;
+    public void setEnrollmentCount(int enrollmentCount) {
+        this.enrollmentCount = enrollmentCount;
     }
 
     @Override
     public String toString() {
-        return "Course{" + "courseID=" + courseID + ", name=" + name + ", description=" + description + ", price=" + price + ", imageUrl=" + imageUrl + ", duration=" + duration + ", level=" + level + ", approvalStatus=" + approvalStatus + ", submissionDate=" + submissionDate + ", approvalDate=" + approvalDate + ", rejectionReason=" + rejectionReason + ", requirements=" + requirements + ", instructorId=" + instructorId + ", instructors=" + instructors + ", categories=" + categories + ", videos=" + videos + ", lessons=" + lessons + ", averageRating=" + averageRating + ", ratingCount=" + ratingCount + '}';
+        return "Course{" + "courseID=" + courseID + ", name=" + name + ", description=" + description + ", price="
+                + price + ", imageUrl=" + imageUrl + ", duration=" + duration + ", level=" + level + ", approvalStatus="
+                + approvalStatus + ", submissionDate=" + submissionDate + ", approvalDate=" + approvalDate
+                + ", rejectionReason=" + rejectionReason + "}";
     }
-
-    
-
 }

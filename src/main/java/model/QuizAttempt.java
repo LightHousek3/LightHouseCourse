@@ -17,7 +17,7 @@ public class QuizAttempt {
 
     private int attemptID;
     private int quizID;
-    private int userID;
+    private int customerID;
     private Timestamp startTime;
     private Timestamp endTime;
     private Integer score; // Can be null if not completed
@@ -28,14 +28,16 @@ public class QuizAttempt {
     private int totalQuestions;
     private int answeredQuestions;
     private List<UserAnswer> userAnswers = new ArrayList<>();
+    private Customer customer;
+    private Quiz quiz;
 
     // Constructors
     public QuizAttempt() {
     }
 
-    public QuizAttempt(int quizID, int userID) {
+    public QuizAttempt(int quizID, int customerID) {
         this.quizID = quizID;
-        this.userID = userID;
+        this.customerID = customerID;
         this.startTime = new Timestamp(System.currentTimeMillis());
     }
 
@@ -56,12 +58,21 @@ public class QuizAttempt {
         this.quizID = quizID;
     }
 
+    public int getCustomerID() {
+        return customerID;
+    }
+
+    public void setCustomerID(int customerID) {
+        this.customerID = customerID;
+    }
+
+    // For backward compatibility
     public int getUserID() {
-        return userID;
+        return customerID;
     }
 
     public void setUserID(int userID) {
-        this.userID = userID;
+        this.customerID = userID;
     }
 
     public Timestamp getStartTime() {
@@ -128,6 +139,22 @@ public class QuizAttempt {
         this.userAnswers = userAnswers;
     }
 
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
+    public Quiz getQuiz() {
+        return quiz;
+    }
+
+    public void setQuiz(Quiz quiz) {
+        this.quiz = quiz;
+    }
+
     public void addUserAnswer(UserAnswer userAnswer) {
         this.userAnswers.add(userAnswer);
     }
@@ -157,7 +184,9 @@ public class QuizAttempt {
 
     @Override
     public String toString() {
-        return "QuizAttempt{" + "attemptID=" + attemptID + ", quizID=" + quizID + ", userID=" + userID + ", startTime=" + startTime + ", endTime=" + endTime + ", score=" + score + ", isPassed=" + isPassed + ", quizTitle=" + quizTitle + ", totalQuestions=" + totalQuestions + ", answeredQuestions=" + answeredQuestions + ", userAnswers=" + userAnswers + '}';
+        return "QuizAttempt{" + "attemptID=" + attemptID + ", quizID=" + quizID + ", customerID=" + customerID +
+                ", startTime=" + startTime + ", endTime=" + endTime + ", score=" + score +
+                ", isPassed=" + isPassed + ", quizTitle=" + quizTitle + ", totalQuestions=" + totalQuestions +
+                ", answeredQuestions=" + answeredQuestions + "}";
     }
-
 }

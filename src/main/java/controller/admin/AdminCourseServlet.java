@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import dao.CourseDAO;
 import dao.CategoryDAO;
@@ -17,7 +16,6 @@ import dao.VideoDAO;
 import dao.MaterialDAO;
 import dao.QuizDAO;
 import java.net.URLEncoder;
-import javax.persistence.metamodel.SetAttribute;
 import model.Course;
 import model.Category;
 import model.Lesson;
@@ -137,7 +135,7 @@ public class AdminCourseServlet extends HttpServlet {
                         }
 
                         boolean success = courseDAO.banCourse(courseID);
-                        response.sendRedirect(request.getContextPath() + "/admin/courses?message="
+                        response.sendRedirect(request.getContextPath() + "/admin/course-list?message="
                                 + URLEncoder.encode(success ? "Course has been banned successfully" : "Failed to ban the course", "UTF-8")
                                 + "&status=" + (success ? "success" : "danger"));
 
@@ -165,7 +163,7 @@ public class AdminCourseServlet extends HttpServlet {
                             return;
                         }
                         boolean success = courseDAO.unbanCourse(courseID);
-                        response.sendRedirect(request.getContextPath() + "/admin/courses?message="
+                        response.sendRedirect(request.getContextPath() + "/admin/course-list?message="
                                 + URLEncoder.encode(success ? "Course has been unbanned successfully" : "Failed to unban the course", "UTF-8")
                                 + "&status=" + (success ? "success" : "danger"));
 
@@ -272,7 +270,7 @@ public class AdminCourseServlet extends HttpServlet {
         }
 
         // Forward to course listing page
-        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/courses.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-list.jsp").forward(request, response);
     }
 
     /**
@@ -343,7 +341,7 @@ public class AdminCourseServlet extends HttpServlet {
         }
 
         // Forward to course listing page with pending filter
-        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/courses.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-list.jsp").forward(request, response);
     }
 
     /**
@@ -368,7 +366,6 @@ public class AdminCourseServlet extends HttpServlet {
 
         int courseId = Integer.parseInt(pathParts[1]);
         Course course = courseDAO.getCourseById(courseId);
-
         if (course == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
@@ -421,7 +418,7 @@ public class AdminCourseServlet extends HttpServlet {
             System.out.println("End lesson @");
         }
         // Forward to course details page
-        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-details.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-detail.jsp").forward(request, response);
     }
 
     /**
@@ -650,7 +647,7 @@ public class AdminCourseServlet extends HttpServlet {
         }
 
         // Forward to course listing page
-        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/courses.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-list.jsp").forward(request, response);
 
     }
 
@@ -733,6 +730,6 @@ public class AdminCourseServlet extends HttpServlet {
         }
 
         // Forward to course listing page
-        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/courses.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-list.jsp").forward(request, response);
     }
 }

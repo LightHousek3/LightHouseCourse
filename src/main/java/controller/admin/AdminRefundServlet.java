@@ -39,7 +39,7 @@ public class AdminRefundServlet extends HttpServlet {
 
         String pathInfo = request.getPathInfo();
         String status = request.getParameter("status");
-        String search = request.getParameter("search"); // Lấy tham số search
+        String search = request.getParameter("search");
 
         int page = 1;
         try {
@@ -59,11 +59,9 @@ public class AdminRefundServlet extends HttpServlet {
             int totalRequests;
 
             if ((status != null && !status.trim().isEmpty()) || (search != null && !search.trim().isEmpty())) {
-                // Có filter status hoặc search
                 totalRequests = refundDAO.getTotalRequestsByStatusAndSearch(status, search);
                 refundRequests = refundDAO.getByStatusAndSearch(status, search, page, PAGE_SIZE);
             } else {
-                // Không filter
                 totalRequests = refundDAO.getTotalRequests();
                 refundRequests = refundDAO.getAllRefundRequests(page, PAGE_SIZE);
             }

@@ -16,13 +16,27 @@ GO
 USE LightHouseCourse;
 GO
 
--- Table Users
-CREATE TABLE Users (
-    UserID INT IDENTITY(1,1) PRIMARY KEY,
+-- Table SuperUsers (for Admin and Instructors)
+CREATE TABLE SuperUsers (
+    SuperUserID INT IDENTITY(1,1) PRIMARY KEY,
     Username NVARCHAR(50) NOT NULL UNIQUE,
     Password NVARCHAR(100) NOT NULL,
     Email NVARCHAR(100) NOT NULL UNIQUE,
-    Role NVARCHAR(20) NOT NULL, -- 'admin' or 'user' or 'instructor'
+    Role NVARCHAR(20) NOT NULL, -- 'admin' or 'instructor'
+    IsActive BIT NOT NULL DEFAULT 1,
+    FullName NVARCHAR(100),
+    Phone NVARCHAR(20),
+    Address NVARCHAR(255),
+    Avatar NVARCHAR(255)
+);
+GO
+
+-- Table Customers (for regular users/students)
+CREATE TABLE Customers (
+    CustomerID INT IDENTITY(1,1) PRIMARY KEY,
+    Username NVARCHAR(50) NOT NULL UNIQUE,
+    Password NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) NOT NULL UNIQUE,
     IsActive BIT NOT NULL DEFAULT 1,
     FullName NVARCHAR(100),
     Phone NVARCHAR(20),
@@ -46,11 +60,13 @@ GO
 -- Table Instructors
 CREATE TABLE Instructors (
     InstructorID INT IDENTITY(1,1) PRIMARY KEY,
-    UserID INT NOT NULL UNIQUE,
+    SuperUserID INT NOT NULL UNIQUE,
     Biography NVARCHAR(1000),
     Specialization NVARCHAR(255),
     ApprovalDate DATETIME,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
+    Token NVARCHAR(255),
+    TokenExpires DATETIME,
+    FOREIGN KEY (SuperUserID) REFERENCES SuperUsers(SuperUserID) ON DELETE CASCADE
 );
 GO
 
@@ -73,24 +89,24 @@ GO
 -- Table Orders 
 CREATE TABLE Orders (
     OrderID INT IDENTITY(1,1) PRIMARY KEY,
-    UserID INT NOT NULL,
+    CustomerID INT,
     OrderDate DATETIME NOT NULL,
     TotalAmount DECIMAL(10, 2) NOT NULL,
     Status NVARCHAR(20) NOT NULL, -- 'pending', 'completed', 'refunded'
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE SET NULL
 );
 GO
 
 -- Table CartItems
 CREATE TABLE CartItems (
     CartItemId INT IDENTITY(1,1) PRIMARY KEY,
-    UserID INT NOT NULL,
+    CustomerID INT NOT NULL,
     CourseID INT NOT NULL,
     Price DECIMAL(10,2) NOT NULL,
     CreatedAt DATETIME DEFAULT GETDATE(),
-    CONSTRAINT FK_CartItems_Users FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    CONSTRAINT FK_CartItems_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE CASCADE,
     CONSTRAINT FK_CartItems_Courses FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
-    CONSTRAINT UQ_CartItems_UserID_CourseID UNIQUE (UserID, CourseID)
+    CONSTRAINT UQ_CartItems_CustomerID_CourseID UNIQUE (CustomerID, CourseID)
 );
 GO
 
@@ -114,7 +130,7 @@ CREATE TABLE CourseInstructors (
 );
 GO
 
--- Tabla OrderDetails
+-- Table OrderDetails
 CREATE TABLE OrderDetails (
     OrderDetailID INT IDENTITY(1,1) PRIMARY KEY,
     OrderID INT NOT NULL,
@@ -137,40 +153,40 @@ CREATE TABLE Lessons (
 );
 GO
 
--- Table Ratings (depend on Courses and Users)
+-- Table Ratings (depend on Courses and Customers)
 CREATE TABLE Ratings (
     RatingID INT PRIMARY KEY IDENTITY(1,1),
     CourseID INT NOT NULL,
-    UserID INT NOT NULL,
+    CustomerID INT NOT NULL,
     Stars INT NOT NULL CHECK (Stars BETWEEN 1 AND 5),
     Comment NVARCHAR(500),
     CreatedAt DATETIME DEFAULT GETDATE(),
     UpdatedAt DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_Ratings_Courses FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
-    CONSTRAINT FK_Ratings_Users FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
-    CONSTRAINT UQ_Ratings_Course_User UNIQUE (CourseID, UserID)
+    CONSTRAINT FK_Ratings_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE CASCADE,
+    CONSTRAINT UQ_Ratings_Course_Customer UNIQUE (CourseID, CustomerID)
 );
 GO
 
--- Table CourseProgress (depend on Users and Courses)
+-- Table CourseProgress (depend on Customers and Courses)
 CREATE TABLE CourseProgress (
     ProgressID INT IDENTITY(1,1) PRIMARY KEY,
-    UserID INT NOT NULL,
+    CustomerID INT NOT NULL,
     CourseID INT NOT NULL,
     LastAccessDate DATETIME DEFAULT GETDATE(),
     CompletionPercentage DECIMAL(5,2) DEFAULT 0, -- Percentage of course completed
     IsCompleted BIT DEFAULT 0,
-    CONSTRAINT FK_CourseProgress_Users FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    CONSTRAINT FK_CourseProgress_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE CASCADE,
     CONSTRAINT FK_CourseProgress_Courses FOREIGN KEY (CourseID) REFERENCES Courses(CourseID),
-    CONSTRAINT UQ_CourseProgress_UserID_CourseID UNIQUE (UserID, CourseID)
+    CONSTRAINT UQ_CourseProgress_CustomerID_CourseID UNIQUE (CustomerID, CourseID)
 );
 GO
 
--- Table RefundRequests (depend on Orders and Users)
+-- Table RefundRequests (depend on Orders and Customers)
 CREATE TABLE RefundRequests (
     RefundID INT IDENTITY(1,1) PRIMARY KEY,
     OrderID INT NOT NULL,
-    UserID INT NOT NULL,
+    CustomerID INT NOT NULL,
     RequestDate DATETIME DEFAULT GETDATE(),
     Status NVARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
     RefundAmount DECIMAL(10,2) NOT NULL,
@@ -180,24 +196,24 @@ CREATE TABLE RefundRequests (
     RefundPercentage INT NOT NULL DEFAULT 80, -- Default refund percentage
     ProcessedBy INT NULL,
     CONSTRAINT FK_RefundRequests_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
-    CONSTRAINT FK_RefundRequests_Users FOREIGN KEY (UserID) REFERENCES Users(UserID),
-    CONSTRAINT FK_RefundRequests_ProcessedBy FOREIGN KEY (ProcessedBy) REFERENCES Users(UserID)
+    CONSTRAINT FK_RefundRequests_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE CASCADE,
+    CONSTRAINT FK_RefundRequests_ProcessedBy FOREIGN KEY (ProcessedBy) REFERENCES SuperUsers(SuperUserID)
 );
 GO
 
--- Table Discussions (depend on Courses, Lessons and Users)
+-- Table Discussions (depend on Courses and Lessons)
 CREATE TABLE Discussions (
     DiscussionID INT IDENTITY(1,1) PRIMARY KEY,
     CourseID INT NOT NULL,
-    LessonID INT NULL, -- Có thể liên kết với bài học cụ thể hoặc không
-    UserID INT NOT NULL,
+    LessonID INT NULL,
+    AuthorID INT NOT NULL,
+    AuthorType NVARCHAR(20) NOT NULL, -- 'customer' or 'instructor'
     Content NVARCHAR(MAX) NOT NULL,
     CreatedAt DATETIME DEFAULT GETDATE(),
     UpdatedAt DATETIME DEFAULT GETDATE(),
-    IsResolved BIT DEFAULT 0, -- Đánh dấu câu hỏi đã được giải quyết chưa
+    IsResolved BIT DEFAULT 0,
     FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
-    FOREIGN KEY (LessonID) REFERENCES Lessons(LessonID) ON DELETE NO ACTION,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (LessonID) REFERENCES Lessons(LessonID) ON DELETE NO ACTION
 );
 GO
 
@@ -228,56 +244,54 @@ GO
 -- Table Quizzes (depend on Lessons)
 CREATE TABLE Quizzes (
     QuizID INT IDENTITY(1,1) PRIMARY KEY,
-    LessonID INT NOT NULL, -- Liên kết với bài học
+    LessonID INT NOT NULL,
     Title NVARCHAR(200) NOT NULL,
     Description NVARCHAR(MAX),
-    TimeLimit INT NULL, -- Thời gian làm bài (phút), NULL nếu không giới hạn
-    PassingScore INT NOT NULL DEFAULT 70, -- Điểm đạt (%)
+    TimeLimit INT NULL,
+    PassingScore INT NOT NULL DEFAULT 70,
     FOREIGN KEY (LessonID) REFERENCES Lessons(LessonID) ON DELETE CASCADE
 );
 GO
 
--- Table LessonProgress (depend on Users and Lessons)
+-- Table LessonProgress (depend on Customers and Lessons)
 CREATE TABLE LessonProgress (
     ProgressID INT IDENTITY(1,1) PRIMARY KEY,
-    UserID INT NOT NULL,
+    CustomerID INT NOT NULL,
     LessonID INT NOT NULL,
     IsCompleted BIT DEFAULT 0,
     CompletionDate DATETIME,
     LastAccessDate DATETIME DEFAULT GETDATE(),
-    CONSTRAINT FK_LessonProgress_Users FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    CONSTRAINT FK_LessonProgress_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
     CONSTRAINT FK_LessonProgress_Lessons FOREIGN KEY (LessonID) REFERENCES Lessons(LessonID),
-    CONSTRAINT UQ_LessonProgress_UserID_LessonID UNIQUE (UserID, LessonID)
+    CONSTRAINT UQ_LessonProgress_CustomerID_LessonID UNIQUE (CustomerID, LessonID)
 );
 GO
 
 -- Table PaymentTransactions (depend on Orders and RefundRequests)
 CREATE TABLE PaymentTransactions (
     TransactionID INT IDENTITY(1,1) PRIMARY KEY,
-    OrderID INT NULL, -- Có thể NULL nếu là giao dịch hoàn tiền
-    RefundRequestID INT NULL, -- Có thể NULL nếu là giao dịch thanh toán
-    TransactionType NVARCHAR(20) NOT NULL, -- 'payment', 'refund'
-    Provider NVARCHAR(20) NOT NULL, -- 'VNPAY'
-    ProviderTransactionID NVARCHAR(100) NOT NULL, -- ID giao dịch từ nhà cung cấp
-    BankAccountInfo NVARCHAR(255) NULL, -- Bank account information used for transaction
+    OrderID INT NULL,
+    RefundRequestID INT NULL,
+    TransactionType NVARCHAR(20) NOT NULL,
+    Provider NVARCHAR(20) NOT NULL,
+    ProviderTransactionID NVARCHAR(100) NOT NULL,
+    BankAccountInfo NVARCHAR(255) NULL,
     CreatedAt DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
     FOREIGN KEY (RefundRequestID) REFERENCES RefundRequests(RefundID)
 );
 GO
 
--- Table DiscussionReplies (depend on Discussions and Users)
+-- Table DiscussionReplies (depend on Discussions)
 CREATE TABLE DiscussionReplies (
     ReplyID INT IDENTITY(1,1) PRIMARY KEY,
     DiscussionID INT NOT NULL,
-    UserID INT NOT NULL,
+    AuthorID INT NOT NULL,
+    AuthorType NVARCHAR(20) NOT NULL,
     Content NVARCHAR(MAX) NOT NULL,
     CreatedAt DATETIME DEFAULT GETDATE(),
     UpdatedAt DATETIME DEFAULT GETDATE(),
-    IsInstructorReply BIT DEFAULT 0, -- Đánh dấu phản hồi từ giảng viên
-    IsAcceptedAnswer BIT DEFAULT 0, -- Marks the reply as the accepted answer
-    FOREIGN KEY (DiscussionID) REFERENCES Discussions(DiscussionID) ON DELETE CASCADE,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (DiscussionID) REFERENCES Discussions(DiscussionID) ON DELETE CASCADE
 );
 GO
 
@@ -286,13 +300,10 @@ CREATE TABLE LessonItems (
     LessonItemID INT IDENTITY(1,1) PRIMARY KEY,
     LessonID INT NOT NULL,
     OrderIndex INT NOT NULL,
-    ItemType NVARCHAR(10) NOT NULL, -- 'video', 'material', 'quiz'
+    ItemType NVARCHAR(10) NOT NULL,
     ItemID INT NOT NULL,
     FOREIGN KEY (LessonID) REFERENCES Lessons(LessonID) ON DELETE CASCADE,
-    -- Each lesson can only have one item at a specific order position
     CONSTRAINT UQ_LessonItems_Lesson_Order UNIQUE (LessonID, OrderIndex),
-    -- Each item (video, material, quiz) can only be used once in the system
-    -- Uniquely identifies a concrete item by its type and specific ID
     CONSTRAINT UQ_LessonItems_Item UNIQUE (ItemType, ItemID)
 );
 GO
@@ -302,38 +313,38 @@ CREATE TABLE Questions (
     QuestionID INT IDENTITY(1,1) PRIMARY KEY,
     QuizID INT NOT NULL,
     Content NVARCHAR(MAX) NOT NULL,
-    Type NVARCHAR(20) NOT NULL, -- 'multiple_choice', 'true_false'
-    Points INT NOT NULL DEFAULT 1, -- Điểm cho câu hỏi
-    OrderIndex INT NOT NULL, -- Thứ tự câu hỏi trong bài kiểm tra
+    Type NVARCHAR(20) NOT NULL,
+    Points INT NOT NULL DEFAULT 1,
+    OrderIndex INT NOT NULL,
     FOREIGN KEY (QuizID) REFERENCES Quizzes(QuizID) ON DELETE CASCADE
 );
 GO
 
--- Table LessonItemProgress (depend on Users and LessonItems)
+-- Table LessonItemProgress (depend on Customers and LessonItems)
 CREATE TABLE LessonItemProgress (
     ProgressID INT IDENTITY(1,1) PRIMARY KEY,
-    UserID INT NOT NULL,
-    LessonItemID INT NOT NULL, -- video, quiz, material
+    CustomerID INT NOT NULL,
+    LessonItemID INT NOT NULL,
     IsCompleted BIT DEFAULT 0,
     CompletionDate DATETIME NULL,
     LastAccessDate DATETIME DEFAULT GETDATE(),
-    CONSTRAINT FK_LessonItemProgress_Users FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    CONSTRAINT FK_LessonItemProgress_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
     CONSTRAINT FK_LessonItemProgress_LessonItems FOREIGN KEY (LessonItemID) REFERENCES LessonItems(LessonItemID),
-    CONSTRAINT UQ_LessonItemProgress_UserID_LessonItemID UNIQUE (UserID, LessonItemID)
+    CONSTRAINT UQ_LessonItemProgress_CustomerID_LessonItemID UNIQUE (CustomerID, LessonItemID)
 );
 GO
 
--- Table QuizAttempts (depend on Quizzes and Users)
+-- Table QuizAttempts (depend on Quizzes and Customers)
 CREATE TABLE QuizAttempts (
     AttemptID INT IDENTITY(1,1) PRIMARY KEY,
     QuizID INT NOT NULL,
-    UserID INT NOT NULL,
+    CustomerID INT NOT NULL,
     StartTime DATETIME NOT NULL DEFAULT GETDATE(),
-    EndTime DATETIME NULL, -- NULL nếu chưa hoàn thành
-    Score INT NULL, -- Điểm số (%)
-    IsPassed BIT NULL, -- NULL nếu chưa hoàn thành
+    EndTime DATETIME NULL,
+    Score INT NULL,
+    IsPassed BIT NULL,
     FOREIGN KEY (QuizID) REFERENCES Quizzes(QuizID) ON DELETE CASCADE,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
 );
 GO
 
@@ -342,8 +353,8 @@ CREATE TABLE Answers (
     AnswerID INT IDENTITY(1,1) PRIMARY KEY,
     QuestionID INT NOT NULL,
     Content NVARCHAR(MAX) NOT NULL,
-    IsCorrect BIT NOT NULL DEFAULT 0, -- Đánh dấu đáp án đúng
-    OrderIndex INT NOT NULL, -- Thứ tự đáp án
+    IsCorrect BIT NOT NULL DEFAULT 0,
+    OrderIndex INT NOT NULL,
     FOREIGN KEY (QuestionID) REFERENCES Questions(QuestionID) ON DELETE CASCADE
 );
 GO
@@ -354,41 +365,78 @@ CREATE TABLE UserAnswers (
     AttemptID INT NOT NULL,
     QuestionID INT NOT NULL,
     AnswerID INT NULL,
-    IsCorrect BIT NULL, -- NULL nếu chưa chấm điểm
+    IsCorrect BIT NULL,
     FOREIGN KEY (AttemptID) REFERENCES QuizAttempts(AttemptID) ON DELETE CASCADE,
     FOREIGN KEY (QuestionID) REFERENCES Questions(QuestionID),
     FOREIGN KEY (AnswerID) REFERENCES Answers(AnswerID)
 );
 GO
 
-
--- 1. Insert Users
-INSERT INTO Users (Username, Password, Email, Role, IsActive, FullName, Phone, Address, Avatar)
+-- Insert SuperUsers
+INSERT INTO SuperUsers (Username, Password, Email, Role, IsActive, FullName, Phone, Address, Avatar)
 VALUES 
-('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin@example.com', 'admin', 1, 'Administrator', NULL, NULL, '/assets/imgs/avatars/admin.png'),
-('instructor1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor1@example.com', 'instructor', 1, 'John Deep', '9876543210', '456 Teaching Ave, Education City', '/assets/imgs/avatars/instructor1.png'),
-('instructor2', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor2@example.com', 'instructor', 1, 'Rose Bae', '0981972722', '123 Teaching Abc, NewYork City', '/assets/imgs/avatars/instructor2.png'),
-('user', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'user@example.com', 'customer', 1, 'Test User', '1234567890', '123 Main St, City, Country', '/assets/imgs/avatars/default-user.png'),
-('student1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student1@example.com', 'customer', 1, 'Alice Student', '1111111111', '111 Student St', '/assets/imgs/avatars/student1.png'),
-('student2', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student2@example.com', 'customer', 1, 'Bob Learner', '2222222222', '222 Learning Ave', '/assets/imgs/avatars/student2.png'),
-('student3', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student3@example.com', 'customer', 1, 'Charlie Scholar', '3333333333', '333 Scholar Blvd', '/assets/imgs/avatars/student3.png');
+('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin@example.com', 'admin', 1, 'Administrator', '0778167802', '123 Admin House', '/assets/imgs/avatars/default-admin.png'),
+('admin2', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin2@example.com', 'admin', 1, 'Jane Admin', '0901234567', '456 Admin Street', '/assets/imgs/avatars/default-admin.png'),
+('admin3', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin3@example.com', 'admin', 1, 'Mark Supervisor', '0901234568', '789 Admin Avenue', '/assets/imgs/avatars/default-admin.png'),
+('instructor1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor1@example.com', 'instructor', 1, 'John Deep', '0912345678', '123 Teaching St', '/assets/imgs/avatars/instructor1.png'),
+('instructor2', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor2@example.com', 'instructor', 1, 'Rose Bae', '0923456789', '456 Education Blvd', '/assets/imgs/avatars/instructor2.png'),
+('instructor3', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor3@example.com', 'instructor', 1, 'Michael Smith', '0934567890', '789 Learning Lane', '/assets/imgs/avatars/default-instructor.png'),
+('instructor4', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor4@example.com', 'instructor', 1, 'David Johnson', '0945678901', '101 Knowledge Way', '/assets/imgs/avatars/default-instructor.png'),
+('instructor5', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor5@example.com', 'instructor', 1, 'Sarah Williams', '0956789012', '202 Teacher Road', '/assets/imgs/avatars/default-instructor.png'),
+('instructor6', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor6@example.com', 'instructor', 1, 'Emily Brown', '0967890123', '303 Professor Path', '/assets/imgs/avatars/default-instructor.png'),
+('instructor7', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor7@example.com', 'instructor', 1, 'Robert Davis', '0978901234', '404 Instructor Drive', '/assets/imgs/avatars/default-instructor.png'),
+('instructor8', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'instructor8@example.com', 'instructor', 1, 'Jennifer Wilson', '0989012345', '505 Faculty Circle', '/assets/imgs/avatars/default-instructor.png');
 
--- 2. Insert Categories
+-- Insert Customers
+INSERT INTO Customers (Username, Password, Email, IsActive, FullName, Phone, Address, Avatar)
+VALUES
+('user', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'user@example.com', 1, 'Test User', '1234567890', '123 Main St, City, Country', '/assets/imgs/avatars/default-user.png'),
+('student1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student1@example.com', 1, 'Alice Student', '1111111111', '111 Student St', '/assets/imgs/avatars/student1.png'),
+('student2', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student2@example.com', 1, 'Bob Learner', '2222222222', '222 Learning Ave', '/assets/imgs/avatars/student2.png'),
+('student3', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'student3@example.com', 1, 'Charlie Scholar', '3333333333', '333 Scholar Blvd', '/assets/imgs/avatars/student3.png'),
+('john_doe', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'john.doe@example.com', 1, 'John Doe', '0901111111', '123 Elm Street', '/assets/imgs/avatars/default-user.png'),
+('jane_doe', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'jane.doe@example.com', 1, 'Jane Doe', '0902222222', '456 Oak Avenue', '/assets/imgs/avatars/default-user.png'),
+('mike_smith', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'mike.smith@example.com', 1, 'Mike Smith', '0903333333', '789 Pine Boulevard', '/assets/imgs/avatars/default-user.png'),
+('sara_jones', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'sara.jones@example.com', 1, 'Sara Jones', '0904444444', '101 Maple Drive', '/assets/imgs/avatars/default-user.png'),
+('david_brown', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'david.brown@example.com', 1, 'David Brown', '0905555555', '202 Cedar Lane', '/assets/imgs/avatars/default-user.png'),
+('lisa_white', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'lisa.white@example.com', 1, 'Lisa White', '0906666666', '303 Birch Road', '/assets/imgs/avatars/default-user.png'),
+('james_green', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'james.green@example.com', 1, 'James Green', '0907777777', '404 Walnut Court', '/assets/imgs/avatars/default-user.png'),
+('emma_black', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'emma.black@example.com', 1, 'Emma Black', '0908888888', '505 Cherry Circle', '/assets/imgs/avatars/default-user.png'),
+('alex_taylor', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'alex.taylor@example.com', 1, 'Alex Taylor', '0909999999', '606 Spruce Place', '/assets/imgs/avatars/default-user.png'),
+('olivia_lee', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'olivia.lee@example.com', 1, 'Olivia Lee', '0900000000', '707 Redwood Street', '/assets/imgs/avatars/default-user.png');
+
+-- Insert Instructors
+INSERT INTO Instructors (SuperUserID, Biography, Specialization, ApprovalDate)
+VALUES 
+(4, 'Experienced software engineer with 10+ years teaching web development and programming languages.', 'Web Development', DATEADD(month, -6, GETDATE())),
+(5, 'Experienced software engineer with 5+ years teaching web designer.', 'Web Designer', DATEADD(month, -5, GETDATE())),
+(6, 'Former senior developer at Google with expertise in AI and machine learning.', 'Machine Learning', DATEADD(month, -4, GETDATE())),
+(7, 'Mobile development expert with 8 years of industry experience.', 'Mobile Development', DATEADD(month, -7, GETDATE())),
+(8, 'Data scientist with background in statistical analysis and big data.', 'Data Science', DATEADD(month, -3, GETDATE())),
+(9, 'UX/UI specialist who has worked with major brands on user experience optimization.', 'UX/UI Design', DATEADD(month, -8, GETDATE())),
+(10, 'Game development guru with experience at major gaming studios.', 'Game Development', DATEADD(month, -9, GETDATE())),
+(11, 'Frontend development expert specializing in modern JavaScript frameworks.', 'Frontend Development', DATEADD(month, -2, GETDATE()));
+
+-- Insert Categories
 INSERT INTO Categories (Name, Description)
 VALUES 
 ('Web Development', 'Courses related to web development technologies'),
 ('Data Science', 'Courses on data analysis, machine learning, and statistics'),
 ('Mobile Development', 'Courses for building mobile applications'),
 ('Game Development', 'Courses on game engines like Unity, Unreal, and game design'),
-('JavaScript Programming', 'Courses about JavaScript, ES6+, and related frameworks');
+('JavaScript Programming', 'Courses about JavaScript, ES6+, and related frameworks'),
+('UI/UX Design', 'Courses focused on user interface and user experience design'),
+('Databases', 'Courses about database design, SQL, NoSQL and optimization'),
+('DevOps', 'Courses on deployment, CI/CD, and cloud infrastructure'),
+('Cybersecurity', 'Courses on network security, ethical hacking, and security practices'),
+('Artificial Intelligence', 'Courses on AI concepts, neural networks, and deep learning'),
+('Blockchain', 'Courses on blockchain technology, cryptocurrency, and smart contracts'),
+('IoT Development', 'Courses on Internet of Things and embedded systems'),
+('Python Programming', 'Courses specifically focused on Python language and libraries'),
+('Frontend Development', 'Courses on HTML, CSS, JavaScript and modern frameworks'),
+('Backend Development', 'Courses on server-side programming and API development');
 
--- 3. Insert Instructors
-INSERT INTO Instructors (UserID, Biography, Specialization, ApprovalDate)
-VALUES 
-(2, 'Experienced software engineer with 10+ years teaching web development and programming languages.', 'Web Development', GETDATE()),
-(3, 'Experienced software engineer with 5+ years teaching web designer.', 'Web Designer', GETDATE());
-
--- 4. Insert Courses
+-- Insert Courses
 INSERT INTO Courses (Name, Description, Price, ImageUrl, Duration, Level, ApprovalStatus, SubmissionDate, ApprovalDate)
 VALUES
 ('Complete Web Development Bootcamp', 'Learn HTML, CSS, JavaScript, React, Node.js and more to become a full-stack web developer', 1500000, 'assets/imgs/courses/Complete-Web-Development-Bootcamp.png', '12 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
@@ -398,461 +446,2515 @@ VALUES
 ('UI/UX Design Principles', 'Master the principles of user interface and user experience design', 1000050, 'assets/imgs/courses/UIUX-Design-Principles.png', '8 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
 ('Advanced JavaScript', 'Deep dive into JavaScript concepts like closures, prototypes, and async programming', 1300000, 'assets/imgs/courses/Advanced-JavaScript.png', '10 weeks', 'Advanced', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
 ('Machine Learning Fundamentals', 'Introduction to core machine learning algorithms and techniques', 1400000, 'assets/imgs/courses/Machine-Learning-Fundamentals.png', '12 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('iOS App Development with Swift', 'Learn to build iOS applications using Swift and SwiftUI', 950000, 'assets/imgs/courses/iOS-App-Development-with-Swift.png', '10 weeks', 'Intermediate', 'pending', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE()));
+('iOS App Development with Swift', 'Learn to build iOS applications using Swift and SwiftUI', 950000, 'assets/imgs/courses/iOS-App-Development-with-Swift.png', '10 weeks', 'Intermediate', 'approved', DATEADD(month, -1, GETDATE()), DATEADD(month, -1, GETDATE())),
+('SQL Database Mastery', 'Master SQL for database management, queries, and optimization', 890000, 'assets/imgs/courses/database-mastery.png', '6 weeks', 'Beginner', 'approved', DATEADD(month, -3, GETDATE()), DATEADD(month, -3, GETDATE())),
+('DevOps Engineering', 'Learn CI/CD, Docker, Kubernetes and cloud deployment', 1600000, 'assets/imgs/courses/devops.png', '10 weeks', 'Advanced', 'approved', DATEADD(month, -4, GETDATE()), DATEADD(month, -4, GETDATE())),
+('Ethical Hacking', 'Learn penetration testing and cyber security fundamentals', 1750000, 'assets/imgs/courses/ethical-hacking.png', '8 weeks', 'Intermediate', 'approved', DATEADD(month, -2, GETDATE()), DATEADD(month, -2, GETDATE())),
+('Deep Learning with TensorFlow', 'Master deep neural networks using TensorFlow and Keras', 1500000, 'assets/imgs/courses/deep-learning.png', '12 weeks', 'Advanced', 'approved', DATEADD(month, -6, GETDATE()), DATEADD(month, -6, GETDATE())),
+('Blockchain Development', 'Build decentralized applications with Ethereum and Solidity', 1800000, 'assets/imgs/courses/blockchain.png', '14 weeks', 'Advanced', 'pending', DATEADD(day, -15, GETDATE()), NULL),
+('Internet of Things Fundamentals', 'Learn to build connected devices using Arduino and Raspberry Pi', 1250000, 'assets/imgs/courses/iot.png', '8 weeks', 'Intermediate', 'pending', DATEADD(day, -20, GETDATE()), NULL),
+('Vue.js for Frontend Development', 'Master modern UI development with Vue.js', 980000, 'assets/imgs/courses/vuejs.png', '6 weeks', 'Intermediate', 'rejected', DATEADD(month, -1, GETDATE()), DATEADD(day, -25, GETDATE())),
+('Django Web Framework', 'Build robust web applications with Python and Django', 1100000, 'assets/imgs/courses/django.png', '8 weeks', 'Intermediate', 'pending', DATEADD(day, -10, GETDATE()), NULL);
 
--- 5. Insert Orders
-INSERT INTO Orders (UserID, OrderDate, TotalAmount, Status)
-VALUES 
-(4, DATEADD(day, -10, GETDATE()), 2700000, 'completed'),
-(4, DATEADD(day, -3, GETDATE()), 1100050, 'completed'),
-(4, DATEADD(day, -20, GETDATE()), 1500000, 'completed'),
-(5, DATEADD(day, -15, GETDATE()), 1500000, 'completed'),
-(6, DATEADD(day, -10, GETDATE()), 2800000, 'completed');
-
--- 6. Insert CartItems
-INSERT INTO CartItems (UserID, CourseID, Price, CreatedAt)
-VALUES
-(4, 1, 1500000, DATEADD(day, -1, GETDATE())),
-(4, 2, 1200000, DATEADD(day, -1, GETDATE())),
-(5, 2, 1200000, DATEADD(day, -2, GETDATE())),
-(6, 3, 1100050, GETDATE());
-
--- 7. Insert CourseCategory
+-- Insert CourseCategory
 INSERT INTO CourseCategory (CourseID, CategoryID)
 VALUES
-(1, 1), -- Web Development Bootcamp -> Web Development
-(2, 2), -- Python for Data Science -> Data Science
-(3, 3), -- React Native -> Mobile Development
-(4, 4), -- Game Development with Unity -> Game Development
-(5, 1), -- UI/UX Design -> Should be related to Web Development
-(6, 1), -- Advanced JavaScript -> Web Development
-(7, 2), -- Machine Learning -> Data Science
-(8, 3); -- iOS Development -> Mobile Development
+(1, 1), (1, 14), (1, 15), (2, 2), (2, 13), (3, 3), (4, 4), (5, 6), (5, 14), (6, 1), (6, 5), (6, 14),
+(7, 2), (7, 10), (8, 3), (9, 7), (10, 8), (11, 9), (12, 10), (12, 2), (13, 11), (14, 12), (15, 14), (15, 5), (16, 15), (16, 13);
 
--- 8. Insert CourseInstructors
+-- Insert CourseInstructors
 INSERT INTO CourseInstructors (CourseID, InstructorID)
 VALUES
-(1, 1), -- Web Development - Instructor1
-(2, 1), -- Python for Data Science - Instructor1
-(3, 1), -- React Native - Instructor1
-(4, 2), -- Business Fundamentals - Instructor2
-(5, 2), -- UI/UX Design - Instructor2
-(6, 1), -- Advanced JavaScript - Instructor1
-(7, 1), -- Machine Learning - Instructor1
-(8, 2); -- iOS Development - Instructor2
+(1, 1), (2, 5), (3, 4), (4, 7), (5, 6), (6, 1), (6, 8), (7, 3), (7, 5), (8, 4), (9, 2), (9, 5), (10, 7), (11, 3), (12, 3), (12, 5), (13, 8), (14, 7), (15, 1), (15, 8), (16, 1), (16, 5);
 
--- 9. Insert OrderDetails
+-- Insert Orders
+INSERT INTO Orders (CustomerID, OrderDate, TotalAmount, Status)
+VALUES 
+(1, DATEADD(day, -60, GETDATE()), 2700000, 'completed'),
+(1, DATEADD(day, -45, GETDATE()), 1100050, 'completed'),
+(1, DATEADD(day, -30, GETDATE()), 1500000, 'completed'),
+(2, DATEADD(day, -55, GETDATE()), 1500000, 'completed'),
+(3, DATEADD(day, -50, GETDATE()), 2800000, 'completed'),
+(4, DATEADD(day, -40, GETDATE()), 1700000, 'completed'),
+(5, DATEADD(day, -35, GETDATE()), 2500050, 'completed'),
+(6, DATEADD(day, -30, GETDATE()), 1300000, 'completed'),
+(7, DATEADD(day, -25, GETDATE()), 1400000, 'completed'),
+(8, DATEADD(day, -20, GETDATE()), 1750000, 'completed'),
+(9, DATEADD(day, -15, GETDATE()), 2290000, 'completed'),
+(10, DATEADD(day, -10, GETDATE()), 1500000, 'completed'),
+(11, DATEADD(day, -5, GETDATE()), 3100000, 'completed'),
+(12, DATEADD(day, -4, GETDATE()), 1000050, 'pending'),
+(13, DATEADD(day, -3, GETDATE()), 890000, 'pending'),
+(14, DATEADD(day, -2, GETDATE()), 2350000, 'pending');
+
+-- Insert OrderDetails
 INSERT INTO OrderDetails (OrderID, CourseID, Price)
 VALUES 
-(1, 1, 1500000),  -- User4's order1: Web Development Bootcamp
-(1, 2, 1200000),  -- User4's order1: Python for Data Science
-(2, 3, 1100050),  -- User4's order2: React Native Mobile Apps
-(3, 1, 1500000),  -- User4's order3: Web Development Bootcamp
-(4, 1, 1500000),  -- User5's order: Web Development Bootcamp
-(5, 1, 1500000),  -- User6's order: Web Development Bootcamp
-(5, 6, 1300000); -- User6's order: Advanced JavaScript
+(1, 1, 1500000), (1, 2, 1200000), (2, 3, 1100050), (3, 1, 1500000), (4, 1, 1500000), (5, 1, 1500000), 
+(5, 6, 1300000), (6, 4, 1700000), (7, 5, 1000050), (7, 10, 1500000), (8, 6, 1300000), (9, 7, 1400000), 
+(10, 11, 1750000), (11, 9, 890000), (11, 12, 1400000), (12, 1, 1500000), (12, 7, 1400000), (13, 5, 1000050), 
+(14, 9, 890000), (15, 6, 1300000), (15, 10, 1600000);
 
--- 10. Insert Lessons
+-- Insert CartItems
+INSERT INTO CartItems (CustomerID, CourseID, Price, CreatedAt)
+VALUES
+(1, 12, 1500000, DATEADD(day, -1, GETDATE())), (2, 9, 890000, DATEADD(day, -1, GETDATE())), 
+(3, 7, 1400000, DATEADD(day, -2, GETDATE())), (4, 6, 1300000, GETDATE()), (5, 11, 1750000, GETDATE()), 
+(6, 10, 1600000, DATEADD(day, -3, GETDATE())), (7, 8, 950000, DATEADD(day, -1, GETDATE())), 
+(8, 12, 1500000, DATEADD(day, -2, GETDATE())), (9, 13, 1800000, GETDATE()), 
+(10, 14, 1250000, DATEADD(day, -4, GETDATE()));
+
+-- Insert Lessons
 INSERT INTO Lessons (CourseID, Title, OrderIndex)
 VALUES 
--- Web Development Bootcamp Lessons
-(1, 'Introduction to HTML', 1),
-(1, 'Working with CSS', 2),
-(1, 'JavaScript Fundamentals', 3),
-(1, 'Building a Simple Website', 4),
--- Python for Data Science Lessons
-(2, 'Python Basics', 1),
-(2, 'Data Analysis with Pandas', 2),
-(2, 'Data Visualization', 3),
--- React Native Lessons
-(3, 'React Native Setup', 1),
-(3, 'Building Your First App', 2),
--- Game Development Lessons
-(4, 'Introduction to Unity', 1),
-(4, 'Game Objects and Components', 2),
-(4, 'C# Scripting for Games', 3),
--- Additional Game Development Lessons (for material/quiz references)
-(4, 'Game Physics and Collisions', 4),
-(4, 'Game UI Development', 5),
--- UI/UX Design Lessons
-(5, 'Design Principles Fundamentals', 1),
--- Add lessons for other courses
-(6, 'Advanced JavaScript Concepts', 1),
-(7, 'Introduction to Machine Learning', 1),
-(8, 'Getting Started with Swift', 1);
+(1, 'Introduction to HTML', 1), (1, 'Working with CSS', 2), (1, 'JavaScript Fundamentals', 3), 
+(1, 'Building a Simple Website', 4), (1, 'Responsive Design', 5), (1, 'Introduction to React', 6), 
+(1, 'Building a React App', 7), (1, 'Node.js Basics', 8), (1, 'Building a RESTful API', 9), 
+(1, 'Database Integration', 10), (1, 'Deployment and DevOps', 11), (1, 'Final Project', 12),
+(2, 'Python Basics', 1), (2, 'Data Analysis with Pandas', 2), (2, 'Data Visualization', 3), 
+(2, 'Statistical Analysis', 4), (2, 'Machine Learning with Scikit-learn', 5), 
+(2, 'Data Cleaning and Preprocessing', 6), (2, 'Working with APIs', 7), (2, 'Big Data Processing', 8),
+(3, 'React Native Setup', 1), (3, 'Building Your First App', 2), (3, 'Navigation and Routing', 3), 
+(3, 'Managing State', 4), (3, 'Using Native Components', 5), (3, 'Handling User Input', 6), 
+(3, 'Networking and APIs', 7), (3, 'Deployment to App Stores', 8), (3, 'Performance Optimization', 9), 
+(3, 'Final Project', 10),
+(4, 'Introduction to Unity', 1), (4, 'Game Objects and Components', 2), (4, 'C# Scripting for Games', 3), 
+(4, 'Game Physics and Collisions', 4), (4, 'Game UI Development', 5), (4, 'Audio in Games', 6), 
+(4, 'Character Animation', 7), (4, 'Game AI Basics', 8), (4, 'Optimizing Game Performance', 9), 
+(4, 'Publishing Your Game', 10),
+(5, 'Design Principles Fundamentals', 1), (5, 'User Research Methods', 2), (5, 'Wireframing and Prototyping', 3), 
+(5, 'Color Theory for UI', 4), (5, 'Typography in Design', 5), (5, 'Creating User Personas', 6), 
+(5, 'Usability Testing', 7), (5, 'Mobile-First Design', 8),
+(6, 'Advanced JavaScript Concepts', 1), (6, 'Closures and Scope', 2), (6, 'Prototypes and Inheritance', 3), 
+(6, 'Asynchronous JavaScript', 4), (6, 'ES6+ Features', 5), (6, 'Functional Programming', 6), 
+(6, 'Design Patterns', 7), (6, 'Testing and Debugging', 8), (6, 'Performance Optimization', 9), 
+(6, 'Advanced Project', 10),
+(7, 'Introduction to Machine Learning', 1), (7, 'Supervised Learning Algorithms', 2), 
+(7, 'Unsupervised Learning Algorithms', 3), (7, 'Feature Engineering', 4), (7, 'Model Evaluation', 5), 
+(7, 'Neural Networks Basics', 6), (7, 'Deep Learning Introduction', 7), (7, 'Practical ML Applications', 8), 
+(7, 'Ethical Considerations in AI', 9), (7, 'Final ML Project', 10),
+(8, 'Swift Programming Fundamentals', 1), (8, 'iOS App Architecture', 2), (8, 'UIKit Essentials', 3), 
+(8, 'SwiftUI Introduction', 4), (8, 'Working with Data', 5), (8, 'Networking and APIs in iOS', 6), 
+(8, 'Core Data and Persistence', 7), (8, 'iOS App Testing', 8), (8, 'App Store Deployment', 9), 
+(8, 'Final iOS Project', 10),
+(9, 'Introduction to Databases', 1), (9, 'SQL Basics: SELECT, INSERT, UPDATE, DELETE', 2), 
+(9, 'Advanced Queries and Joins', 3), (9, 'Database Design and Normalization', 4), 
+(9, 'Indexing and Performance', 5), (9, 'Stored Procedures and Functions', 6), 
+(9, 'Transactions and Concurrency', 7), (9, 'Database Security', 8), (9, 'Real-world Database Projects', 9),
+(10, 'Introduction to DevOps', 1), (10, 'Version Control with Git', 2), (10, 'Continuous Integration', 3), 
+(10, 'Continuous Deployment', 4), (10, 'Containerization with Docker', 5), 
+(10, 'Container Orchestration with Kubernetes', 6), (10, 'Infrastructure as Code', 7), 
+(10, 'Monitoring and Logging', 8), (10, 'Cloud Services Integration', 9), (10, 'DevOps Best Practices', 10),
+(11, 'Introduction to Ethical Hacking', 1), (11, 'Reconnaissance Techniques', 2), (11, 'Scanning Networks', 3), 
+(11, 'Enumeration', 4), (11, 'Vulnerability Analysis', 5), (11, 'System Hacking', 6), 
+(11, 'Malware Threats', 7), (11, 'Sniffing', 8), (11, 'Social Engineering', 9), (11, 'Denial of Service', 10), 
+(11, 'Session Hijacking', 11), (11, 'Web Server and Application Security', 12),
+(12, 'Introduction to Deep Learning', 1), (12, 'TensorFlow Basics', 2), (12, 'Building Neural Networks', 3), 
+(12, 'Convolutional Neural Networks', 4), (12, 'Recurrent Neural Networks', 5), (12, 'Transfer Learning', 6), 
+(12, 'Generative Models', 7), (12, 'Natural Language Processing', 8), (12, 'Computer Vision Applications', 9), 
+(12, 'Deploying Deep Learning Models', 10),
+(13, 'Blockchain Fundamentals', 1), (13, 'Cryptography Basics', 2), (13, 'Bitcoin Protocol', 3), 
+(13, 'Ethereum and Smart Contracts', 4), (13, 'Solidity Programming', 5), (13, 'Decentralized Applications (DApps)', 6), 
+(13, 'Web3.js and Frontend Integration', 7), (13, 'Testing Smart Contracts', 8), (13, 'Security Best Practices', 9), 
+(13, 'Real-world Blockchain Project', 10),
+(14, 'Introduction to IoT', 1), (14, 'Sensors and Actuators', 2), (14, 'Microcontrollers and Arduino', 3), 
+(14, 'Raspberry Pi for IoT', 4), (14, 'Networking Protocols for IoT', 5), (14, 'IoT Cloud Platforms', 6), 
+(14, 'IoT Security', 7), (14, 'IoT Data Analytics', 8), (14, 'Building End-to-End IoT Solutions', 9), 
+(14, 'Future of IoT and Industry Applications', 10),
+(15, 'Introduction to Vue.js', 1), (15, 'Vue Components', 2), (15, 'Vue Directives and Event Handling', 3), 
+(15, 'Vue Reactivity System', 4), (15, 'Vue Router', 5), (15, 'State Management with Vuex', 6), 
+(15, 'Forms and Validation', 7), (15, 'Vue.js Best Practices', 8), (15, 'Testing Vue Applications', 9), 
+(15, 'Building a Production-ready Vue.js App', 10),
+(16, 'Introduction to Django', 1), (16, 'Django Models and Databases', 2), (16, 'Django Views and Templates', 3), 
+(16, 'Django Forms', 4), (16, 'Django Admin Interface', 5), (16, 'Authentication and Permissions', 6), 
+(16, 'REST APIs with Django Rest Framework', 7), (16, 'Testing Django Applications', 8), 
+(16, 'Django Deployment', 9), (16, 'Building a Complete Django Project', 10);
 
--- 11. Insert Ratings
-INSERT INTO Ratings (CourseID, UserID, Stars, Comment)
+-- Insert Ratings
+INSERT INTO Ratings (CourseID, CustomerID, Stars, Comment)
 VALUES
-(1, 4, 5, N'Excellent course with hands-on projects!'),
-(2, 4, 5, 'Excellent content! The instructor explains complex concepts in a simple way.'),
-(1, 5, 4, 'Very good course. Covers all the basics and some advanced topics too.'),
-(1, 6, 5, 'Best web development course I''ve taken. Highly recommended!'),
-(3, 4, 4, N'Great Python course with practical examples.'),
-(4, 4, 3, 'Good content but could use more exercises.'),
-(3, 5, 5, N'Excellent React Native course. Very practical.'),
-(4, 5, 4, 'Well-structured business course. Very informative.'),
-(5, 4, 5, 'The UI/UX principles were clearly explained with great examples.'),
-(6, 5, 5, 'Incredibly detailed JavaScript course. Learned a lot!'),
-(6, 6, 4, 'Great advanced JavaScript course. Looking forward to applying these concepts.'),
-(7, 6, 5, 'Excellent introduction to machine learning. Highly recommended!'),
-(8, 5, 4, 'Good iOS development course. Clear explanations and examples.');
+(1, 1, 5, N'Excellent course with hands-on projects!'),
+(2, 1, 5, 'Excellent content! The instructor explains complex concepts in a simple way.'),
+(1, 2, 4, 'Very good course. Covers all the basics and some advanced topics too.'),
+(1, 3, 5, 'Best web development course I''ve taken. Highly recommended!'),
+(3, 1, 4, N'Great React Native course with practical examples.'),
+(4, 1, 3, 'Good content but could use more exercises.'),
+(3, 2, 5, N'Excellent React Native course. Very practical.'),
+(4, 2, 4, 'Well-structured Unity course. Very informative.'),
+(5, 1, 5, 'The UI/UX principles were clearly explained with great examples.'),
+(6, 2, 5, 'Incredibly detailed JavaScript course. Learned a lot!'),
+(6, 3, 4, 'Great advanced JavaScript course. Looking forward to applying these concepts.'),
+(7, 3, 5, 'Excellent introduction to machine learning. Highly recommended!'),
+(8, 2, 4, 'Good iOS development course. Clear explanations and examples.'),
+(9, 4, 5, 'Best SQL course I''ve taken. Very comprehensive.'),
+(10, 5, 4, 'Solid DevOps course with practical examples.'),
+(11, 6, 5, 'Excellent cybersecurity content. Very relevant examples.'),
+(12, 7, 3, 'Good content but too theoretical at times.'),
+(13, 8, 4, 'Interesting blockchain course. Would have liked more hands-on projects.'),
+(14, 9, 5, 'Fantastic IoT course with great practical exercises.'),
+(15, 10, 2, 'Outdated content. Needs to be refreshed with newer Vue.js versions.'),
+(16, 11, 5, 'Excellent Django course. Very thorough and practical.'),
+(1, 4, 4, 'Good introduction to web development. Helpful for beginners.'),
+(2, 5, 5, 'Great Python course. The data science applications were very useful.'),
+(3, 6, 3, 'Decent React Native course but lacks advanced topics.'),
+(4, 7, 5, 'Excellent Unity course with practical projects.');
 
--- 12. Insert CourseProgress
-INSERT INTO CourseProgress (UserID, CourseID, LastAccessDate, CompletionPercentage, IsCompleted)
+-- Insert CourseProgress
+INSERT INTO CourseProgress (CustomerID, CourseID, LastAccessDate, CompletionPercentage, IsCompleted)
 VALUES
--- User 4's course progress (courses 1, 2, 3 from orders)
-(4, 1, DATEADD(day, -5, GETDATE()), 15.0, 0),  -- Web Development
-(4, 2, DATEADD(day, -2, GETDATE()), 5.0, 0),   -- Python for Data Science
-(4, 3, GETDATE(), 25.0, 0),                    -- React Native
+(1, 1, DATEADD(day, -5, GETDATE()), 75.0, 0),
+(1, 2, DATEADD(day, -2, GETDATE()), 60.0, 0),
+(1, 3, GETDATE(), 25.0, 0),
+(2, 1, DATEADD(day, -10, GETDATE()), 50.0, 0),
+(3, 1, DATEADD(day, -5, GETDATE()), 100.0, 1),
+(3, 6, GETDATE(), 85.0, 0),
+(4, 4, DATEADD(day, -3, GETDATE()), 70.0, 0),
+(5, 5, DATEADD(day, -2, GETDATE()), 90.0, 0),
+(5, 10, GETDATE(), 40.0, 0),
+(6, 6, DATEADD(day, -1, GETDATE()), 60.0, 0),
+(7, 7, GETDATE(), 50.0, 0),
+(8, 11, DATEADD(day, -2, GETDATE()), 30.0, 0),
+(9, 9, DATEADD(day, -8, GETDATE()), 100.0, 1),
+(9, 12, DATEADD(day, -1, GETDATE()), 45.0, 0),
+(10, 1, DATEADD(day, -3, GETDATE()), 10.0, 0),
+(10, 7, GETDATE(), 15.0, 0),
+(10, 9, DATEADD(day, -5, GETDATE()), 5.0, 0);
 
--- User 5's course progress (course 1 from order)
-(5, 1, DATEADD(day, -1, GETDATE()), 45.0, 0),  -- Web Development
-
--- User 6's course progress (courses 1, 6 from order)
-(6, 1, DATEADD(day, -5, GETDATE()), 20.0, 0),  -- Web Development
-(6, 6, GETDATE(), 10.0, 0)                     -- Advanced JavaScript
-
--- 13. Insert RefundRequests
-INSERT INTO RefundRequests (OrderID, UserID, RequestDate, Status, RefundAmount, Reason, ProcessedDate, AdminMessage, ProcessedBy)
+-- Insert RefundRequests
+INSERT INTO RefundRequests (OrderID, CustomerID, RequestDate, Status, RefundAmount, Reason, ProcessedDate, AdminMessage, ProcessedBy, RefundPercentage)
 VALUES
-(1, 4, DATEADD(day, -8, GETDATE()), 'rejected', 1200000, 'Course content not as expected', DATEADD(day, -7, GETDATE()), 'Course content aligns with description', 1),
-(3, 4, DATEADD(day, -3, GETDATE()), 'pending', 1500000, 'Found a better course for free', NULL, NULL, NULL);
+(1, 1, DATEADD(day, -55, GETDATE()), 'rejected', 1200000, 'Course content not as expected', DATEADD(day, -54, GETDATE()), 'Course content aligns with description', 1, 80),
+(3, 1, DATEADD(day, -25, GETDATE()), 'approved', 1200000, 'Found a better course for free', DATEADD(day, -23, GETDATE()), 'Approved as per policy', 1, 80),
+(5, 3, DATEADD(day, -45, GETDATE()), 'rejected', 1500000, 'Too difficult for my level', DATEADD(day, -44, GETDATE()), 'Course difficulty is clearly stated in description', 2, 80),
+(6, 4, DATEADD(day, -38, GETDATE()), 'approved', 1360000, 'Technical issues with course videos', DATEADD(day, -36, GETDATE()), 'Refund approved due to technical issues', 1, 80),
+(8, 6, DATEADD(day, -28, GETDATE()), 'approved', 1040000, 'Content is outdated', DATEADD(day, -25, GETDATE()), 'Approved - content will be updated soon', 3, 80),
+(9, 7, DATEADD(day, -22, GETDATE()), 'rejected', 1400000, 'Found similar content for free', DATEADD(day, -20, GETDATE()), 'Free content is not as comprehensive', 2, 80),
+(11, 9, DATEADD(day, -10, GETDATE()), 'pending', 712000, 'Course not as advanced as described', NULL, NULL, NULL, 80),
+(12, 10, DATEADD(day, -8, GETDATE()), 'pending', 1200000, 'Not what I was looking for', NULL, NULL, NULL, 80),
+(13, 12, DATEADD(day, -3, GETDATE()), 'pending', 1000050, 'Changed my mind', NULL, NULL, NULL, 80),
+(15, 14, DATEADD(day, -1, GETDATE()), 'pending', 1600000, 'Financial reasons', NULL, NULL, NULL, 80);
 
--- 15. Insert Discussions
-INSERT INTO Discussions (CourseID, LessonID, UserID, Content, IsResolved)
+-- Insert Discussions
+INSERT INTO Discussions (CourseID, LessonID, AuthorID, AuthorType, Content, IsResolved)
 VALUES
-(1, 1, 4, 'Can someone explain the difference between <div> and <span> tags?', 1),
-(1, 3, 5, 'I don''t understand the difference between for...of and for...in loops', 0),
-(2, 5, 6, 'I''m having trouble installing Python on Windows 11. Any suggestions?', 0),
-(2, 6, 4, 'How do I efficiently filter rows in a DataFrame?', 1),
-(3, 8, 4, 'Getting a bundler error when trying to run the app. Help needed!', 0),
-(4, 10, 5, 'What''s the best approach for implementing player movement in Unity?', 1),
-(4, 15, 6, 'How do I optimize my game for mobile devices?', 0),
-(5, 11, 5, 'What color combinations work best for UI design?', 1),
-(6, 12, 6, 'Can someone explain JavaScript closures with a simple example?', 0),
-(7, 13, 5, 'My model has low accuracy. How can I improve it?', 0),
-(8, 14, 4, 'When should I use SwiftUI instead of UIKit?', 1);
+(1, 1, 1, 'customer', 'Can someone explain the difference between <div> and <span> tags?', 1),
+(1, 3, 2, 'customer', 'I don''t understand the difference between for...of and for...in loops', 0),
+(2, 13, 3, 'customer', 'I''m having trouble installing Python on Windows 11. Any suggestions?', 0),
+(2, 14, 1, 'customer', 'How do I efficiently filter rows in a DataFrame?', 1),
+(3, 21, 1, 'customer', 'Getting a bundler error when trying to run the app. Help needed!', 0),
+(4, 31, 2, 'customer', 'What''s the best approach for implementing player movement in Unity?', 1),
+(4, 35, 3, 'customer', 'How do I optimize my game for mobile devices?', 0),
+(5, 41, 2, 'customer', 'What color combinations work best for UI design?', 1),
+(6, 45, 3, 'customer', 'Can someone explain JavaScript closures with a simple example?', 0),
+(7, 13, 2, 'customer', 'My model has low accuracy. How can I improve it?', 0),
+(8, 14, 1, 'customer', 'When should I use SwiftUI instead of UIKit?', 1),
+(1, 5, 4, 'customer', 'How do we make a responsive design work on all screen sizes?', 0),
+(1, 6, 5, 'customer', 'Is React better than Angular for beginners?', 1),
+(2, 16, 6, 'customer', 'Which visualization library is better - Matplotlib or Seaborn?', 0),
+(3, 23, 7, 'customer', 'My app crashes when I try to implement navigation. Any help?', 0),
+(4, 33, 8, 'customer', 'What''s the difference between rigid body and character controller?', 1),
+(5, 43, 9, 'customer', 'How do I conduct effective usability testing with limited resources?', 0),
+(6, 48, 10, 'customer', 'Can someone explain the concept of "this" in JavaScript?', 1),
+(7, 13, 11, 'customer', 'Which algorithm works best for image classification tasks?', 0),
+(9, 13, 12, 'customer', 'How do I optimize complex SQL queries?', 1),
+(3, 22, 1, 'customer', 'I''m struggling with state management in React Native. What''s the best approach for a complex app?', 0),
+(3, 24, 3, 'customer', 'How do I implement push notifications in React Native?', 0),
+(3, 25, 5, 'customer', 'My React Native app performs poorly on older Android devices. Any optimization tips?', 0),
+(3, 26, 2, 'customer', 'What''s the best way to handle image caching in React Native?', 1),
+(3, 27, 4, 'customer', 'I''m having issues with React Native animations. They seem choppy on Android.', 0),
+(3, 28, 6, 'customer', 'How can I implement deep linking in my React Native app?', 1),
+(3, 29, 8, 'customer', 'What''s the recommended approach for offline data storage in React Native?', 0),
+(3, 30, 10, 'customer', 'How do I handle different screen sizes in React Native?', 0),
+(8, 14, 3, 'customer', 'What are the main differences between UIKit and SwiftUI for beginners?', 0),
+(8, 15, 5, 'customer', 'How do I implement Core Data in a SwiftUI project?', 1),
+(8, 16, 7, 'customer', 'My Swift app crashes when parsing JSON from an API. How can I debug this?', 0),
+(8, 17, 9, 'customer', 'What''s the best practice for handling user authentication in iOS apps?', 0),
+(8, 18, 11, 'customer', 'How do I implement dark mode support in my Swift app?', 1),
+(8, 19, 13, 'customer', 'I''m having trouble with Auto Layout constraints. Any debugging tips?', 0),
+(6, 46, 12, 'customer', 'What is the difference between null and undefined in JavaScript?', 0),
+(6, 47, 14, 'customer', 'Can someone explain how prototype inheritance works in JavaScript?', 0),
+(6, 49, 8, 'customer', 'What''s the best way to handle errors in async JavaScript functions?', 0),
+(6, 50, 10, 'customer', 'Could someone explain the key array methods like map, filter, and reduce?', 0),
+(6, 51, 7, 'customer', 'How do you mock API calls when writing JavaScript tests?', 0),
+(15, 140, 11, 'customer', 'Should I learn Vue 2 or Vue 3 as a beginner?', 0),
+(15, 143, 13, 'customer', 'How does Vue''s reactivity system work under the hood?', 0),
+(15, 145, 9, 'customer', 'My Vuex mutations aren''t updating state, what am I doing wrong?', 0),
+(15, 148, 5, 'customer', 'What''s the best folder structure for a large Vue application?', 0),
+(15, 149, 4, 'customer', 'What are the best practices for deploying a Vue application?', 0),
+(16, 150, 2, 'customer', 'What''s the difference between a Django project and a Django app?', 0),
+(16, 152, 6, 'customer', 'How do I create custom template tags in Django?', 0),
+(16, 154, 3, 'customer', 'What are the best ways to customize the Django admin interface?', 0),
+(16, 156, 1, 'customer', 'What authentication options are available in Django REST Framework?', 0),
+(16, 158, 7, 'customer', 'What''s the recommended way to deploy a Django application?', 0);
 
--- 16. Insert Videos
+-- Insert DiscussionReplies
+INSERT INTO DiscussionReplies (DiscussionID, AuthorID, AuthorType, Content)
+VALUES
+(1, 4, 'customer', '<div> is a block element while <span> is an inline element. Use <div> when you want a new line before and after the element, and <span> when you want to style text inline.'),
+(2, 4, 'customer', 'for...in loops iterate over the enumerable properties of an object, while for...of loops iterate over the values of an iterable object like arrays.'),
+(1, 2, 'customer', 'Also, <div> is commonly used for layout while <span> is used for styling small portions of text.'),
+(3, 5, 'customer', 'Try downloading the latest installer from python.org and make sure to check "Add Python to PATH" during installation.'),
+(5, 2, 'customer', 'Check if your Metro bundler is running. You might need to restart it with "npx react-native start".'),
+(4, 5, 'customer', 'You can use df.loc[] for label-based filtering or df.query() for string expressions.'),
+(4, 3, 'customer', 'Thanks! df.query() worked perfectly for my needs.'),
+(6, 10, 'customer', 'For game UIs, keep controls intuitive and consistent. Use clear visual feedback for player actions and maintain a balanced HUD that doesn''t obstruct gameplay.'),
+(7, 10, 'customer', 'For mobile optimization: 1) Reduce texture sizes 2) Use LOD groups 3) Minimize draw calls 4) Use mobile-specific quality settings 5) Profile performance regularly'),
+(9, 4, 'customer', 'Closures are functions that remember their lexical environment. Example: function outer() { let x = 10; function inner() { console.log(x); } return inner; }'),
+(10, 5, 'customer', 'Try feature engineering, hyperparameter tuning, or using a more complex model. Also check if your data is imbalanced.'),
+(11, 4, 'customer', 'Use SwiftUI for new apps targeting iOS 13+ for faster development. UIKit is better for complex UI, backward compatibility, or specific controls not available in SwiftUI.'),
+(12, 4, 'customer', 'Use media queries in CSS to target different screen sizes. Start with a mobile-first approach and progressively enhance for larger screens.'),
+(13, 8, 'customer', 'For beginners, React often has a gentler learning curve compared to Angular, which has more concepts to master initially.'),
+(13, 3, 'customer', 'I agree. I found React much easier to get started with compared to Angular.'),
+(14, 5, 'customer', 'Both have their strengths. Matplotlib offers more control, while Seaborn provides more attractive visualizations with less code. Start with Seaborn for simple plots.'),
+(15, 4, 'customer', 'Make sure you''ve properly installed react-navigation and its dependencies. Check the navigator structure for common mistakes like missing screenOptions.'),
+(16, 10, 'customer', 'Rigid bodies are physics-based and affected by forces, while character controllers are designed specifically for character movement with manual control over physics.'),
+(17, 6, 'customer', 'For limited budgets, try guerrilla testing with 5-7 users, remote testing tools, or A/B testing on a live but limited audience segment.'),
+(18, 4, 'customer', 'The "this" keyword refers to the object it belongs to. In regular functions, "this" depends on how the function is called. In arrow functions, "this" retains the value from the enclosing context.'),
+(19, 5, 'customer', 'For image classification, CNNs are the go-to. Specifically, architectures like ResNet, EfficientNet, or Vision Transformer work well depending on your needs and computational constraints.'),
+(20, 8, 'customer', 'For SQL optimization: 1) Use appropriate indexes 2) Avoid SELECT * 3) Use EXPLAIN to analyze your queries 4) Consider denormalization for read-heavy operations 5) Use stored procedures for complex operations'),
+(1, 1, 'customer', 'Great question! <div> is a block-level element that takes up the full width available and creates a new line before and after it. <span> is an inline element that only takes up as much width as necessary and doesn''t force new lines. Use <div> for layout sections and <span> for styling pieces of text within a block.'),
+(2, 1, 'customer', 'The for...of loop iterates over the values of iterable objects like arrays, strings, etc. The for...in loop iterates over the enumerable properties of an object. Be careful with for...in on arrays as it will include properties added to the array''s prototype!'),
+(12, 1, 'customer', 'Good question! For responsive design, use a combination of: 1) Media queries to apply different styles at different breakpoints 2) Flexbox or Grid for layout 3) Relative units like % or rem instead of fixed pixels 4) viewport units (vw, vh) and 5) the meta viewport tag in your HTML. Test on multiple devices as you develop.'),
+(13, 1, 'customer', 'I generally recommend React for beginners because it has a simpler mental model and faster learning curve. Angular has more built-in features but comes with more complexity. React''s component model is very intuitive, and the community support is excellent for learning resources.'),
+(9, 1, 'customer', 'A closure is a function that remembers the variables from the scope where it was created, even after that scope has closed. Here''s a simple example: function createCounter() { let count = 0; return function() { return ++count; }; } const counter = createCounter(); console.log(counter()); // 1 console.log(counter()); // 2 The inner function "closes over" the count variable.'),
+(18, 1, 'customer', 'Great question about "this" in JavaScript! It refers to the object that is executing the current function. In regular functions, "this" is determined by how the function is called (its execution context). In arrow functions, "this" retains the value from the enclosing lexical scope, which makes them useful for callbacks inside methods.'),
+(35, 1, 'customer', 'Null and undefined are both used to represent "no value" but in different ways. Undefined means a variable has been declared but not assigned a value, while null is an intentional assignment representing "no value" or "empty". For example, if you want to explicitly clear a variable, use null. If you check a property that doesn''t exist, you''ll get undefined.'),
+(36, 1, 'customer', 'The prototype chain in JavaScript is how inheritance works. Each object has a prototype (accessible via Object.getPrototypeOf() or the deprecated __proto__ property) from which it inherits properties. When you access a property, JavaScript first looks on the object itself, then its prototype, then its prototype''s prototype, and so on until it finds the property or reaches the end of the chain.'),
+(37, 1, 'customer', 'For handling errors in async functions, always use try/catch blocks. Example: async function fetchData() { try { const response = await api.getData(); return response; } catch (error) { console.error(''Failed to fetch data:'', error); // Handle error appropriately throw error; // Re-throw if needed } } You can also use .catch() with promises if you prefer that syntax.'),
+(38, 1, 'customer', 'Array methods explained: map() transforms each element and returns a new array of the same length; filter() creates a new array with elements that pass a test; reduce() accumulates values to a single result. Example: const numbers = [1, 2, 3, 4]; const doubled = numbers.map(x => x * 2); // [2, 4, 6, 8] const evens = numbers.filter(x => x % 2 === 0); // [2, 4] const sum = numbers.reduce((acc, x) => acc + x, 0); // 10'),
+(39, 1, 'customer', 'For mocking API calls in tests, you have several options: 1) Use Jest''s mock functions to replace fetch/axios, 2) Use libraries like axios-mock-adapter, 3) Use fetch-mock or similar, or 4) Use MSW (Mock Service Worker) for a more modern approach. The key is intercepting the network requests and providing controlled responses to test both success and error scenarios.'),
+(40, 1, 'customer', 'I recommend learning Vue 3 directly as it''s the future of Vue. The Composition API in Vue 3 offers better TypeScript support and code organization for complex applications. However, many existing projects and tutorials use Vue 2, so understanding both can be valuable. The core concepts are the same, so learning Vue 3 won''t make it difficult to work with Vue 2 code if needed.'),
+(41, 1, 'customer', 'Reactivity in Vue 3 uses the Composition API with ref() and reactive(). ref() is for primitive values (creating a reactive reference object with a .value property), while reactive() is for objects (creating a reactive proxy of the entire object). Vue needs these special functions to track property access and changes, which is how it knows when to update the DOM.'),
+(42, 1, 'customer', 'If your Vuex mutations aren''t updating state, check these common issues: 1) Make sure you''re using commit to call mutations, not direct state modification, 2) Verify mutation names match exactly, 3) Check if you''re modifying nested objects (Vue can''t detect these changes directly), 4) Use Vue devtools to see if mutations are being called, and 5) Ensure you''re not trying to modify state outside mutations.'),
+(43, 1, 'customer', 'For large Vue applications, I recommend: 1) Feature-based structure instead of type-based, 2) Modules for Vuex store, 3) Component registration for common components, 4) Router with lazy-loading, 5) Services for API calls, and 6) Composables (in Vue 3) for shared logic. Example structure: src/features/auth/, src/features/products/, src/components/common/, src/router/, src/store/, src/services/, etc.'),
+(44, 1, 'customer', 'To deploy a production Vue app: 1) Run npm run build to create optimized files, 2) Enable Vue Router''s history mode with proper server config, 3) Use dynamic imports for code-splitting (import() syntax), 4) Lazy load routes, 5) Configure proper cache headers for static assets, 6) Consider using a CDN for distribution, and 7) Use performance monitoring tools like Lighthouse to verify optimizations.'),
+(45, 1, 'customer', 'Great question! A Django project is the entire web application, containing multiple apps and configuration. A Django app is a self-contained module within a project that handles a specific functionality (e.g., blog, authentication, etc.). Projects can contain multiple apps, and apps can be reused across different projects. Think of a project as the website and apps as the features within it.'),
+(46, 1, 'customer', 'To create custom template tags in Django: 1) Create a templatetags package in your app with an __init__.py file, 2) Create a Python module (e.g., custom_tags.py), 3) Use @register.simple_tag or @register.inclusion_tag decorators, 4) Load your tags in templates with {% load custom_tags %}. Example: from django import template\nregister = template.Library()\n@register.simple_tag\ndef multiply(a, b):\n    return a * b'),
+(47, 1, 'customer', 'To customize Django admin: 1) Create a custom ModelAdmin class in admin.py, 2) Use list_display, list_filter, search_fields for customized lists, 3) Override get_urls() for custom views, 4) Use admin actions for batch operations, 5) Create custom templates in templates/admin/. Example: @admin.register(Product)\nclass ProductAdmin(admin.ModelAdmin):\n    list_display = [''name'', ''price'', ''in_stock'']\n    actions = [''mark_as_featured'']'),
+(48, 1, 'customer', 'For Django REST Framework authentication, I recommend: 1) Token authentication for mobile apps, 2) JWT for SPAs with refresh tokens, 3) Session auth for server-rendered Django apps, 4) OAuth2 for third-party integration. Always use permission_classes to restrict access based on user roles. For social auth, django-allauth or social-auth-app-django are excellent options.'),
+(49, 1, 'customer', 'For deploying Django: 1) Use Gunicorn/uWSGI as the app server, 2) Nginx as the web server, 3) PostgreSQL for the database, 4) Redis for caching, 5) Use environment variables for settings, 6) Collect static files with collectstatic, 7) Use a CDN for static files, and 8) Consider managed services like AWS RDS for databases. Docker containers are also excellent for consistent deployments.');
+
+-- Insert Videos
 INSERT INTO Videos (LessonID, Title, Description, VideoUrl, Duration)
-VALUES 
--- HTML Lesson Videos
-(1, 'HTML Introduction', 'Basic HTML concepts and structure', 'assets/videos/introduce-advance-js.mp4', 135),
-(1, 'HTML Tags and Elements', 'Working with different HTML elements', 'assets/videos/introduce-advance-js.mp4', 135),
--- CSS Lesson Videos
-(2, 'CSS Basics', 'Introduction to CSS styling', 'assets/videos/introduce-advance-js.mp4', 135),
-(2, 'CSS Layout', 'Understanding CSS layout techniques', 'assets/videos/introduce-advance-js.mp4', 135),
--- JavaScript Lesson Videos
-(3, 'JavaScript Variables', 'Working with variables in JavaScript', 'assets/videos/introduce-advance-js.mp4', 135),
-(3, 'JavaScript Functions', 'Understanding functions in JavaScript', 'assets/videos/introduce-advance-js.mp4', 135),
--- Add videos for other lessons
-(5, 'Python Basics', 'Introduction to Python syntax', 'assets/videos/introduce-advance-js.mp4', 135),
-(8, 'React Native Intro', 'Introduction to React Native', 'assets/videos/introduce-advance-js.mp4', 135),
-(10, 'Unity Introduction', 'Introduction to Unity interface and workflow', 'assets/videos/unity-introduction.mp4', 180),
-(15, 'Creating Game Objects', 'How to create and manipulate game objects in Unity', 'assets/videos/unity-gameobjects.mp4', 150),
-(16, 'C# Scripting Basics', 'Introduction to C# scripting in Unity', 'assets/videos/unity-csharp-basics.mp4', 165),
-(11, 'Design Principles', 'Introduction to design principles', 'assets/videos/introduce-advance-js.mp4', 135),
-(12, 'Advanced JS Intro', 'Introduction to advanced JavaScript', 'assets/videos/introduce-advance-js.mp4', 135),
-(13, 'Machine Learning Intro', 'Introduction to machine learning', 'assets/videos/introduce-advance-js.mp4', 135),
-(14, 'Swift Intro', 'Introduction to Swift programming', 'assets/videos/introduce-advance-js.mp4', 135);
+VALUES
+-- Web Development Bootcamp (CourseID 1)
+(1, 'HTML Structure and Elements', 'Learn the basic structure of HTML documents and essential elements', '/assets/videos/html-structure.mp4', 1800),
+(2, 'CSS Selectors and Properties', 'Master CSS selectors and common styling properties', '/assets/videos/css-selectors.mp4', 2100),
+(3, 'JavaScript Variables and Functions', 'Understanding variables, functions, and scope in JavaScript', '/assets/videos/js-basics.mp4', 2400),
+(4, 'Building Your First Web Page', 'Hands-on tutorial for creating a complete web page', '/assets/videos/first-webpage.mp4', 3000),
+(5, 'Media Queries and Flexbox', 'How to create responsive layouts with CSS', '/assets/videos/responsive-design.mp4', 2700),
+(6, 'React Components and Props', 'Introduction to React component architecture', '/assets/videos/react-intro.mp4', 2500),
+(7, 'State Management in React', 'Managing and updating state in React applications', '/assets/videos/react-state.mp4', 2600),
+(8, 'Node.js and Express Framework', 'Server-side JavaScript with Node.js', '/assets/videos/nodejs-basics.mp4', 2400),
+(9, 'Creating RESTful APIs', 'Design and implement RESTful APIs with Express', '/assets/videos/restful-apis.mp4', 2700),
+(10, 'MongoDB Integration', 'Connecting and using MongoDB with Node.js', '/assets/videos/mongodb-integration.mp4', 2500),
+(11, 'Deploying to Heroku and Netlify', 'How to deploy your full-stack applications', '/assets/videos/deployment.mp4', 2200),
+(12, 'Final Project Walkthrough', 'Step-by-step guide for the course final project', '/assets/videos/final-project-web.mp4', 3600),
+-- Python for Data Science (CourseID 2)
+(13, 'Python Syntax and Data Types', 'Introduction to Python programming language', '/assets/videos/python-basics.mp4', 2400),
+(14, 'Pandas DataFrame Operations', 'Working with data using pandas library', '/assets/videos/pandas-intro.mp4', 2700),
+(15, 'Creating Charts with Matplotlib', 'Data visualization techniques in Python', '/assets/videos/matplotlib-intro.mp4', 2500),
+(16, 'Statistical Analysis Methods', 'Applying statistical methods to datasets', '/assets/videos/stats-analysis.mp4', 2800),
+(17, 'Introduction to Machine Learning Models', 'Overview of common ML algorithms', '/assets/videos/scikit-learn-intro.mp4', 3000),
+(18, 'Data Cleaning Techniques', 'Methods for preparing and cleaning datasets', '/assets/videos/data-cleaning.mp4', 2400),
+(19, 'Working with REST APIs', 'Fetching and processing data from APIs', '/assets/videos/python-apis.mp4', 2200),
+(20, 'Processing Large Datasets', 'Techniques for handling big data in Python', '/assets/videos/big-data-python.mp4', 2600),
+-- React Native Mobile Apps (CourseID 3)
+(21, 'Setting Up React Native Environment', 'Guide to setting up React Native development environment', '/assets/videos/react-native-setup.mp4', 2000),
+-- Continuing the insertion of Videos for remaining courses
+-- React Native Mobile Apps (CourseID 3, continued)
+(22, 'Building Your First React Native App', 'Step-by-step app creation tutorial', '/assets/videos/react-native-first-app.mp4', 2800),
+(23, 'Navigation in React Native', 'Implementing navigation using React Navigation', '/assets/videos/react-native-navigation.mp4', 2500),
+(24, 'State Management with Redux', 'Managing app state with Redux', '/assets/videos/react-native-redux.mp4', 2700),
+(25, 'Using Native Components', 'Integrating device-native features', '/assets/videos/react-native-native-components.mp4', 2400),
+(26, 'Handling User Input', 'Managing forms and user interactions', '/assets/videos/react-native-user-input.mp4', 2200),
+(27, 'Networking with APIs', 'Connecting to REST APIs in React Native', '/assets/videos/react-native-networking.mp4', 2600),
+(28, 'Deploying to App Stores', 'Publishing apps to Google Play and App Store', '/assets/videos/react-native-deployment.mp4', 3000),
+(29, 'Performance Optimization', 'Optimizing React Native apps for performance', '/assets/videos/react-native-performance.mp4', 2300),
+(30, 'Final Project Walkthrough', 'Building a complete React Native app', '/assets/videos/react-native-final-project.mp4', 3600),
+-- Game Development with Unity (CourseID 4)
+(31, 'Unity Interface Overview', 'Introduction to Unity editor and tools', '/assets/videos/unity-intro.mp4', 2000),
+(32, 'Game Objects and Components', 'Working with Unity game objects', '/assets/videos/unity-game-objects.mp4', 2200),
+(33, 'C# Scripting Basics', 'Learning C# for Unity game development', '/assets/videos/unity-csharp.mp4', 2500),
+(34, 'Game Physics', 'Implementing physics and collisions in Unity', '/assets/videos/unity-physics.mp4', 2400),
+(35, 'Game UI Design', 'Creating user interfaces in Unity', '/assets/videos/unity-ui.mp4', 2300),
+(36, 'Audio Integration', 'Adding sound effects and music to games', '/assets/videos/unity-audio.mp4', 2100),
+(37, 'Character Animation', 'Animating characters in Unity', '/assets/videos/unity-animation.mp4', 2600),
+(38, 'Game AI Basics', 'Implementing basic AI behaviors', '/assets/videos/unity-ai.mp4', 2400),
+(39, 'Performance Optimization', 'Optimizing games for better performance', '/assets/videos/unity-performance.mp4', 2200),
+(40, 'Publishing Your Game', 'Steps to publish your Unity game', '/assets/videos/unity-publishing.mp4', 2000),
+-- UI/UX Design Principles (CourseID 5)
+(41, 'Design Thinking Basics', 'Introduction to design thinking principles', '/assets/videos/design-thinking.mp4', 2100),
+(42, 'User Research Techniques', 'Conducting effective user research', '/assets/videos/user-research.mp4', 2300),
+(43, 'Wireframing Tools', 'Creating wireframes for UI design', '/assets/videos/wireframing.mp4', 2200),
+(44, 'Color Theory Basics', 'Understanding color theory for UI', '/assets/videos/color-theory.mp4', 2000),
+(45, 'Typography Essentials', 'Choosing and applying typography', '/assets/videos/typography.mp4', 2100),
+(46, 'Creating User Personas', 'Building effective user personas', '/assets/videos/user-personas.mp4', 2000),
+(47, 'Usability Testing Methods', 'Conducting usability tests', '/assets/videos/usability-testing.mp4', 2300),
+(48, 'Mobile-First Design', 'Designing for mobile devices first', '/assets/videos/mobile-first.mp4', 2200),
+-- Advanced JavaScript (CourseID 6)
+(49, 'Understanding Closures', 'Deep dive into JavaScript closures', '/assets/videos/js-closures.mp4', 2400),
+(50, 'Prototypes and Inheritance', 'Exploring JavaScript prototypes', '/assets/videos/js-prototypes.mp4', 2500),
+(51, 'Asynchronous Programming', 'Handling async operations in JavaScript', '/assets/videos/js-async.mp4', 2600),
+(52, 'ES6+ Features', 'Modern JavaScript features and syntax', '/assets/videos/js-es6.mp4', 2300),
+(53, 'Functional Programming', 'Applying functional programming in JS', '/assets/videos/js-functional.mp4', 2400),
+(54, 'Design Patterns', 'Common JavaScript design patterns', '/assets/videos/js-patterns.mp4', 2500),
+(55, 'Testing JavaScript', 'Unit testing with Jest', '/assets/videos/js-testing.mp4', 2200),
+(56, 'Performance Optimization', 'Optimizing JavaScript code', '/assets/videos/js-performance.mp4', 2300),
+(57, 'Advanced Project Walkthrough', 'Building a complex JS project', '/assets/videos/js-advanced-project.mp4', 3600),
+-- Machine Learning Fundamentals (CourseID 7)
+(58, 'ML Concepts Overview', 'Introduction to machine learning concepts', '/assets/videos/ml-intro.mp4', 2400),
+(59, 'Supervised Learning', 'Understanding supervised learning algorithms', '/assets/videos/ml-supervised.mp4', 2600),
+(60, 'Unsupervised Learning', 'Exploring unsupervised learning techniques', '/assets/videos/ml-unsupervised.mp4', 2500),
+(61, 'Feature Engineering', 'Crafting effective features for ML', '/assets/videos/ml-features.mp4', 2400),
+(62, 'Model Evaluation', 'Evaluating ML model performance', '/assets/videos/ml-evaluation.mp4', 2300),
+(63, 'Neural Networks Intro', 'Basics of neural networks', '/assets/videos/ml-neural.mp4', 2600),
+(64, 'Deep Learning Basics', 'Introduction to deep learning', '/assets/videos/ml-deep-learning.mp4', 2700),
+(65, 'ML Applications', 'Real-world machine learning applications', '/assets/videos/ml-applications.mp4', 2500),
+(66, 'AI Ethics', 'Ethical considerations in machine learning', '/assets/videos/ml-ethics.mp4', 2200),
+(67, 'Final ML Project', 'Building a complete ML project', '/assets/videos/ml-final-project.mp4', 3600),
+-- iOS App Development with Swift (CourseID 8)
+(68, 'Swift Language Basics', 'Introduction to Swift programming', '/assets/videos/swift-basics.mp4', 2400),
+(69, 'iOS App Architecture', 'Understanding iOS app structure', '/assets/videos/ios-architecture.mp4', 2300),
+(70, 'UIKit Fundamentals', 'Working with UIKit for UI', '/assets/videos/uikit-basics.mp4', 2500),
+(71, 'SwiftUI Basics', 'Introduction to SwiftUI framework', '/assets/videos/swiftui-intro.mp4', 2400),
+(72, 'Data Management', 'Handling data in iOS apps', '/assets/videos/ios-data.mp4', 2300),
+(73, 'Networking in iOS', 'Connecting to APIs in iOS', '/assets/videos/ios-networking.mp4', 2600),
+(74, 'Core Data Basics', 'Using Core Data for persistence', '/assets/videos/core-data.mp4', 2500),
+(75, 'iOS Testing', 'Testing iOS applications', '/assets/videos/ios-testing.mp4', 2200),
+(76, 'App Store Deployment', 'Publishing to the App Store', '/assets/videos/ios-deployment.mp4', 2300),
+(77, 'Final iOS Project', 'Building a complete iOS app', '/assets/videos/ios-final-project.mp4', 3600),
+-- SQL Database Mastery (CourseID 9)
+(78, 'Database Fundamentals', 'Introduction to database concepts', '/assets/videos/db-intro.mp4', 2100),
+(79, 'SQL CRUD Operations', 'Basic SQL operations', '/assets/videos/sql-crud.mp4', 2300),
+(80, 'Advanced SQL Queries', 'Writing complex SQL queries', '/assets/videos/sql-advanced.mp4', 2500),
+(81, 'Database Design', 'Designing normalized databases', '/assets/videos/db-design.mp4', 2400),
+(82, 'Indexing Techniques', 'Optimizing database performance', '/assets/videos/db-indexing.mp4', 2200),
+(83, 'Stored Procedures', 'Writing stored procedures', '/assets/videos/db-procedures.mp4', 2300),
+(84, 'Transactions', 'Managing database transactions', '/assets/videos/db-transactions.mp4', 2200),
+(85, 'Database Security', 'Securing database systems', '/assets/videos/db-security.mp4', 2100),
+(86, 'Real-world DB Projects', 'Building practical database solutions', '/assets/videos/db-projects.mp4', 3000),
+-- DevOps Engineering (CourseID 10)
+(87, 'DevOps Introduction', 'Overview of DevOps principles', '/assets/videos/devops-intro.mp4', 2100),
+(88, 'Git Version Control', 'Using Git for version control', '/assets/videos/devops-git.mp4', 2300),
+(89, 'CI/CD Pipelines', 'Setting up CI/CD pipelines', '/assets/videos/devops-cicd.mp4', 2500),
+(90, 'Docker Containers', 'Containerization with Docker', '/assets/videos/devops-docker.mp4', 2400),
+(91, 'Kubernetes Basics', 'Orchestrating containers with Kubernetes', '/assets/videos/devops-kubernetes.mp4', 2600),
+(92, 'Infrastructure as Code', 'Using IaC tools like Terraform', '/assets/videos/devops-iac.mp4', 2300),
+(93, 'Monitoring Systems', 'Setting up monitoring and logging', '/assets/videos/devops-monitoring.mp4', 2200),
+(94, 'Cloud Integration', 'Integrating with cloud services', '/assets/videos/devops-cloud.mp4', 2400),
+(95, 'DevOps Best Practices', 'Implementing DevOps effectively', '/assets/videos/devops-practices.mp4', 2300),
+(96, 'DevOps Project', 'Complete DevOps pipeline project', '/assets/videos/devops-project.mp4', 3600),
+-- Ethical Hacking (CourseID 11)
+(97, 'Ethical Hacking Intro', 'Introduction to ethical hacking', '/assets/videos/hacking-intro.mp4', 2100),
+(98, 'Reconnaissance', 'Gathering information for hacking', '/assets/videos/hacking-recon.mp4', 2300),
+(99, 'Network Scanning', 'Scanning networks for vulnerabilities', '/assets/videos/hacking-scanning.mp4', 2400),
+(100, 'Enumeration Techniques', 'Enumerating system resources', '/assets/videos/hacking-enumeration.mp4', 2200),
+(101, 'Vulnerability Analysis', 'Identifying system vulnerabilities', '/assets/videos/hacking-vulnerabilities.mp4', 2300),
+(102, 'System Hacking', 'Exploiting system weaknesses', '/assets/videos/hacking-system.mp4', 2500),
+(103, 'Malware Analysis', 'Understanding malware threats', '/assets/videos/hacking-malware.mp4', 2400),
+(104, 'Network Sniffing', 'Capturing network traffic', '/assets/videos/hacking-sniffing.mp4', 2200),
+(105, 'Social Engineering', 'Exploiting human psychology', '/assets/videos/hacking-social.mp4', 2100),
+(106, 'DoS Attacks', 'Understanding denial-of-service attacks', '/assets/videos/hacking-dos.mp4', 2300),
+(107, 'Session Hijacking', 'Hijacking user sessions', '/assets/videos/hacking-session.mp4', 2200),
+(108, 'Web Security', 'Securing web applications', '/assets/videos/hacking-web.mp4', 2400),
+-- Deep Learning with TensorFlow (CourseID 12)
+(109, 'Deep Learning Intro', 'Introduction to deep learning concepts', '/assets/videos/dl-intro.mp4', 2400),
+(110, 'TensorFlow Basics', 'Getting started with TensorFlow', '/assets/videos/dl-tensorflow.mp4', 2500),
+(111, 'Building Neural Networks', 'Constructing neural networks', '/assets/videos/dl-neural-networks.mp4', 2600),
+(112, 'Convolutional Neural Networks', 'Understanding CNNs', '/assets/videos/dl-cnn.mp4', 2700),
+(113, 'Recurrent Neural Networks', 'Working with RNNs', '/assets/videos/dl-rnn.mp4', 2500),
+(114, 'Transfer Learning', 'Using pre-trained models', '/assets/videos/dl-transfer.mp4', 2400),
+(115, 'Generative Models', 'Creating generative AI models', '/assets/videos/dl-generative.mp4', 2600),
+(116, 'NLP with TensorFlow', 'Natural language processing basics', '/assets/videos/dl-nlp.mp4', 2500),
+(117, 'Computer Vision', 'Applying deep learning to vision', '/assets/videos/dl-vision.mp4', 2700),
+(118, 'Model Deployment', 'Deploying TensorFlow models', '/assets/videos/dl-deployment.mp4', 2300),
+-- Blockchain Development (CourseID 13)
+(119, 'Blockchain Basics', 'Introduction to blockchain technology', '/assets/videos/blockchain-intro.mp4', 2200),
+(120, 'Cryptography Fundamentals', 'Understanding cryptographic principles', '/assets/videos/blockchain-crypto.mp4', 2300),
+(121, 'Bitcoin Protocol', 'Exploring Bitcoin blockchain', '/assets/videos/blockchain-bitcoin.mp4', 2400),
+(122, 'Ethereum Smart Contracts', 'Building smart contracts with Ethereum', '/assets/videos/blockchain-ethereum.mp4', 2600),
+(123, 'Solidity Programming', 'Learning Solidity for smart contracts', '/assets/videos/blockchain-solidity.mp4', 2500),
+(124, 'Building DApps', 'Creating decentralized applications', '/assets/videos/blockchain-dapps.mp4', 2700),
+(125, 'Web3.js Integration', 'Connecting blockchain to frontend', '/assets/videos/blockchain-web3.mp4', 2400),
+(126, 'Testing Smart Contracts', 'Ensuring smart contract reliability', '/assets/videos/blockchain-testing.mp4', 2300),
+(127, 'Blockchain Security', 'Securing blockchain applications', '/assets/videos/blockchain-security.mp4', 2200),
+(128, 'Blockchain Project', 'Building a complete blockchain app', '/assets/videos/blockchain-project.mp4', 3600),
+-- Internet of Things Fundamentals (CourseID 14)
+(129, 'IoT Overview', 'Introduction to IoT concepts', '/assets/videos/iot-intro.mp4', 2100),
+(130, 'Sensors and Actuators', 'Working with IoT hardware', '/assets/videos/iot-sensors.mp4', 2300),
+(131, 'Arduino Programming', 'Programming Arduino for IoT', '/assets/videos/iot-arduino.mp4', 2400),
+(132, 'Raspberry Pi Setup', 'Setting up Raspberry Pi for IoT', '/assets/videos/iot-raspberry.mp4', 2500),
+(133, 'IoT Networking', 'Networking protocols for IoT', '/assets/videos/iot-networking.mp4', 2300),
+(134, 'IoT Cloud Platforms', 'Using cloud services for IoT', '/assets/videos/iot-cloud.mp4', 2400),
+(135, 'IoT Security', 'Securing IoT devices', '/assets/videos/iot-security.mp4', 2200),
+(136, 'IoT Data Analytics', 'Analyzing IoT data', '/assets/videos/iot-analytics.mp4', 2300),
+(137, 'End-to-End IoT', 'Building complete IoT solutions', '/assets/videos/iot-end-to-end.mp4', 2600),
+(138, 'IoT Industry Applications', 'Real-world IoT applications', '/assets/videos/iot-applications.mp4', 2400),
+-- Vue.js for Frontend Development (CourseID 15)
+(139, 'Vue.js Introduction', 'Getting started with Vue.js', '/assets/videos/vue-intro.mp4', 2100),
+(140, 'Vue Components', 'Building reusable Vue components', '/assets/videos/vue-components.mp4', 2300),
+(141, 'Vue Directives', 'Using Vue directives and events', '/assets/videos/vue-directives.mp4', 2200),
+(142, 'Vue Reactivity', 'Understanding Vue reactivity system', '/assets/videos/vue-reactivity.mp4', 2400),
+(143, 'Vue Router', 'Implementing navigation with Vue Router', '/assets/videos/vue-router.mp4', 2300),
+(144, 'Vuex State Management', 'Managing state with Vuex', '/assets/videos/vue-vuex.mp4', 2500),
+(145, 'Vue Forms', 'Handling forms in Vue.js', '/assets/videos/vue-forms.mp4', 2200),
+(146, 'Vue Best Practices', 'Best practices for Vue development', '/assets/videos/vue-practices.mp4', 2300),
+(147, 'Testing Vue Apps', 'Unit testing Vue applications', '/assets/videos/vue-testing.mp4', 2200),
+(148, 'Vue Production App', 'Building a production-ready Vue app', '/assets/videos/vue-project.mp4', 3600),
+-- Django Web Framework (CourseID 16)
+(149, 'Django Introduction', 'Overview of Django framework', '/assets/videos/django-intro.mp4', 2100),
+(150, 'Django Models', 'Working with Django models and databases', '/assets/videos/django-models.mp4', 2300),
+(151, 'Django Views', 'Creating views and templates in Django', '/assets/videos/django-views.mp4', 2400),
+(152, 'Django Forms', 'Handling forms in Django', '/assets/videos/django-forms.mp4', 2200),
+(153, 'Django Admin', 'Customizing Django admin interface', '/assets/videos/django-admin.mp4', 2300),
+(154, 'Django Authentication', 'Implementing authentication in Django', '/assets/videos/django-auth.mp4', 2400),
+(155, 'Django REST APIs', 'Building APIs with Django REST Framework', '/assets/videos/django-rest.mp4', 2500),
+(156, 'Testing Django Apps', 'Unit testing Django applications', '/assets/videos/django-testing.mp4', 2200),
+(157, 'Django Deployment', 'Deploying Django applications', '/assets/videos/django-deployment.mp4', 2300),
+(158, 'Django Project', 'Building a complete Django project', '/assets/videos/django-project.mp4', 3600);
 
--- 17. Insert Materials
-INSERT INTO Materials (LessonID, Title, Description, Content, FileUrl)
-VALUES 
-(1, 'HTML Reference Guide', 'Comprehensive HTML reference guide', 'This is a complete reference for HTML elements and attributes.', 'assets/materials/html-reference.pdf'),
-(2, 'CSS Cheat Sheet', 'Quick reference for CSS properties', 'A cheat sheet containing all common CSS properties and values.', 'assets/materials/css-cheatsheet.pdf'),
-(3, 'JavaScript Exercise Files', 'Practice exercises for JavaScript', 'A set of JavaScript exercises to practice your skills.', 'assets/materials/js-exercises.pdf'),
-(5, 'Python Cheat Sheet', 'Quick reference for Python syntax', 'A complete reference for Python syntax and common functions.', 'assets/materials/python-cheatsheet.pdf'),
-(8, 'React Native Setup Guide', 'Guide for setting up React Native', 'Complete guide to set up your React Native development environment.', 'assets/materials/react-native-setup.pdf'),
-(10, 'Unity Installation Guide', 'Guide for setting up Unity', 'A comprehensive guide to install Unity and set up your game development environment.', 'assets/materials/unity-setup.pdf'),
-(15, 'C# for Unity Reference', 'Quick reference for Unity C# scripting', 'Essential C# concepts and patterns specifically for Unity game development.', 'assets/materials/unity-csharp-reference.pdf'),
-(16, 'Game Design Document Template', 'Template for planning your game', 'A structured template for planning and documenting your game concept and mechanics.', 'assets/materials/game-design-template.pdf'),
-(11, 'Design Patterns Guide', 'Guide to common design patterns', 'A comprehensive guide to UI/UX design patterns.', 'assets/materials/design-patterns.pdf'),
-(12, 'Advanced JS Reference', 'Reference for advanced JavaScript', 'Advanced JavaScript concepts and examples.', 'assets/materials/advanced-js-reference.pdf'),
-(13, 'ML Algorithms Overview', 'Overview of ML algorithms', 'A guide to common machine learning algorithms.', 'assets/materials/ml-algorithms.pdf'),
-(14, 'Swift Programming Guide', 'Guide to Swift programming', 'Comprehensive guide to Swift programming language.', 'assets/materials/swift-guide.pdf');
+-- Insert Materials
+INSERT INTO Materials (LessonID, Title, Description, FileUrl)
+VALUES
+-- Web Development Bootcamp (CourseID 1)
+(1, 'HTML Cheat Sheet', 'Quick reference for HTML elements and attributes', '/assets/materials/html-cheat-sheet.pdf'),
+(2, 'CSS Properties Guide', 'Comprehensive guide to CSS properties', '/assets/materials/css-guide.pdf'),
+(3, 'JavaScript Basics', 'Summary of JavaScript fundamentals', '/assets/materials/js-basics.pdf'),
+(4, 'Website Project Template', 'Starter template for building a website', '/assets/materials/website-template.zip'),
+(5, 'Responsive Design Guide', 'Best practices for responsive design', '/assets/materials/responsive-design.pdf'),
+(6, 'React Component Guide', 'Guide to React components and props', '/assets/materials/react-components.pdf'),
+(7, 'React State Management', 'State management patterns in React', '/assets/materials/react-state.pdf'),
+(8, 'Node.js Cheat Sheet', 'Quick reference for Node.js APIs', '/assets/materials/nodejs-cheat-sheet.pdf'),
+(9, 'REST API Design', 'Best practices for RESTful APIs', '/assets/materials/rest-api-design.pdf'),
+(10, 'MongoDB Guide', 'Introduction to MongoDB integration', '/assets/materials/mongodb-guide.pdf'),
+(11, 'Deployment Checklist', 'Checklist for deploying web apps', '/assets/materials/deployment-checklist.pdf'),
+(12, 'Final Project Guidelines', 'Guidelines for the final project', '/assets/materials/web-final-project.pdf'),
+-- Python for Data Science (CourseID 2)
+(13, 'Python Cheat Sheet', 'Quick reference for Python syntax', '/assets/materials/python-cheat-sheet.pdf'),
+(14, 'Pandas Reference', 'Pandas operations and functions', '/assets/materials/pandas-reference.pdf'),
+(15, 'Matplotlib Guide', 'Guide to creating visualizations', '/assets/materials/matplotlib-guide.pdf'),
+(16, 'Statistics Cheat Sheet', 'Key statistical methods', '/assets/materials/stats-cheat-sheet.pdf'),
+(17, 'Scikit-learn Reference', 'Overview of Scikit-learn APIs', '/assets/materials/scikit-learn-reference.pdf'),
+(18, 'Data Cleaning Checklist', 'Checklist for data cleaning', '/assets/materials/data-cleaning-checklist.pdf'),
+(19, 'API Integration Guide', 'Guide to working with APIs', '/assets/materials/api-integration.pdf'),
+(20, 'Big Data Processing', 'Techniques for big data in Python', '/assets/materials/big-data-python.pdf'),
+-- React Native Mobile Apps (CourseID 3)
+(21, 'React Native Setup Guide', 'Step-by-step setup instructions', '/assets/materials/react-native-setup.pdf'),
+(22, 'App Template', 'Starter template for React Native', '/assets/materials/react-native-template.zip'),
+(23, 'Navigation Guide', 'React Navigation best practices', '/assets/materials/navigation-guide.pdf'),
+(24, 'Redux Reference', 'Redux state management guide', '/assets/materials/redux-reference.pdf'),
+(25, 'Native Components', 'List of native components', '/assets/materials/native-components.pdf'),
+(26, 'Form Handling Guide', 'Best practices for forms', '/assets/materials/form-handling.pdf'),
+(27, 'API Integration', 'Connecting to APIs in React Native', '/assets/materials/api-integration-rn.pdf'),
+(28, 'App Store Guidelines', 'Guidelines for app store submission', '/assets/materials/app-store-guidelines.pdf'),
+(29, 'Performance Checklist', 'Optimizing React Native apps', '/assets/materials/performance-checklist.pdf'),
+(30, 'Final Project Specs', 'Specifications for final project', '/assets/materials/rn-final-project.pdf'),
+-- Game Development with Unity (CourseID 4)
+(31, 'Unity Interface Guide', 'Overview of Unity editor', '/assets/materials/unity-interface.pdf'),
+(32, 'Game Objects Reference', 'Guide to Unity game objects', '/assets/materials/game-objects.pdf'),
+(33, 'C# Cheat Sheet', 'Quick reference for C# in Unity', '/assets/materials/csharp-cheat-sheet.pdf'),
+(34, 'Physics Guide', 'Unity physics and collisions', '/assets/materials/unity-physics.pdf'),
+(35, 'UI Design Guide', 'Creating UIs in Unity', '/assets/materials/unity-ui-guide.pdf'),
+(36, 'Audio Integration', 'Adding audio to Unity games', '/assets/materials/unity-audio.pdf'),
+(37, 'Animation Guide', 'Animating characters in Unity', '/assets/materials/unity-animation.pdf'),
+(38, 'AI Basics', 'Implementing AI in Unity', '/assets/materials/unity-ai.pdf'),
+(39, 'Optimization Guide', 'Optimizing Unity games', '/assets/materials/unity-optimization.pdf'),
+(40, 'Publishing Guide', 'Steps to publish Unity games', '/assets/materials/unity-publishing.pdf'),
+-- UI/UX Design Principles (CourseID 5)
+(41, 'Design Thinking Overview', 'Principles of design thinking', '/assets/materials/design-thinking.pdf'),
+(42, 'User Research Guide', 'Conducting user research', '/assets/materials/user-research.pdf'),
+(43, 'Wireframing Tools', 'Overview of wireframing tools', '/assets/materials/wireframing-tools.pdf'),
+(44, 'Color Theory Guide', 'Understanding color theory', '/assets/materials/color-theory.pdf'),
+(45, 'Typography Guide', 'Choosing typography for UI', '/assets/materials/typography-guide.pdf'),
+(46, 'User Personas Template', 'Template for creating personas', '/assets/materials/user-personas.pdf'),
+(47, 'Usability Testing Guide', 'Conducting usability tests', '/assets/materials/usability-testing.pdf'),
+(48, 'Mobile-First Design', 'Designing for mobile first', '/assets/materials/mobile-first.pdf');
+-- Additional Materials for other courses can be added similarly
 
--- 18. Insert Quizzes
+-- Insert Quizzes
 INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore)
 VALUES
-(1, 'HTML Basics Quiz', 'Test your knowledge of HTML fundamentals', 20, 70),
-(2, 'CSS Mastery Quiz', 'Check your understanding of CSS concepts', 25, 70),
-(3, 'JavaScript Fundamentals Quiz', 'Test your JavaScript knowledge', 30, 75),
-(4, 'Website Building Quiz', 'Final test for website building concepts', 45, 80),
-(5, 'Python Syntax Quiz', 'Test your knowledge of Python syntax', 15, 70),
-(6, 'Pandas Library Quiz', 'Check your understanding of Pandas', 30, 75),
-(7, 'Data Visualization Quiz', 'Test your skills in data visualization', 25, 70),
-(8, 'React Native Basics Quiz', 'Test your understanding of React Native setup', 20, 70),
-(9, 'Mobile App Development Quiz', 'Final check on mobile app development concepts', 30, 75),
-(10, 'Unity Basics Quiz', 'Test your understanding of Unity interface and components', 25, 70),
-(15, 'Game Objects Quiz', 'Test your knowledge of game objects and prefabs', 20, 70),
-(16, 'C# for Unity Quiz', 'Check your understanding of C# scripting in Unity', 30, 75),
-(11, 'Design Principles Quiz', 'Test your knowledge of design principles', 20, 70),
-(12, 'Advanced JS Quiz', 'Test your advanced JavaScript knowledge', 30, 75),
-(13, 'Machine Learning Quiz', 'Test your understanding of ML concepts', 25, 70),
-(14, 'Swift Programming Quiz', 'Test your Swift programming knowledge', 30, 70);
+-- Web Development Bootcamp (CourseID 1)
+(1, 'HTML Basics Quiz', 'Test your knowledge of HTML fundamentals', 1800, 70),
+(2, 'CSS Properties Quiz', 'Assess your understanding of CSS', 1800, 70),
+(3, 'JavaScript Basics Quiz', 'Quiz on JavaScript fundamentals', 1800, 70),
+(5, 'Responsive Design Quiz', 'Test your responsive design knowledge', 1800, 70),
+(6, 'React Components Quiz', 'Quiz on React basics', 1800, 70),
+(8, 'Node.js Quiz', 'Test your Node.js knowledge', 1800, 70),
+-- Python for Data Science (CourseID 2)
+(13, 'Python Basics Quiz', 'Test your Python fundamentals', 1800, 70),
+(14, 'Pandas Quiz', 'Assess your Pandas skills', 1800, 70),
+(15, 'Matplotlib Quiz', 'Test your visualization skills', 1800, 70),
+(17, 'Machine Learning Quiz', 'Quiz on ML basics', 1800, 70),
+-- React Native Mobile Apps (CourseID 3)
+(21, 'React Native Setup Quiz', 'Test your setup knowledge', 1800, 70),
+(23, 'Navigation Quiz', 'Assess navigation implementation', 1800, 70),
+(24, 'Redux Quiz', 'Test your Redux knowledge', 1800, 70),
+-- Game Development with Unity (CourseID 4)
+(31, 'Unity Basics Quiz', 'Test your Unity knowledge', 1800, 70),
+(33, 'C# Scripting Quiz', 'Assess your C# skills', 1800, 70),
+(35, 'Unity UI Quiz', 'Test your Unity UI knowledge', 1800, 70),
+-- UI/UX Design Principles (CourseID 5)
+(41, 'Design Thinking Quiz', 'Test your design thinking knowledge', 1800, 70),
+(43, 'Wireframing Quiz', 'Assess your wireframing skills', 1800, 70),
+(45, 'Typography Quiz', 'Test your typography knowledge', 1800, 70);
 
--- 19. Insert LessonProgress
-INSERT INTO LessonProgress (UserID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+-- Insert LessonProgress
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
--- User 4's progress
-(4, 1, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -15, GETDATE())), -- HTML completed
-(4, 2, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- CSS completed
-(4, 3, 0, NULL, DATEADD(day, -5, GETDATE())),                          -- JS in progress
-(4, 5, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),   -- Python completed
+(1, 1, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(1, 2, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
+(1, 3, 0, NULL, DATEADD(day, -3, GETDATE())),
+(2, 1, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -6, GETDATE())),
+(2, 2, 0, NULL, DATEADD(day, -5, GETDATE())),
+(3, 1, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
+(3, 3, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
+(4, 31, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
+(5, 41, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
+(5, 42, 0, NULL, GETDATE());
 
--- User 5's progress
-(5, 1, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -20, GETDATE())),  -- HTML completed
-(5, 2, 1, DATEADD(day, -18, GETDATE()), DATEADD(day, -18, GETDATE())),  -- CSS completed
-(5, 3, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -15, GETDATE())),  -- JS completed
-(5, 4, 0, NULL, DATEADD(day, -10, GETDATE())),                          -- Website building in progress
-(5, 6, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),    -- Pandas completed
-
--- User 6's progress
-(6, 1, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -12, GETDATE())),  -- HTML completed
-(6, 2, 0, NULL, DATEADD(day, -8, GETDATE())),                           -- CSS in progress
-(6, 6, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),    -- Pandas completed
-(6, 7, 0, NULL, DATEADD(day, -3, GETDATE()));                           -- Data Viz in progress
-
--- 20. Insert PaymentTransactions
-INSERT INTO PaymentTransactions (OrderID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo)
+-- Insert PaymentTransactions
+INSERT INTO PaymentTransactions (OrderID, RefundRequestID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo)
 VALUES
-(1, 'payment', 'VNPAY', 'TXN123456789', NULL),
-(2, 'payment', 'VNPAY', 'PP987654321', NULL),
-(3, 'payment', 'VNPAY', 'TXN234567890', NULL),
-(4, 'payment', 'VNPAY', 'PP876543210', NULL),
-(5, 'payment', 'VNPAY', 'VN345678901', NULL);
+(1, NULL, 'payment', 'PayPal', 'PAYID-MX123456', 'user@example.com'),
+(2, NULL, 'payment', 'Stripe', 'ch_3K123456789', '****1234'),
+(3, 2, 'refund', 'PayPal', 'REF-123456789', 'user@example.com'),
+(4, NULL, 'payment', 'Stripe', 'ch_3K123456790', '****5678'),
+(5, 3, 'refund', 'PayPal', 'REF-123456790', 'student3@example.com'),
+(6, 4, 'refund', 'Stripe', 're_3K123456791', '****9012'),
+(7, NULL, 'payment', 'PayPal', 'PAYID-MX123457', 'student5@example.com'),
+(8, 5, 'refund', 'Stripe', 're_3K123456792', '****3456'),
+(9, NULL, 'payment', 'PayPal', 'PAYID-MX123458', 'mike.smith@example.com'),
+(10, NULL, 'payment', 'Stripe', 'ch_3K123456793', '****7890');
 
--- Add sample refund transaction
-INSERT INTO PaymentTransactions (RefundRequestID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo)
-VALUES
-(1, 'refund', 'VNPAY', 'RF123456789', '19034857623901 - NGUYEN VAN A - Techcombank');
-
--- 21. Insert DiscussionReplies
-INSERT INTO DiscussionReplies (DiscussionID, UserID, Content, IsInstructorReply, IsAcceptedAnswer)
-VALUES
-(1, 2, '<div> is a block element while <span> is an inline element. Use <div> when you want a new line before and after the element, and <span> when you want to style text inline.', 1, 1),
-(2, 2, 'for...in loops iterate over the enumerable properties of an object, while for...of loops iterate over the values of an iterable object like arrays.', 1, 0),
-(1, 5, 'Also, <div> is commonly used for layout while <span> is used for styling small portions of text.', 0, 0),
-(3, 2, 'Try downloading the latest installer from python.org and make sure to check "Add Python to PATH" during installation.', 1, 0),
-(4, 5, 'Check if your Metro bundler is running. You might need to restart it with "npx react-native start".', 0, 0),
-(5, 2, 'You can use df.loc[] for label-based filtering or df.query() for string expressions.', 1, 1),
-(5, 6, 'Thanks! df.query() worked perfectly for my needs.', 0, 0),
-(6, 3, 'For game UIs, keep controls intuitive and consistent. Use clear visual feedback for player actions and maintain a balanced HUD that doesn''t obstruct gameplay. For a good Unity game UI, consider using Canvas with Screen Space - Camera for 3D integration.', 1, 1),
-(7, 3, 'Closures are functions that remember their lexical environment. Example: function outer() { let x = 10; function inner() { console.log(x); } return inner; }', 1, 0),
-(8, 2, 'Try feature engineering, hyperparameter tuning, or using a more complex model. Also check if your data is imbalanced.', 1, 0),
-(9, 2, 'Use SwiftUI for new apps targeting iOS 13+ for faster development. UIKit is better for complex UI, backward compatibility, or specific controls not available in SwiftUI.', 1, 1);
-
--- 22. Insert LessonItems
--- First, clear any existing data
-DELETE FROM LessonItems;
-
--- Then insert data for Videos with a ROW_NUMBER to ensure unique OrderIndex
+-- Insert LessonItems
 INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID)
-SELECT 
-    v.LessonID, 
-    ROW_NUMBER() OVER (PARTITION BY v.LessonID ORDER BY v.VideoID), 
-    'video', 
-    v.VideoID
-FROM Videos v;
+VALUES
+(1, 1, 'video', 1), (1, 2, 'material', 1), (1, 3, 'quiz', 1),
+(2, 1, 'video', 2), (2, 2, 'material', 2), (2, 3, 'quiz', 2),
+(3, 1, 'video', 3), (3, 2, 'material', 3), (3, 3, 'quiz', 3),
+(5, 1, 'video', 5), (5, 2, 'material', 5), (5, 3, 'quiz', 4),
+(6, 1, 'video', 6), (6, 2, 'material', 6), (6, 3, 'quiz', 5),
+(8, 1, 'video', 8), (8, 2, 'material', 8), (8, 3, 'quiz', 6),
+(13, 1, 'video', 13), (13, 2, 'material', 13), (13, 3, 'quiz', 7),
+(14, 1, 'video', 14), (14, 2, 'material', 14), (14, 3, 'quiz', 8),
+(15, 1, 'video', 15), (15, 2, 'material', 15), (15, 3, 'quiz', 9),
+(17, 1, 'video', 17), (17, 2, 'material', 17), (17, 3, 'quiz', 10);
 
--- Insert Materials with OrderIndex that continues from Videos
-INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID)
-SELECT 
-    m.LessonID, 
-    (SELECT COUNT(*) FROM LessonItems WHERE LessonID = m.LessonID) + 1,
-    'material', 
-    m.MaterialID
-FROM Materials m;
-
--- Insert Quizzes with OrderIndex that continues from both Videos and Materials
-INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID)
-SELECT 
-    q.LessonID, 
-    (SELECT COUNT(*) FROM LessonItems WHERE LessonID = q.LessonID) + 1,
-    'quiz', 
-    q.QuizID
-FROM Quizzes q;
-
--- 24. Insert Questions
+-- Insert Questions
 INSERT INTO Questions (QuizID, Content, Type, Points, OrderIndex)
 VALUES
 (1, 'What does HTML stand for?', 'multiple_choice', 1, 1),
-(1, 'Which tag is used to create a hyperlink?', 'multiple_choice', 1, 2),
-(1, 'HTML is a programming language.', 'true_false', 1, 3),
-(2, 'Which CSS property is used to change the text color?', 'multiple_choice', 1, 1),
-(2, 'What does CSS stand for?', 'multiple_choice', 1, 2),
-(3, 'What is the correct way to declare a JavaScript variable?', 'multiple_choice', 1, 1),
-(3, 'JavaScript is case-sensitive.', 'true_false', 1, 2);
+(1, 'Which tag is used for a line break?', 'multiple_choice', 1, 2),
+(2, 'What CSS property controls text size?', 'multiple_choice', 1, 1),
+(2, 'How do you center an element horizontally?', 'multiple_choice', 1, 2),
+(3, 'What is the correct syntax for a JavaScript function?', 'multiple_choice', 1, 1),
+(3, 'What does "var" do in JavaScript?', 'multiple_choice', 1, 2),
+(4, 'What is a media query in CSS?', 'multiple_choice', 1, 1),
+(4, 'What is Flexbox used for?', 'multiple_choice', 1, 2),
+(5, 'What is a React component?', 'multiple_choice', 1, 1),
+(5, 'What are props in React?', 'multiple_choice', 1, 2);
 
--- 25. Insert LessonItemProgress
-INSERT INTO LessonItemProgress (UserID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
-SELECT 4, li.LessonItemID, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -15, GETDATE())
-FROM LessonItems li
-WHERE li.LessonID = 1 AND li.ItemType = 'video' AND li.OrderIndex = 1;
-
-INSERT INTO LessonItemProgress (UserID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
-SELECT 4, li.LessonItemID, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -14, GETDATE())
-FROM LessonItems li
-WHERE li.LessonID = 1 AND li.ItemType = 'material' AND li.OrderIndex = 2;
-
-INSERT INTO LessonItemProgress (UserID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
-SELECT 5, li.LessonItemID, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -20, GETDATE())
-FROM LessonItems li
-WHERE li.LessonID IN (1, 2, 3);
-
-INSERT INTO LessonItemProgress (UserID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
-SELECT 6, li.LessonItemID, 
-       CASE WHEN li.ItemType = 'video' THEN 1 ELSE 0 END, 
-       CASE WHEN li.ItemType = 'video' THEN DATEADD(day, -16, GETDATE()) ELSE NULL END, 
-       DATEADD(day, -16, GETDATE())
-FROM LessonItems li
-WHERE li.LessonID = 1;
-
--- Additional progress data for new courses
-INSERT INTO LessonItemProgress (UserID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
-SELECT 4, li.LessonItemID, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())
-FROM LessonItems li
-WHERE li.LessonID = 5 AND li.OrderIndex <= 2;
-
-INSERT INTO LessonItemProgress (UserID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
-SELECT 5, li.LessonItemID, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())
-FROM LessonItems li
-WHERE li.LessonID = 6;
-
-INSERT INTO LessonItemProgress (UserID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
-SELECT 6, li.LessonItemID, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())
-FROM LessonItems li
-WHERE li.LessonID = 7 AND li.OrderIndex = 1;
-
--- 26. Insert QuizAttempts
-INSERT INTO QuizAttempts (QuizID, UserID, StartTime, EndTime, Score, IsPassed)
-VALUES
-(1, 4, DATEADD(day, -14, GETDATE()), DATEADD(day, -14, GETDATE()), 80, 1),
-(1, 5, DATEADD(day, -19, GETDATE()), DATEADD(day, -19, GETDATE()), 90, 1),
-(2, 5, DATEADD(day, -17, GETDATE()), DATEADD(day, -17, GETDATE()), 85, 1),
-(3, 5, DATEADD(day, -14, GETDATE()), DATEADD(day, -14, GETDATE()), 75, 1),
-(2, 4, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE()), 70, 1),
-(3, 4, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE()), 65, 0),
-(4, 5, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE()), 88, 1),
-(5, 6, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE()), 75, 1),
-(6, 6, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE()), 92, 1),
-(7, 6, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE()), 60, 0),
-(8, 4, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE()), 78, 1);
-
--- 27. Insert Answers
+-- Insert Answers
 INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
 VALUES
-(1, 'Hypertext Markup Language', 1, 1),
-(1, 'High Text Machine Language', 0, 2),
-(1, 'Hypertext Machine Language', 0, 3),
-(1, 'High Text Markup Language', 0, 4),
-(2, '<a>', 1, 1),
-(2, '<link>', 0, 2),
-(2, '<href>', 0, 3),
-(2, '<hyperlink>', 0, 4),
-(3, 'False', 1, 1), -- HTML is a markup language, not a programming language
-(3, 'True', 0, 2),
-(4, 'color', 1, 1),
-(4, 'text-color', 0, 2),
-(4, 'font-color', 0, 3),
-(4, 'background-color', 0, 4),
-(5, 'Cascading Style Sheets', 1, 1),
-(5, 'Computer Style Sheets', 0, 2),
-(5, 'Creative Style System', 0, 3),
-(5, 'Colorful Style Sheets', 0, 4),
-(6, 'var x = 5;', 1, 1),
-(6, 'x = 5;', 0, 2),
-(6, 'variable x = 5;', 0, 3),
-(6, 'int x = 5;', 0, 4),
-(7, 'True', 1, 1),
-(7, 'False', 0, 2);
+(1, 'HyperText Markup Language', 1, 1),
+(1, 'HighText Machine Language', 0, 2),
+(1, 'HyperTool Multi Language', 0, 3),
+(1, 'HyperText Machine Language', 0, 4),
+(2, '<br>', 1, 1),
+(2, '<lb>', 0, 2),
+(2, '<break>', 0, 3),
+(2, '<newline>', 0, 4),
+(3, 'font-size', 1, 1),
+(3, 'text-size', 0, 2),
+(3, 'font-style', 0, 3),
+(3, 'text-style', 0, 4),
+(4, 'margin: 0 auto;', 1, 1),
+(4, 'padding: 0 auto;', 0, 2),
+(4, 'align: center;', 0, 3),
+(4, 'center: auto;', 0, 4),
+(5, 'function name() {}', 1, 1),
+(5, 'func name() {}', 0, 2),
+(5, 'function: name() {}', 0, 3),
+(5, 'def name() {}', 0, 4),
+(6, 'Declares a variable', 1, 1),
+(6, 'Declares a function', 0, 2),
+(6, 'Declares a constant', 0, 3),
+(6, 'Declares a class', 0, 4),
+(7, 'A CSS rule for responsive design', 1, 1),
+(7, 'A JavaScript function', 0, 2),
+(7, 'A HTML tag', 0, 3),
+(7, 'A CSS selector', 0, 4),
+(8, 'A layout model for flexible boxes', 1, 1),
+(8, 'A JavaScript library', 0, 2),
+(8, 'A CSS preprocessor', 0, 3),
+(8, 'A HTML element', 0, 4),
+(9, 'A reusable piece of UI', 1, 1),
+(9, 'A JavaScript function', 0, 2),
+(9, 'A CSS rule', 0, 3),
+(9, 'A database query', 0, 4),
+(10, 'Properties passed to components', 1, 1),
+(10, 'State variables', 0, 2),
+(10, 'CSS properties', 0, 3),
+(10, 'HTML attributes', 0, 4);
 
--- 28. Insert UserAnswers
+-- Insert QuizAttempts
+INSERT INTO QuizAttempts (QuizID, CustomerID, StartTime, EndTime, Score, IsPassed)
+VALUES
+(1, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, DATEADD(minute, 20, GETDATE())), 80, 1),
+(1, 2, DATEADD(day, -12, GETDATE()), DATEADD(day, -12, DATEADD(minute, 15, GETDATE())), 90, 1),
+(2, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, DATEADD(minute, 18, GETDATE())), 70, 1),
+(3, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, DATEADD(minute, 25, GETDATE())), 60, 0),
+(4, 3, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, DATEADD(minute, 20, GETDATE())), 85, 1),
+(5, 3, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, DATEADD(minute, 22, GETDATE())), 75, 1);
+
+-- Insert UserAnswers
 INSERT INTO UserAnswers (AttemptID, QuestionID, AnswerID, IsCorrect)
 VALUES
--- User 4's first quiz attempt - Quiz 1 (HTML Basics)
-(1, 1, 1, 1), -- Question 1: HTML acronym - correct
-(1, 2, 5, 1), -- Question 2: Hyperlink tag - correct
-(1, 3, 3, 0), -- Question 3: HTML is programming language - incorrect (chose True)
+(1, 1, 1, 1),
+(1, 2, 2, 0),
+(2, 1, 1, 1),
+(2, 2, 5, 1),
+(3, 3, 9, 1),
+(3, 4, 14, 0),
+(4, 5, 17, 1),
+(4, 6, 22, 0),
+(5, 7, 25, 1),
+(5, 8, 29, 1);
 
--- User 5's first quiz attempt - Quiz 1 (HTML Basics)
-(2, 1, 1, 1), -- Question 1: HTML acronym - correct
-(2, 2, 5, 1), -- Question 2: Hyperlink tag - correct
-(2, 3, 9, 1), -- Question 3: HTML is programming language - correct (chose False)
+-- Insert LessonItemProgress
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(1, 1, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(1, 2, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(1, 3, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(2, 1, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -6, GETDATE())),
+(2, 2, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -6, GETDATE())),
+(3, 3, 0, NULL, DATEADD(day, -5, GETDATE())),
+(3, 4, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -4, GETDATE())),
+(4, 13, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
+(5, 16, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
+(5, 17, 0, NULL, GETDATE());
 
--- User 5's second quiz attempt - Quiz 2 (CSS Mastery)
-(3, 4, 11, 1), -- Question 4: CSS text color property - correct
-(3, 5, 15, 1), -- Question 5: CSS acronym - correct
+-- Continuing insertions for Videos, Materials, Quizzes, Questions, and Answers for LightHouseCourse Database
+-- Ensuring data is added for missing lessons in Courses 1-16
 
--- User 5's third quiz attempt - Quiz 3 (JavaScript Fundamentals)
-(4, 6, 19, 1), -- Question 6: JS variable declaration - correct
-(4, 7, 23, 1), -- Question 7: JS case-sensitive - correct
+-- Insert Videos for remaining lessons in Courses 1-16
+INSERT INTO Videos (LessonID, Title, Description, VideoUrl, Duration)
+VALUES
+-- Web Development Bootcamp (CourseID 1, LessonIDs 4, 7, 9-12 missing videos)
+(4, 'Assembling a Complete Website', 'Practical guide to combining HTML, CSS, and JS', '/assets/videos/website-assembly.mp4', 2800),
+(7, 'React App Development', 'Building a full React application', '/assets/videos/react-app.mp4', 3000),
+(9, 'REST API Implementation', 'Practical REST API development with Express', '/assets/videos/rest-api-implementation.mp4', 2900),
+(10, 'Database Connectivity', 'Integrating MongoDB with your app', '/assets/videos/db-connectivity.mp4', 2600),
+(11, 'App Deployment Strategies', 'Deploying to cloud platforms', '/assets/videos/deployment-strategies.mp4', 2500),
+(12, 'Capstone Project Overview', 'Detailed guide for final project', '/assets/videos/capstone-web.mp4', 4000),
+-- Advanced JavaScript (CourseID 6, LessonIDs 49-57)
+(49, 'Closures Deep Dive', 'Understanding closures in depth', '/assets/videos/closures-deep.mp4', 2500),
+(50, 'Prototype Chain', 'Exploring prototype-based inheritance', '/assets/videos/prototype-chain.mp4', 2600),
+(51, 'Async/Await Patterns', 'Modern async programming techniques', '/assets/videos/async-await.mp4', 2700),
+(52, 'ES6+ Syntax', 'Leveraging modern JavaScript features', '/assets/videos/es6-syntax.mp4', 2300),
+(53, 'Functional JS Techniques', 'Applying functional programming concepts', '/assets/videos/functional-js.mp4', 2400),
+(54, 'JS Design Patterns', 'Common patterns in JavaScript', '/assets/videos/js-design-patterns.mp4', 2600),
+(55, 'Unit Testing with Jest', 'Writing tests for JavaScript code', '/assets/videos/jest-testing.mp4', 2200),
+(56, 'JS Performance Tips', 'Optimizing JavaScript performance', '/assets/videos/js-performance-tips.mp4', 2300),
+(57, 'Complex JS Project', 'Building a real-world JS application', '/assets/videos/js-complex-project.mp4', 3800),
+-- Machine Learning Fundamentals (CourseID 7, LessonIDs 58-67)
+(58, 'ML Overview', 'Broad introduction to ML concepts', '/assets/videos/ml-overview.mp4', 2400),
+(59, 'Supervised Learning Techniques', 'Detailed look at supervised algorithms', '/assets/videos/supervised-techniques.mp4', 2700),
+(60, 'Unsupervised Learning Methods', 'Exploring clustering and more', '/assets/videos/unsupervised-methods.mp4', 2600),
+(61, 'Feature Engineering Basics', 'Crafting features for ML models', '/assets/videos/feature-engineering.mp4', 2500),
+(62, 'Model Evaluation Techniques', 'Assessing model performance', '/assets/videos/model-evaluation.mp4', 2400),
+(63, 'Neural Networks Overview', 'Introduction to neural architectures', '/assets/videos/neural-overview.mp4', 2600),
+(64, 'Deep Learning Foundations', 'Core concepts of deep learning', '/assets/videos/deep-learning-foundations.mp4', 2700),
+(65, 'ML Practical Applications', 'Real-world use cases for ML', '/assets/videos/ml-practical.mp4', 2500),
+(66, 'AI Ethics Considerations', 'Ethical issues in ML', '/assets/videos/ai-ethics.mp4', 2200),
+(67, 'ML Capstone Project', 'Complete ML project walkthrough', '/assets/videos/ml-capstone.mp4', 4000),
+-- iOS App Development with Swift (CourseID 8, LessonIDs 68-77)
+(68, 'Swift Syntax Basics', 'Core Swift programming concepts', '/assets/videos/swift-syntax.mp4', 2500),
+(69, 'iOS Architecture Patterns', 'Understanding MVC and MVVM', '/assets/videos/ios-patterns.mp4', 2400),
+(70, 'UIKit Components', 'Building UI with UIKit', '/assets/videos/uikit-components.mp4', 2600),
+(71, 'SwiftUI Components', 'Modern UI with SwiftUI', '/assets/videos/swiftui-components.mp4', 2500),
+(72, 'Data Handling in iOS', 'Managing data flows', '/assets/videos/ios-data-handling.mp4', 2300),
+(73, 'API Integration in iOS', 'Connecting to REST APIs', '/assets/videos/ios-api.mp4', 2600),
+(74, 'Core Data Implementation', 'Persistent storage with Core Data', '/assets/videos/core-data-impl.mp4', 2500),
+(75, 'Testing iOS Apps', 'Writing unit and UI tests', '/assets/videos/ios-test.mp4', 2200),
+(76, 'App Store Submission', 'Preparing for App Store', '/assets/videos/app-store-sub.mp4', 2300),
+(77, 'iOS Capstone Project', 'Building a full iOS app', '/assets/videos/ios-capstone.mp4', 3800),
+-- SQL Database Mastery (CourseID 9, LessonIDs 78-86)
+(78, 'Database Concepts', 'Core database principles', '/assets/videos/db-concepts.mp4', 2200),
+(79, 'SQL CRUD Basics', 'Basic SQL operations', '/assets/videos/sql-crud-basics.mp4', 2300),
+(80, 'Complex SQL Queries', 'Advanced query techniques', '/assets/videos/sql-complex.mp4', 2500),
+(81, 'Normalization Techniques', 'Designing normalized DBs', '/assets/videos/normalization.mp4', 2400),
+(82, 'Indexing Strategies', 'Improving query performance', '/assets/videos/indexing-strategies.mp4', 2200),
+(83, 'Stored Procedures Basics', 'Writing reusable SQL code', '/assets/videos/stored-proc.mp4', 2300),
+(84, 'Transaction Management', 'Handling DB transactions', '/assets/videos/transactions.mp4', 2200),
+(85, 'DB Security Practices', 'Securing database systems', '/assets/videos/db-security-practices.mp4', 2100),
+(86, 'DB Project Walkthrough', 'Real-world DB project', '/assets/videos/db-project.mp4', 3500),
+-- DevOps Engineering (CourseID 10, LessonIDs 87-96)
+(87, 'DevOps Principles', 'Core DevOps concepts', '/assets/videos/devops-principles.mp4', 2100),
+(88, 'Git Workflows', 'Effective Git usage', '/assets/videos/git-workflows.mp4', 2300),
+(89, 'CI/CD Setup', 'Building CI/CD pipelines', '/assets/videos/cicd-setup.mp4', 2500),
+(90, 'Docker Fundamentals', 'Containerization basics', '/assets/videos/docker-fundamentals.mp4', 2400),
+(91, 'Kubernetes Orchestration', 'Managing containers', '/assets/videos/k8s-basics.mp4', 2600),
+(92, 'IaC with Terraform', 'Infrastructure as Code', '/assets/videos/terraform-iac.mp4', 2300),
+(93, 'Monitoring Setup', 'Implementing monitoring', '/assets/videos/monitoring-setup.mp4', 2200),
+(94, 'Cloud Services Overview', 'Using AWS/GCP/Azure', '/assets/videos/cloud-overview.mp4', 2400),
+(95, 'DevOps Best Practices', 'Effective DevOps strategies', '/assets/videos/devops-best.mp4', 2300),
+(96, 'DevOps Capstone', 'Complete DevOps project', '/assets/videos/devops-capstone.mp4', 3800),
+-- Ethical Hacking (CourseID 11, LessonIDs 97-108)
+(97, 'Hacking Fundamentals', 'Introduction to ethical hacking', '/assets/videos/hacking-fundamentals.mp4', 2100),
+(98, 'Information Gathering', 'Reconnaissance techniques', '/assets/videos/info-gathering.mp4', 2300),
+(99, 'Network Scanning Tools', 'Using scanning tools', '/assets/videos/network-scanning.mp4', 2400),
+(100, 'Enumeration Methods', 'System enumeration', '/assets/videos/enumeration.mp4', 2200),
+(101, 'Vulnerability Scanning', 'Identifying weaknesses', '/assets/videos/vuln-scanning.mp4', 2300),
+(102, 'System Exploitation', 'Exploiting vulnerabilities', '/assets/videos/system-exploit.mp4', 2500),
+(103, 'Malware Overview', 'Understanding malware', '/assets/videos/malware-overview.mp4', 2400),
+(104, 'Packet Sniffing', 'Capturing network traffic', '/assets/videos/packet-sniffing.mp4', 2200),
+(105, 'Social Engineering Tactics', 'Human-based attacks', '/assets/videos/social-eng.mp4', 2100),
+(106, 'DoS Attack Types', 'Denial-of-service techniques', '/assets/videos/dos-types.mp4', 2300),
+(107, 'Session Hijacking Methods', 'Stealing user sessions', '/assets/videos/session-hijack.mp4', 2200),
+(108, 'Web App Security', 'Securing web applications', '/assets/videos/web-app-sec.mp4', 2400),
+-- Deep Learning with TensorFlow (CourseID 12, LessonIDs 109-118)
+(109, 'Deep Learning Concepts', 'Core deep learning principles', '/assets/videos/dl-concepts.mp4', 2400),
+(110, 'TensorFlow Setup', 'Getting started with TensorFlow', '/assets/videos/tf-setup.mp4', 2500),
+(111, 'Neural Network Design', 'Building neural nets', '/assets/videos/nn-design.mp4', 2600),
+(112, 'CNN Architectures', 'Convolutional neural nets', '/assets/videos/cnn-arch.mp4', 2700),
+(113, 'RNN Architectures', 'Recurrent neural nets', '/assets/videos/rnn-arch.mp4', 2500),
+(114, 'Transfer Learning Techniques', 'Using pre-trained models', '/assets/videos/transfer-learning.mp4', 2400),
+(115, 'Generative AI Models', 'Creating generative models', '/assets/videos/generative-ai.mp4', 2600),
+(116, 'NLP Fundamentals', 'Natural language processing', '/assets/videos/nlp-fundamentals.mp4', 2500),
+(117, 'Computer Vision Basics', 'Vision applications', '/assets/videos/vision-basics.mp4', 2700),
+(118, 'Model Deployment Strategies', 'Deploying DL models', '/assets/videos/dl-deploy.mp4', 2300),
+-- Blockchain Development (CourseID 13, LessonIDs 119-128)
+(119, 'Blockchain Overview', 'Introduction to blockchain', '/assets/videos/blockchain-overview.mp4', 2200),
+(120, 'Crypto Principles', 'Cryptographic foundations', '/assets/videos/crypto-principles.mp4', 2300),
+(121, 'Bitcoin Mechanics', 'How Bitcoin works', '/assets/videos/bitcoin-mechanics.mp4', 2400),
+(122, 'Ethereum Basics', 'Smart contracts on Ethereum', '/assets/videos/ethereum-basics.mp4', 2600),
+(123, 'Solidity Syntax', 'Programming with Solidity', '/assets/videos/solidity-syntax.mp4', 2500),
+(124, 'DApp Development', 'Building decentralized apps', '/assets/videos/dapp-dev.mp4', 2700),
+(125, 'Web3 Integration', 'Frontend-blockchain connection', '/assets/videos/web3-integration.mp4', 2400),
+(126, 'Smart Contract Testing', 'Testing Solidity code', '/assets/videos/contract-testing.mp4', 2300),
+(127, 'Blockchain Security Practices', 'Securing blockchain apps', '/assets/videos/blockchain-sec.mp4', 2200),
+(128, 'Blockchain Capstone', 'Complete blockchain project', '/assets/videos/blockchain-capstone.mp4', 3600),
+-- Internet of Things Fundamentals (CourseID 14, LessonIDs 129-138)
+(129, 'IoT Concepts', 'Core IoT principles', '/assets/videos/iot-concepts.mp4', 2100),
+(130, 'Sensor Integration', 'Working with sensors', '/assets/videos/sensor-integration.mp4', 2300),
+(131, 'Arduino Basics', 'Programming Arduino boards', '/assets/videos/arduino-basics.mp4', 2400),
+(132, 'Raspberry Pi Basics', 'Setting up Raspberry Pi', '/assets/videos/raspberry-basics.mp4', 2500),
+(133, 'IoT Protocols', 'Networking for IoT', '/assets/videos/iot-protocols.mp4', 2300),
+(134, 'Cloud IoT Platforms', 'Using cloud for IoT', '/assets/videos/iot-cloud-platforms.mp4', 2400),
+(135, 'IoT Security Measures', 'Securing IoT devices', '/assets/videos/iot-sec-measures.mp4', 2200),
+(136, 'IoT Data Analysis', 'Analyzing IoT data', '/assets/videos/iot-data-analysis.mp4', 2300),
+(137, 'Complete IoT Solution', 'End-to-end IoT project', '/assets/videos/iot-solution.mp4', 2600),
+(138, 'IoT Applications', 'Real-world IoT use cases', '/assets/videos/iot-apps.mp4', 2400),
+-- Vue.js for Frontend Development (CourseID 15, LessonIDs 139-148)
+(139, 'Vue.js Setup', 'Getting started with Vue.js', '/assets/videos/vue-setup.mp4', 2100),
+(140, 'Component Architecture', 'Building Vue components', '/assets/videos/vue-component-arch.mp4', 2300),
+(141, 'Vue Directives Basics', 'Using Vue directives', '/assets/videos/vue-directives-basics.mp4', 2200),
+(142, 'Reactivity System', 'Vue’s reactive data', '/assets/videos/vue-reactivity-system.mp4', 2400),
+(143, 'Vue Router Setup', 'Navigation with Vue Router', '/assets/videos/vue-router-setup.mp4', 2300),
+(144, 'Vuex Basics', 'State management with Vuex', '/assets/videos/vuex-basics.mp4', 2500),
+(145, 'Vue Form Handling', 'Managing forms in Vue', '/assets/videos/vue-form-handling.mp4', 2200),
+(146, 'Vue Development Practices', 'Best practices for Vue', '/assets/videos/vue-dev-practices.mp4', 2300),
+(147, 'Vue Testing Basics', 'Testing Vue apps', '/assets/videos/vue-testing-basics.mp4', 2200),
+(148, 'Vue Capstone Project', 'Building a Vue app', '/assets/videos/vue-capstone.mp4', 3600),
+-- Django Web Framework (CourseID 16, LessonIDs 149-158)
+(149, 'Django Setup', 'Installing and configuring Django', '/assets/videos/django-setup.mp4', 2100),
+(150, 'Model Design', 'Creating Django models', '/assets/videos/django-model-design.mp4', 2300),
+(151, 'View and Template Basics', 'Building views and templates', '/assets/videos/django-view-basics.mp4', 2400),
+(152, 'Django Form Basics', 'Handling forms in Django', '/assets/videos/django-form-basics.mp4', 2200),
+(153, 'Admin Customization', 'Customizing Django admin', '/assets/videos/django-admin-custom.mp4', 2300),
+(154, 'Auth Implementation', 'Adding authentication', '/assets/videos/django-auth-impl.mp4', 2400),
+(155, 'REST API Basics', 'Building APIs with DRF', '/assets/videos/django-rest-basics.mp4', 2500),
+(156, 'Django Testing Basics', 'Testing Django apps', '/assets/videos/django-testing-basics.mp4', 2200),
+(157, 'Django Deployment Basics', 'Deploying Django apps', '/assets/videos/django-deploy-basics.mp4', 2300),
+(158, 'Django Capstone Project', 'Complete Django project', '/assets/videos/django-capstone.mp4', 3600);
 
--- User 4's second quiz attempt - Quiz 2 (CSS Mastery)
-(5, 4, 11, 1), -- Question 4: CSS text color property - correct
-(5, 5, 15, 1), -- Question 5: CSS acronym - correct
+-- Insert Materials for remaining lessons in Courses 1-16
+INSERT INTO Materials (LessonID, Title, Description, FileUrl)
+VALUES
+-- Web Development Bootcamp (CourseID 1, LessonIDs 4, 7, 9-12 missing materials)
+(4, 'Website Project Specs', 'Specifications for website project', '/assets/materials/website-specs.pdf'),
+(7, 'React App Template', 'Starter template for React app', '/assets/materials/react-app-template.zip'),
+(9, 'API Design Guide', 'REST API design principles', '/assets/materials/api-design-guide.pdf'),
+(10, 'MongoDB Schema Design', 'Designing MongoDB schemas', '/assets/materials/mongodb-schema.pdf'),
+(11, 'Deployment Guide', 'Step-by-step deployment guide', '/assets/materials/deployment-guide.pdf'),
+(12, 'Capstone Project Specs', 'Final project requirements', '/assets/materials/web-capstone-specs.pdf'),
+-- Advanced JavaScript (CourseID 6, LessonIDs 49-57)
+(49, 'Closures Guide', 'Detailed closures explanation', '/assets/materials/closures-guide.pdf'),
+(50, 'Prototypes Reference', 'Prototype chain overview', '/assets/materials/prototypes-reference.pdf'),
+(51, 'Async Programming Guide', 'Async/await best practices', '/assets/materials/async-guide.pdf'),
+(52, 'ES6+ Cheat Sheet', 'Modern JS syntax reference', '/assets/materials/es6-cheat-sheet.pdf'),
+(53, 'Functional JS Guide', 'Functional programming principles', '/assets/materials/functional-js.pdf'),
+(54, 'Design Patterns Reference', 'Common JS patterns', '/assets/materials/js-patterns.pdf'),
+(55, 'Jest Testing Guide', 'Unit testing with Jest', '/assets/materials/jest-guide.pdf'),
+(56, 'JS Optimization Tips', 'Performance optimization guide', '/assets/materials/js-optimization.pdf'),
+(57, 'JS Project Specs', 'Complex JS project requirements', '/assets/materials/js-project-specs.pdf'),
+-- Machine Learning Fundamentals (CourseID 7, LessonIDs 58-67)
+(58, 'ML Concepts Guide', 'Overview of ML principles', '/assets/materials/ml-concepts.pdf'),
+(59, 'Supervised Learning Guide', 'Supervised algorithms reference', '/assets/materials/supervised-guide.pdf'),
+(60, 'Unsupervised Learning Guide', 'Unsupervised methods reference', '/assets/materials/unsupervised-guide.pdf'),
+(61, 'Feature Engineering Guide', 'Crafting ML features', '/assets/materials/feature-eng-guide.pdf'),
+(62, 'Model Evaluation Guide', 'Evaluating ML models', '/assets/materials/model-eval-guide.pdf'),
+(63, 'Neural Networks Guide', 'Neural network basics', '/assets/materials/neural-guide.pdf'),
+(64, 'Deep Learning Guide', 'Deep learning foundations', '/assets/materials/deep-learning-guide.pdf'),
+(65, 'ML Applications Guide', 'Real-world ML use cases', '/assets/materials/ml-applications.pdf'),
+(66, 'AI Ethics Guide', 'Ethical considerations in AI', '/assets/materials/ai-ethics-guide.pdf'),
+(67, 'ML Capstone Specs', 'ML project requirements', '/assets/materials/ml-capstone-specs.pdf'),
+-- iOS App Development with Swift (CourseID 8, LessonIDs 68-77)
+(68, 'Swift Cheat Sheet', 'Swift syntax reference', '/assets/materials/swift-cheat-sheet.pdf'),
+(69, 'iOS Architecture Guide', 'MVC and MVVM patterns', '/assets/materials/ios-arch-guide.pdf'),
+(70, 'UIKit Reference', 'UIKit components overview', '/assets/materials/uikit-reference.pdf'),
+(71, 'SwiftUI Reference', 'SwiftUI components overview', '/assets/materials/swiftui-reference.pdf'),
+(72, 'Data Handling Guide', 'Managing data in iOS', '/assets/materials/ios-data-guide.pdf'),
+(73, 'API Integration Guide', 'Connecting to APIs', '/assets/materials/ios-api-guide.pdf'),
+(74, 'Core Data Guide', 'Using Core Data', '/assets/materials/core-data-guide.pdf'),
+(75, 'iOS Testing Guide', 'Testing iOS apps', '/assets/materials/ios-testing-guide.pdf'),
+(76, 'App Store Guide', 'App Store submission guide', '/assets/materials/app-store-guide.pdf'),
+(77, 'iOS Capstone Specs', 'iOS project requirements', '/assets/materials/ios-capstone-specs.pdf'),
+-- SQL Database Mastery (CourseID 9, LessonIDs 78-86)
+(78, 'DB Concepts Guide', 'Database principles overview', '/assets/materials/db-concepts-guide.pdf'),
+(79, 'SQL CRUD Reference', 'Basic SQL operations', '/assets/materials/sql-crud-reference.pdf'),
+(80, 'Advanced SQL Guide', 'Complex query techniques', '/assets/materials/sql-advanced-guide.pdf'),
+(81, 'Normalization Guide', 'Database normalization', '/assets/materials/normalization-guide.pdf'),
+(82, 'Indexing Guide', 'Optimizing with indexes', '/assets/materials/indexing-guide.pdf'),
+(83, 'Stored Procedures Guide', 'Writing stored procedures', '/assets/materials/stored-proc-guide.pdf'),
+(84, 'Transactions Guide', 'Managing transactions', '/assets/materials/transactions-guide.pdf'),
+(85, 'DB Security Guide', 'Securing databases', '/assets/materials/db-security-guide.pdf'),
+(86, 'DB Project Specs', 'Real-world DB project', '/assets/materials/db-project-specs.pdf'),
+-- DevOps Engineering (CourseID 10, LessonIDs 87-96)
+(87, 'DevOps Principles Guide', 'Core DevOps concepts', '/assets/materials/devops-principles.pdf'),
+(88, 'Git Reference', 'Git commands and workflows', '/assets/materials/git-reference.pdf'),
+(89, 'CI/CD Guide', 'Building CI/CD pipelines', '/assets/materials/cicd-guide.pdf'),
+(90, 'Docker Reference', 'Containerization basics', '/assets/materials/docker-reference.pdf'),
+(91, 'Kubernetes Guide', 'Container orchestration', '/assets/materials/k8s-guide.pdf'),
+(92, 'Terraform Guide', 'Infrastructure as Code', '/assets/materials/terraform-guide.pdf'),
+(93, 'Monitoring Guide', 'Monitoring and logging', '/assets/materials/monitoring-guide.pdf'),
+(94, 'Cloud Services Guide', 'Using cloud platforms', '/assets/materials/cloud-guide.pdf'),
+(95, 'DevOps Practices Guide', 'Best practices for DevOps', '/assets/materials/devops-practices.pdf'),
+(96, 'DevOps Capstone Specs', 'DevOps project requirements', '/assets/materials/devops-capstone.pdf'),
+-- Ethical Hacking (CourseID 11, LessonIDs 97-108)
+(97, 'Hacking Principles Guide', 'Ethical hacking basics', '/assets/materials/hacking-principles.pdf'),
+(98, 'Recon Guide', 'Information gathering techniques', '/assets/materials/recon-guide.pdf'),
+(99, 'Scanning Guide', 'Network scanning tools', '/assets/materials/scanning-guide.pdf'),
+(100, 'Enumeration Guide', 'System enumeration methods', '/assets/materials/enumeration-guide.pdf'),
+(101, 'Vuln Analysis Guide', 'Vulnerability scanning', '/assets/materials/vuln-analysis.pdf'),
+(102, 'Exploitation Guide', 'System exploitation techniques', '/assets/materials/exploitation-guide.pdf'),
+(103, 'Malware Guide', 'Understanding malware', '/assets/materials/malware-guide.pdf'),
+(104, 'Sniffing Guide', 'Packet sniffing techniques', '/assets/materials/sniffing-guide.pdf'),
+(105, 'Social Eng Guide', 'Social engineering tactics', '/assets/materials/social-eng-guide.pdf'),
+(106, 'DoS Guide', 'Denial-of-service attacks', '/assets/materials/dos-guide.pdf'),
+(107, 'Session Hijack Guide', 'Session hijacking methods', '/assets/materials/session-hijack.pdf'),
+(108, 'Web Security Guide', 'Securing web apps', '/assets/materials/web-security-guide.pdf'),
+-- Deep Learning with TensorFlow (CourseID 12, LessonIDs 109-118)
+(109, 'DL Concepts Guide', 'Deep learning principles', '/assets/materials/dl-concepts.pdf'),
+(110, 'TensorFlow Reference', 'TensorFlow basics', '/assets/materials/tf-reference.pdf'),
+(111, 'NN Design Guide', 'Designing neural networks', '/assets/materials/nn-design.pdf'),
+(112, 'CNN Guide', 'Convolutional neural nets', '/assets/materials/cnn-guide.pdf'),
+(113, 'RNN Guide', 'Recurrent neural nets', '/assets/materials/rnn-guide.pdf'),
+(114, 'Transfer Learning Guide', 'Using pre-trained models', '/assets/materials/transfer-learning.pdf'),
+(115, 'Generative Models Guide', 'Generative AI models', '/assets/materials/generative-models.pdf'),
+(116, 'NLP Guide', 'Natural language processing', '/assets/materials/nlp-guide.pdf'),
+(117, 'Vision Guide', 'Computer vision applications', '/assets/materials/vision-guide.pdf'),
+(118, 'DL Deployment Guide', 'Deploying DL models', '/assets/materials/dl-deployment.pdf'),
+-- Blockchain Development (CourseID 13, LessonIDs 119-128)
+(119, 'Blockchain Guide', 'Blockchain technology overview', '/assets/materials/blockchain-guide.pdf'),
+(120, 'Crypto Guide', 'Cryptographic principles', '/assets/materials/crypto-guide.pdf'),
+(121, 'Bitcoin Guide', 'Bitcoin protocol details', '/assets/materials/bitcoin-guide.pdf'),
+(122, 'Ethereum Guide', 'Smart contracts on Ethereum', '/assets/materials/ethereum-guide.pdf'),
+(123, 'Solidity Reference', 'Solidity programming guide', '/assets/materials/solidity-reference.pdf'),
+(124, 'DApp Guide', 'Building decentralized apps', '/assets/materials/dapp-guide.pdf'),
+(125, 'Web3 Guide', 'Frontend-blockchain integration', '/assets/materials/web3-guide.pdf'),
+(126, 'Contract Testing Guide', 'Testing smart contracts', '/assets/materials/contract-testing.pdf'),
+(127, 'Blockchain Security Guide', 'Securing blockchain apps', '/assets/materials/blockchain-security.pdf'),
+(128, 'Blockchain Capstone Specs', 'Blockchain project requirements', '/assets/materials/blockchain-capstone.pdf'),
+-- Internet of Things Fundamentals (CourseID 14, LessonIDs 129-138)
+(129, 'IoT Principles Guide', 'Core IoT concepts', '/assets/materials/iot-principles.pdf'),
+(130, 'Sensors Guide', 'Working with sensors', '/assets/materials/sensors-guide.pdf'),
+(131, 'Arduino Guide', 'Programming Arduino', '/assets/materials/arduino-guide.pdf'),
+(132, 'Raspberry Pi Guide', 'Setting up Raspberry Pi', '/assets/materials/raspberry-guide.pdf'),
+(133, 'IoT Protocols Guide', 'Networking protocols', '/assets/materials/iot-protocols.pdf'),
+(134, 'IoT Cloud Guide', 'Cloud platforms for IoT', '/assets/materials/iot-cloud.pdf'),
+(135, 'IoT Security Guide', 'Securing IoT devices', '/assets/materials/iot-security.pdf'),
+(136, 'IoT Analytics Guide', 'Analyzing IoT data', '/assets/materials/iot-analytics.pdf'),
+(137, 'IoT Solution Guide', 'End-to-end IoT project', '/assets/materials/iot-solution.pdf'),
+(138, 'IoT Applications Guide', 'Real-world IoT use cases', '/assets/materials/iot-applications.pdf'),
+-- Vue.js for Frontend Development (CourseID 15, LessonIDs 139-148)
+(139, 'Vue Setup Guide', 'Getting started with Vue.js', '/assets/materials/vue-setup.pdf'),
+(140, 'Vue Components Guide', 'Building components', '/assets/materials/vue-components.pdf'),
+(141, 'Vue Directives Guide', 'Using Vue directives', '/assets/materials/vue-directives.pdf'),
+(142, 'Vue Reactivity Guide', 'Reactivity system overview', '/assets/materials/vue-reactivity.pdf'),
+(143, 'Vue Router Guide', 'Navigation with Vue Router', '/assets/materials/vue-router.pdf'),
+(144, 'Vuex Guide', 'State management with Vuex', '/assets/materials/vuex-guide.pdf'),
+(145, 'Vue Forms Guide', 'Handling forms in Vue', '/assets/materials/vue-forms.pdf'),
+(146, 'Vue Practices Guide', 'Best practices for Vue', '/assets/materials/vue-practices.pdf'),
+(147, 'Vue Testing Guide', 'Testing Vue apps', '/assets/materials/vue-testing.pdf'),
+(148, 'Vue Capstone Specs', 'Vue project requirements', '/assets/materials/vue-capstone.pdf'),
+-- Django Web Framework (CourseID 16, LessonIDs 149-158)
+(149, 'Django Setup Guide', 'Installing Django', '/assets/materials/django-setup.pdf'),
+(150, 'Django Models Guide', 'Creating models', '/assets/materials/django-models.pdf'),
+(151, 'Django Views Guide', 'Building views and templates', '/assets/materials/django-views.pdf'),
+(152, 'Django Forms Guide', 'Handling forms', '/assets/materials/django-forms.pdf'),
+(153, 'Django Admin Guide', 'Customizing admin', '/assets/materials/django-admin.pdf'),
+(154, 'Django Auth Guide', 'Implementing authentication', '/assets/materials/django-auth.pdf'),
+(155, 'Django REST Guide', 'Building REST APIs', '/assets/materials/django-rest.pdf'),
+(156, 'Django Testing Guide', 'Testing Django apps', '/assets/materials/django-testing.pdf'),
+(157, 'Django Deployment Guide', 'Deploying Django', '/assets/materials/django-deployment.pdf'),
+(158, 'Django Capstone Specs', 'Django project requirements', '/assets/materials/django-capstone.pdf');
 
--- User 4's third quiz attempt - Quiz 3 (JavaScript Fundamentals)
-(6, 6, 20, 0), -- Question 6: JS variable declaration - incorrect
-(6, 7, 23, 1), -- Question 7: JS case-sensitive - correct
+-- Insert Quizzes for remaining lessons in Courses 1-16
+INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore)
+VALUES
+-- Web Development Bootcamp (CourseID 1, LessonIDs 4, 7, 9-12 missing quizzes)
+(4, 'Website Building Quiz', 'Test your website creation skills', 1800, 70),
+(7, 'React App Quiz', 'Assess your React app development', 1800, 70),
+(9, 'REST API Quiz', 'Test your REST API knowledge', 1800, 70),
+(10, 'Database Integration Quiz', 'Assess DB connectivity skills', 1800, 70),
+(11, 'Deployment Quiz', 'Test your deployment knowledge', 1800, 70),
+(12, 'Capstone Quiz', 'Final project knowledge test', 1800, 70),
+-- Advanced JavaScript (CourseID 6, LessonIDs 49-57)
+(49, 'Closures Quiz', 'Test your closures knowledge', 1800, 70),
+(50, 'Prototypes Quiz', 'Assess prototype understanding', 1800, 70),
+(51, 'Async Programming Quiz', 'Test async JS skills', 1800, 70),
+(52, 'ES6+ Quiz', 'Assess modern JS features', 1800, 70),
+(53, 'Functional JS Quiz', 'Test functional programming', 1800, 70),
+(54, 'Design Patterns Quiz', 'Assess JS patterns', 1800, 70),
+(55, 'Jest Testing Quiz', 'Test your testing skills', 1800, 70),
+(56, 'JS Performance Quiz', 'Assess optimization skills', 1800, 70),
+(57, 'JS Project Quiz', 'Test project knowledge', 1800, 70),
+-- Machine Learning Fundamentals (CourseID 7, LessonIDs 58-67)
+(58, 'ML Concepts Quiz', 'Test ML basics', 1800, 70),
+(59, 'Supervised Learning Quiz', 'Assess supervised algorithms', 1800, 70),
+(60, 'Unsupervised Learning Quiz', 'Test unsupervised methods', 1800, 70),
+(61, 'Feature Engineering Quiz', 'Assess feature crafting', 1800, 70),
+(62, 'Model Evaluation Quiz', 'Test evaluation techniques', 1800, 70),
+(63, 'Neural Networks Quiz', 'Assess neural basics', 1800, 70),
+(64, 'Deep Learning Quiz', 'Test deep learning basics', 1800, 70),
+(65, 'ML Applications Quiz', 'Assess real-world ML', 1800, 70),
+(66, 'AI Ethics Quiz', 'Test ethical knowledge', 1800, 70),
+(67, 'ML Capstone Quiz', 'Test project knowledge', 1800, 70),
+-- iOS App Development with Swift (CourseID 8, LessonIDs 68-77)
+(68, 'Swift Basics Quiz', 'Test Swift fundamentals', 1800, 70),
+(69, 'iOS Architecture Quiz', 'Assess architecture patterns', 1800, 70),
+(70, 'UIKit Quiz', 'Test UIKit knowledge', 1800, 70),
+(71, 'SwiftUI Quiz', 'Assess SwiftUI skills', 1800, 70),
+(72, 'Data Handling Quiz', 'Test data management', 1800, 70),
+(73, 'API Integration Quiz', 'Assess API skills', 1800, 70),
+(74, 'Core Data Quiz', 'Test Core Data knowledge', 1800, 70),
+(75, 'iOS Testing Quiz', 'Assess testing skills', 1800, 70),
+(76, 'App Store Quiz', 'Test submission knowledge', 1800, 70),
+(77, 'iOS Capstone Quiz', 'Test project knowledge', 1800, 70),
+-- SQL Database Mastery (CourseID 9, LessonIDs 78-86)
+(78, 'DB Concepts Quiz', 'Test database basics', 1800, 70),
+(79, 'SQL CRUD Quiz', 'Assess CRUD operations', 1800, 70),
+(80, 'Advanced SQL Quiz', 'Test complex queries', 1800, 70),
+(81, 'Normalization Quiz', 'Assess normalization skills', 1800, 70),
+(82, 'Indexing Quiz', 'Test indexing knowledge', 1800, 70),
+(83, 'Stored Procedures Quiz', 'Assess stored procedures', 1800, 70),
+(84, 'Transactions Quiz', 'Test transaction management', 1800, 70),
+(85, 'DB Security Quiz', 'Assess security practices', 1800, 70),
+(86, 'DB Project Quiz', 'Test project knowledge', 1800, 70),
+-- DevOps Engineering (CourseID 10, LessonIDs 87-96)
+(87, 'DevOps Principles Quiz', 'Test DevOps basics', 1800, 70),
+(88, 'Git Quiz', 'Assess Git skills', 1800, 70),
+(89, 'CI/CD Quiz', 'Test CI/CD knowledge', 1800, 70),
+(90, 'Docker Quiz', 'Assess Docker skills', 1800, 70),
+(91, 'Kubernetes Quiz', 'Test Kubernetes knowledge', 1800, 70),
+(92, 'IaC Quiz', 'Assess Terraform skills', 1800, 70),
+(93, 'Monitoring Quiz', 'Test monitoring skills', 1800, 70),
+(94, 'Cloud Services Quiz', 'Assess cloud knowledge', 1800, 70),
+(95, 'DevOps Practices Quiz', 'Test best practices', 1800, 70),
+(96, 'DevOps Capstone Quiz', 'Test project knowledge', 1800, 70),
+-- Ethical Hacking (CourseID 11, LessonIDs 97-108)
+(97, 'Hacking Basics Quiz', 'Test hacking fundamentals', 1800, 70),
+(98, 'Recon Quiz', 'Assess reconnaissance skills', 1800, 70),
+(99, 'Scanning Quiz', 'Test scanning knowledge', 1800, 70),
+(100, 'Enumeration Quiz', 'Assess enumeration skills', 1800, 70),
+(101, 'Vuln Analysis Quiz', 'Test vulnerability skills', 1800, 70),
+(102, 'Exploitation Quiz', 'Assess exploitation skills', 1800, 70),
+(103, 'Malware Quiz', 'Test malware knowledge', 1800, 70),
+(104, 'Sniffing Quiz', 'Assess sniffing skills', 1800, 70),
+(105, 'Social Eng Quiz', 'Test social engineering', 1800, 70),
+(106, 'DoS Quiz', 'Assess DoS knowledge', 1800, 70),
+(107, 'Session Hijack Quiz', 'Test session hijacking', 1800, 70),
+(108, 'Web Security Quiz', 'Assess web security', 1800, 70),
+-- Deep Learning with TensorFlow (CourseID 12, LessonIDs 109-118)
+(109, 'DL Concepts Quiz', 'Test deep learning basics', 1800, 70),
+(110, 'TensorFlow Quiz', 'Assess TensorFlow skills', 1800, 70),
+(111, 'Neural Networks Quiz', 'Test NN design', 1800, 70),
+(112, 'CNN Quiz', 'Assess CNN knowledge', 1800, 70),
+(113, 'RNN Quiz', 'Test RNN knowledge', 1800, 70),
+(114, 'Transfer Learning Quiz', 'Assess transfer learning', 1800, 70),
+(115, 'Generative Models Quiz', 'Test generative AI', 1800, 70),
+(116, 'NLP Quiz', 'Assess NLP skills', 1800, 70),
+(117, 'Vision Quiz', 'Test computer vision', 1800, 70),
+(118, 'DL Deployment Quiz', 'Assess deployment skills', 1800, 70),
+-- Blockchain Development (CourseID 13, LessonIDs 119-128)
+(119, 'Blockchain Basics Quiz', 'Test blockchain fundamentals', 1800, 70),
+(120, 'Crypto Quiz', 'Assess crypto knowledge', 1800, 70),
+(121, 'Bitcoin Quiz', 'Test Bitcoin knowledge', 1800, 70),
+(122, 'Ethereum Quiz', 'Assess Ethereum skills', 1800, 70),
+(123, 'Solidity Quiz', 'Test Solidity knowledge', 1800, 70),
+(124, 'DApp Quiz', 'Assess DApp skills', 1800, 70),
+(125, 'Web3 Quiz', 'Test Web3 integration', 1800, 70),
+(126, 'Contract Testing Quiz', 'Assess testing skills', 1800, 70),
+(127, 'Blockchain Security Quiz', 'Test security practices', 1800, 70),
+(128, 'Blockchain Capstone Quiz', 'Test project knowledge', 1800, 70),
+-- Internet of Things Fundamentals (CourseID 14, LessonIDs 129-138)
+(129, 'IoT Basics Quiz', 'Test IoT fundamentals', 1800, 70),
+(130, 'Sensors Quiz', 'Assess sensor knowledge', 1800, 70),
+(131, 'Arduino Quiz', 'Test Arduino skills', 1800, 70),
+(132, 'Raspberry Pi Quiz', 'Assess Raspberry Pi skills', 1800, 70),
+(133, 'IoT Protocols Quiz', 'Test protocol knowledge', 1800, 70),
+(134, 'IoT Cloud Quiz', 'Assess cloud skills', 1800, 70),
+(135, 'IoT Security Quiz', 'Test security knowledge', 1800, 70),
+(136, 'IoT Analytics Quiz', 'Assess analytics skills', 1800, 70),
+(137, 'IoT Solution Quiz', 'Test project knowledge', 1800, 70),
+(138, 'IoT Applications Quiz', 'Assess application knowledge', 1800, 70),
+-- Vue.js for Frontend Development (CourseID 15, LessonIDs 139-148)
+(139, 'Vue Basics Quiz', 'Test Vue fundamentals', 1800, 70),
+(140, 'Vue Components Quiz', 'Assess component skills', 1800, 70),
+(141, 'Vue Directives Quiz', 'Test directive knowledge', 1800, 70),
+(142, 'Vue Reactivity Quiz', 'Assess reactivity skills', 1800, 70),
+(143, 'Vue Router Quiz', 'Test router knowledge', 1800, 70),
+(144, 'Vuex Quiz', 'Assess Vuex skills', 1800, 70),
+(145, 'Vue Forms Quiz', 'Test form handling', 1800, 70),
+(146, 'Vue Practices Quiz', 'Assess best practices', 1800, 70),
+(147, 'Vue Testing Quiz', 'Test testing skills', 1800, 70),
+(148, 'Vue Capstone Quiz', 'Test project knowledge', 1800, 70),
+-- Django Web Framework (CourseID 16, LessonIDs 149-158)
+(149, 'Django Basics Quiz', 'Test Django fundamentals', 1800, 70),
+(150, 'Django Models Quiz', 'Assess model skills', 1800, 70),
+(151, 'Django Views Quiz', 'Test view knowledge', 1800, 70),
+(152, 'Django Forms Quiz', 'Assess form skills', 1800, 70),
+(153, 'Django Admin Quiz', 'Test admin customization', 1800, 70),
+(154, 'Django Auth Quiz', 'Assess auth skills', 1800, 70),
+(155, 'Django REST Quiz', 'Test REST API skills', 1800, 70),
+(156, 'Django Testing Quiz', 'Assess testing skills', 1800, 70),
+(157, 'Django Deployment Quiz', 'Test deployment knowledge', 1800, 70),
+(158, 'Django Capstone Quiz', 'Test project knowledge', 1800, 70);
 
--- User 5's fourth quiz attempt - Quiz 4 (Website Building)
-(7, 1, 1, 1), -- Using HTML questions for Website Building quiz
-(7, 2, 5, 1),
-(7, 3, 9, 1),
+-- Insert Questions for new Quizzes
+INSERT INTO Questions (QuizID, Content, Type, Points, OrderIndex)
+VALUES
+-- Web Development Bootcamp (CourseID 1, QuizIDs for LessonIDs 4, 7, 9-12)
+(20, 'What is the purpose of a DOCTYPE declaration?', 'multiple_choice', 1, 1),
+(20, 'Which HTML element is used for navigation?', 'multiple_choice', 1, 2),
+(21, 'What is the useState hook in React?', 'multiple_choice', 1, 1),
+(21, 'How do you pass props in React?', 'multiple_choice', 1, 2),
+(22, 'What does a REST API return?', 'multiple_choice', 1, 1),
+(22, 'What is a common HTTP method for updating resources?', 'multiple_choice', 1, 2),
+(23, 'What is MongoDB?', 'multiple_choice', 1, 1),
+(23, 'How do you connect MongoDB to Node.js?', 'multiple_choice', 1, 2),
+(24, 'What is Heroku used for?', 'multiple_choice', 1, 1),
+(24, 'What is Netlify primarily used for?', 'multiple_choice', 1, 2),
+(25, 'What is the purpose of a capstone project?', 'multiple_choice', 1, 1),
+(25, 'Which tool is used for version control?', 'multiple_choice', 1, 2),
+-- Advanced JavaScript (CourseID 6, QuizIDs for LessonIDs 49-57)
+(26, 'What is a closure in JavaScript?', 'multiple_choice', 1, 1),
+(26, 'What does a closure retain?', 'multiple_choice', 1, 2),
+(27, 'What is a prototype in JavaScript?', 'multiple_choice', 1, 1),
+(27, 'How do you access an object’s prototype?', 'multiple_choice', 1, 2),
+(28, 'What is async/await used for?', 'multiple_choice', 1, 1),
+(28, 'What does the await keyword do?', 'multiple_choice', 1, 2),
+(29, 'What is a common ES6+ feature?', 'multiple_choice', 1, 1),
+(29, 'What does the spread operator do?', 'multiple_choice', 1, 2),
+(30, 'What is functional programming?', 'multiple_choice', 1, 1),
+(30, 'What is a pure function?', 'multiple_choice', 1, 2),
+(31, 'What is a design pattern?', 'multiple_choice', 1, 1),
+(31, 'What is the Singleton pattern?', 'multiple_choice', 1, 2),
+(32, 'What is Jest used for?', 'multiple_choice', 1, 1),
+(32, 'What is a unit test?', 'multiple_choice', 1, 2),
+(33, 'What affects JavaScript performance?', 'multiple_choice', 1, 1),
+(33, 'How can you optimize JS code?', 'multiple_choice', 1, 2),
+(34, 'What is a common JS project tool?', 'multiple_choice', 1, 1),
+(34, 'What is Webpack used for?', 'multiple_choice', 1, 2),
+-- Machine Learning Fundamentals (CourseID 7, QuizIDs for LessonIDs 58-67)
+(35, 'What is machine learning?', 'multiple_choice', 1, 1),
+(35, 'What is supervised learning?', 'multiple_choice', 1, 2),
+(36, 'What is a common supervised algorithm?', 'multiple_choice', 1, 1),
+(36, 'What is regression used for?', 'multiple_choice', 1, 2),
+(37, 'What is unsupervised learning?', 'multiple_choice', 1, 1),
+(37, 'What is clustering?', 'multiple_choice', 1, 2),
+(38, 'What is feature engineering?', 'multiple_choice', 1, 1),
+(38, 'Why is feature scaling important?', 'multiple_choice', 1, 2),
+(39, 'What is model evaluation?', 'multiple_choice', 1, 1),
+(39, 'What is a confusion matrix?', 'multiple_choice', 1, 2),
+(40, 'What is a neural network?', 'multiple_choice', 1, 1),
+(40, 'What is an activation function?', 'multiple_choice', 1, 2),
+(41, 'What is deep learning?', 'multiple_choice', 1, 1),
+(41, 'What is a common DL framework?', 'multiple_choice', 1, 2),
+(42, 'What is a real-world ML application?', 'multiple_choice', 1, 1),
+(42, 'What is used for image recognition?', 'multiple_choice', 1, 2),
+(43, 'What is an ethical issue in AI?', 'multiple_choice', 1, 1),
+(43, 'Why is bias in AI a problem?', 'multiple_choice', 1, 2),
+(44, 'What is an ML project goal?', 'multiple_choice', 1, 1),
+(44, 'What is a common ML dataset?', 'multiple_choice', 1, 2),
+-- iOS App Development with Swift (CourseID 8, QuizIDs for LessonIDs 68-77)
+(45, 'What is Swift?', 'multiple_choice', 1, 1),
+(45, 'What is a Swift variable?', 'multiple_choice', 1, 2),
+(46, 'What is MVC in iOS?', 'multiple_choice', 1, 1),
+(46, 'What is MVVM used for?', 'multiple_choice', 1, 2),
+(47, 'What is UIKit?', 'multiple_choice', 1, 1),
+(47, 'What is a UIView?', 'multiple_choice', 1, 2),
+(48, 'What is SwiftUI?', 'multiple_choice', 1, 1),
+(48, 'What is a SwiftUI View?', 'multiple_choice', 1, 2),
+(49, 'What is data persistence?', 'multiple_choice', 1, 1),
+(49, 'What is UserDefaults?', 'multiple_choice', 1, 2),
+(50, 'What is URLSession?', 'multiple_choice', 1, 1),
+(50, 'What is JSON decoding?', 'multiple_choice', 1, 2),
+(51, 'What is Core Data?', 'multiple_choice', 1, 1),
+(51, 'What is an NSManagedObject?', 'multiple_choice', 1, 2),
+(52, 'What is XCTest?', 'multiple_choice', 1, 1),
+(52, 'What is a UI test?', 'multiple_choice', 1, 2),
+(53, 'What is required for App Store?', 'multiple_choice', 1, 1),
+(53, 'What is an App ID?', 'multiple_choice', 1, 2),
+(54, 'What is an iOS project goal?', 'multiple_choice', 1, 1),
+(54, 'What is a common iOS framework?', 'multiple_choice', 1, 2),
+-- SQL Database Mastery (CourseID 9, QuizIDs for LessonIDs 78-86)
+(55, 'What is a database?', 'multiple_choice', 1, 1),
+(55, 'What is a relational DB?', 'multiple_choice', 1, 2),
+(56, 'What is SELECT in SQL?', 'multiple_choice', 1, 1),
+(56, 'What is INSERT used for?', 'multiple_choice', 1, 2),
+(57, 'What is a JOIN in SQL?', 'multiple_choice', 1, 1),
+(57, 'What is a LEFT JOIN?', 'multiple_choice', 1, 2),
+(58, 'What is normalization?', 'multiple_choice', 1, 1),
+(58, 'What is 3NF?', 'multiple_choice', 1, 2),
+(59, 'What is an index?', 'multiple_choice', 1, 1),
+(59, 'What is a clustered index?', 'multiple_choice', 1, 2),
+(60, 'What is a stored procedure?', 'multiple_choice', 1, 1),
+(60, 'What is a trigger?', 'multiple_choice', 1, 2),
+(61, 'What is a transaction?', 'multiple_choice', 1, 1),
+(61, 'What is ACID?', 'multiple_choice', 1, 2),
+(62, 'What is DB security?', 'multiple_choice', 1, 1),
+(62, 'What is SQL injection?', 'multiple_choice', 1, 2),
+(63, 'What is a DB project goal?', 'multiple_choice', 1, 1),
+(63, 'What is a common DB tool?', 'multiple_choice', 1, 2),
+-- DevOps Engineering (CourseID 10, QuizIDs for LessonIDs 87-96)
+(64, 'What is DevOps?', 'multiple_choice', 1, 1),
+(64, 'What is CI/CD?', 'multiple_choice', 1, 2),
+(65, 'What is Git?', 'multiple_choice', 1, 1),
+(65, 'What is a Git branch?', 'multiple_choice', 1, 2),
+(66, 'What is continuous integration?', 'multiple_choice', 1, 1),
+(66, 'What is Jenkins?', 'multiple_choice', 1, 2),
+(67, 'What is Docker?', 'multiple_choice', 1, 1),
+(67, 'What is a container?', 'multiple_choice', 1, 2),
+(68, 'What is Kubernetes?', 'multiple_choice', 1, 1),
+(68, 'What is a pod?', 'multiple_choice', 1, 2),
+(69, 'What is IaC?', 'multiple_choice', 1, 1),
+(69, 'What is Terraform?', 'multiple_choice', 1, 2),
+(70, 'What is monitoring?', 'multiple_choice', 1, 1),
+(70, 'What is Prometheus?', 'multiple_choice', 1, 2),
+(71, 'What is AWS?', 'multiple_choice', 1, 1),
+(71, 'What is EC2?', 'multiple_choice', 1, 2),
+(72, 'What is a DevOps best practice?', 'multiple_choice', 1, 1),
+(72, 'What is automation?', 'multiple_choice', 1, 2),
+(73, 'What is a DevOps project goal?', 'multiple_choice', 1, 1),
+(73, 'What is a common DevOps tool?', 'multiple_choice', 1, 2),
+-- Ethical Hacking (CourseID 11, QuizIDs for LessonIDs 97-108)
+(74, 'What is ethical hacking?', 'multiple_choice', 1, 1),
+(74, 'What is a penetration test?', 'multiple_choice', 1, 2),
+(75, 'What is reconnaissance?', 'multiple_choice', 1, 1),
+(75, 'What is OSINT?', 'multiple_choice', 1, 2),
+(76, 'What is network scanning?', 'multiple_choice', 1, 1),
+(76, 'What is Nmap?', 'multiple_choice', 1, 2),
+(77, 'What is enumeration?', 'multiple_choice', 1, 1),
+(77, 'What is SNMP?', 'multiple_choice', 1, 2),
+(78, 'What is vulnerability analysis?', 'multiple_choice', 1, 1),
+(78, 'What is Nessus?', 'multiple_choice', 1, 2),
+(79, 'What is system hacking?', 'multiple_choice', 1, 1),
+(79, 'What is a brute force attack?', 'multiple_choice', 1, 2),
+(80, 'What is malware?', 'multiple_choice', 1, 1),
+(80, 'What is a virus?', 'multiple_choice', 1, 2),
+(81, 'What is sniffing?', 'multiple_choice', 1, 1),
+(81, 'What is Wireshark?', 'multiple_choice', 1, 2),
+(82, 'What is social engineering?', 'multiple_choice', 1, 1),
+(82, 'What is phishing?', 'multiple_choice', 1, 2),
+(83, 'What is a DoS attack?', 'multiple_choice', 1, 1),
+(83, 'What is DDoS?', 'multiple_choice', 1, 2),
+(84, 'What is session hijacking?', 'multiple_choice', 1, 1),
+(84, 'What is a session token?', 'multiple_choice', 1, 2),
+(85, 'What is XSS?', 'multiple_choice', 1, 1),
+(85, 'What is CSRF?', 'multiple_choice', 1, 2),
+-- Deep Learning with TensorFlow (CourseID 12, QuizIDs for LessonIDs 109-118)
+(86, 'What is deep learning?', 'multiple_choice', 1, 1),
+(86, 'What is a neural network?', 'multiple_choice', 1, 2),
+(87, 'What is TensorFlow?', 'multiple_choice', 1, 1),
+(87, 'What is Keras?', 'multiple_choice', 1, 2),
+(88, 'What is a layer in NN?', 'multiple_choice', 1, 1),
+(88, 'What is a neuron?', 'multiple_choice', 1, 2),
+(89, 'What is a CNN?', 'multiple_choice', 1, 1),
+(89, 'What is convolution?', 'multiple_choice', 1, 2),
+(90, 'What is an RNN?', 'multiple_choice', 1, 1),
+(90, 'What is LSTM?', 'multiple_choice', 1, 2),
+(91, 'What is transfer learning?', 'multiple_choice', 1, 1),
+(91, 'What is a pre-trained model?', 'multiple_choice', 1, 2),
+(92, 'What is a GAN?', 'multiple_choice', 1, 1),
+(92, 'What is a generative model?', 'multiple_choice', 1, 2),
+(93, 'What is NLP?', 'multiple_choice', 1, 1),
+(93, 'What is tokenization?', 'multiple_choice', 1, 2),
+(94, 'What is computer vision?', 'multiple_choice', 1, 1),
+(94, 'What is image classification?', 'multiple_choice', 1, 2),
+(95, 'What is model deployment?', 'multiple_choice', 1, 1),
+(95, 'What is TensorFlow Serving?', 'multiple_choice', 1, 2),
+-- Blockchain Development (CourseID 13, QuizIDs for LessonIDs 119-128)
+(96, 'What is blockchain?', 'multiple_choice', 1, 1),
+(96, 'What is a distributed ledger?', 'multiple_choice', 1, 2),
+(97, 'What is cryptography?', 'multiple_choice', 1, 1),
+(97, 'What is a hash function?', 'multiple_choice', 1, 2),
+(98, 'What is Bitcoin?', 'multiple_choice', 1, 1),
+(98, 'What is a blockchain wallet?', 'multiple_choice', 1, 2),
+(99, 'What is Ethereum?', 'multiple_choice', 1, 1),
+(99, 'What is a smart contract?', 'multiple_choice', 1, 2),
+(100, 'What is Solidity?', 'multiple_choice', 1, 1),
+(100, 'What is a Solidity function?', 'multiple_choice', 1, 2),
+(101, 'What is a DApp?', 'multiple_choice', 1, 1),
+(101, 'What is Web3.js?', 'multiple_choice', 1, 2),
+(102, 'What is a blockchain frontend?', 'multiple_choice', 1, 1),
+(102, 'What is MetaMask?', 'multiple_choice', 1, 2),
+(103, 'What is contract testing?', 'multiple_choice', 1, 1),
+(103, 'What is Truffle?', 'multiple_choice', 1, 2),
+(104, 'What is blockchain security?', 'multiple_choice', 1, 1),
+(104, 'What is a reentrancy attack?', 'multiple_choice', 1, 2),
+(105, 'What is a blockchain project?', 'multiple_choice', 1, 1),
+(105, 'What is a common blockchain tool?', 'multiple_choice', 1, 2),
+-- Internet of Things Fundamentals (CourseID 14, QuizIDs for LessonIDs 129-138)
+(106, 'What is IoT?', 'multiple_choice', 1, 1),
+(106, 'What is an IoT device?', 'multiple_choice', 1, 2),
+(107, 'What is a sensor?', 'multiple_choice', 1, 1),
+(107, 'What is an actuator?', 'multiple_choice', 1, 2),
+(108, 'What is Arduino?', 'multiple_choice', 1, 1),
+(108, 'What is an Arduino sketch?', 'multiple_choice', 1, 2),
+(109, 'What is Raspberry Pi?', 'multiple_choice', 1, 1),
+(109, 'What is a GPIO pin?', 'multiple_choice', 1, 2),
+(110, 'What is MQTT?', 'multiple_choice', 1, 1),
+(110, 'What is CoAP?', 'multiple_choice', 1, 2),
+(111, 'What is an IoT cloud platform?', 'multiple_choice', 1, 1),
+(111, 'What is AWS IoT?', 'multiple_choice', 1, 2),
+(112, 'What is IoT security?', 'multiple_choice', 1, 1),
+(112, 'What is a common IoT attack?', 'multiple_choice', 1, 2),
+(113, 'What is IoT analytics?', 'multiple_choice', 1, 1),
+(113, 'What is real-time analytics?', 'multiple_choice', 1, 2),
+(114, 'What is an IoT solution?', 'multiple_choice', 1, 1),
+(114, 'What is an IoT gateway?', 'multiple_choice', 1, 2),
+(115, 'What is an IoT application?', 'multiple_choice', 1, 1),
+(115, 'What is smart home IoT?', 'multiple_choice', 1, 2),
+-- Vue.js for Frontend Development (CourseID 15, QuizIDs for LessonIDs 139-148)
+(116, 'What is Vue.js?', 'multiple_choice', 1, 1),
+(116, 'What is a Vue instance?', 'multiple_choice', 1, 2),
+(117, 'What is a Vue component?', 'multiple_choice', 1, 1),
+(117, 'What is a Vue prop?', 'multiple_choice', 1, 2),
+(118, 'What is a Vue directive?', 'multiple_choice', 1, 1),
+(118, 'What is v-bind?', 'multiple_choice', 1, 2),
+(119, 'What is Vue reactivity?', 'multiple_choice', 1, 1),
+(119, 'What is a reactive property?', 'multiple_choice', 1, 2),
+(120, 'What is Vue Router?', 'multiple_choice', 1, 1),
+(120, 'What is a route?', 'multiple_choice', 1, 2),
+(121, 'What is Vuex?', 'multiple_choice', 1, 1),
+(121, 'What is a Vuex store?', 'multiple_choice', 1, 2),
+(122, 'What is a Vue form?', 'multiple_choice', 1, 1),
+(122, 'What is v-model?', 'multiple_choice', 1, 2),
+(123, 'What is a Vue best practice?', 'multiple_choice', 1, 1),
+(123, 'What is component reuse?', 'multiple_choice', 1, 2),
+(124, 'What is Vue testing?', 'multiple_choice', 1, 1),
+(124, 'What is Vue Test Utils?', 'multiple_choice', 1, 2),
+(125, 'What is a Vue project?', 'multiple_choice', 1, 1),
+(125, 'What is a common Vue tool?', 'multiple_choice', 1, 2),
+-- Django Web Framework (CourseID 16, QuizIDs for LessonIDs 149-158)
+(126, 'What is Django?', 'multiple_choice', 1, 1),
+(126, 'What is a Django project?', 'multiple_choice', 1, 2),
+(127, 'What is a Django model?', 'multiple_choice', 1, 1),
+(127, 'What is a Django field?', 'multiple_choice', 1, 2),
+(128, 'What is a Django view?', 'multiple_choice', 1, 1),
+(128, 'What is a Django template?', 'multiple_choice', 1, 2),
+(129, 'What is a Django form?', 'multiple_choice', 1, 1),
+(129, 'What is a Django ModelForm?', 'multiple_choice', 1, 2),
+(130, 'What is Django admin?', 'multiple_choice', 1, 1),
+(130, 'What is a Django admin action?', 'multiple_choice', 1, 2),
+(131, 'What is Django auth?', 'multiple_choice', 1, 1),
+(131, 'What is a Django User model?', 'multiple_choice', 1, 2),
+(132, 'What is Django REST?', 'multiple_choice', 1, 1),
+(132, 'What is a Django serializer?', 'multiple_choice', 1, 2),
+(133, 'What is Django testing?', 'multiple_choice', 1, 1),
+(133, 'What is Django TestCase?', 'multiple_choice', 1, 2),
+(134, 'What is Django deployment?', 'multiple_choice', 1, 1),
+(134, 'What is Gunicorn?', 'multiple_choice', 1, 2),
+(135, 'What is a Django project?', 'multiple_choice', 1, 1),
+(135, 'What is a common Django tool?', 'multiple_choice', 1, 2);
 
--- User 6's first quiz attempt - Quiz 5 (Python Syntax)
-(8, 4, 11, 1), -- Using CSS questions for Python quiz
-(8, 5, 15, 1),
+-- Insert Answers for new Questions
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+-- Web Development Bootcamp (CourseID 1, Questions for QuizIDs 20-25)
+(11, 'Declares the document type', 1, 1), (11, 'Styles the document', 0, 2), (11, 'Links to CSS', 0, 3), (11, 'Defines metadata', 0, 4),
+(12, '<nav>', 1, 1), (12, '<header>', 0, 2), (12, '<section>', 0, 3), (12, '<footer>', 0, 4),
+(13, 'Manages state in functional components', 1, 1), (13, 'Handles routing', 0, 2), (13, 'Fetches data', 0, 3), (13, 'Styles components', 0, 4),
+(14, 'As attributes to components', 1, 1), (14, 'As global variables', 0, 2), (14, 'As CSS classes', 0, 3), (14, 'As HTML tags', 0, 4),
+(15, 'JSON data', 1, 1), (15, 'HTML content', 0, 2), (15, 'CSS styles', 0, 3), (15, 'Binary files', 0, 4),
+(16, 'PUT', 1, 1), (16, 'GET', 0, 2), (16, 'POST', 0, 3), (16, 'DELETE', 0, 4),
+(17, 'NoSQL database', 1, 1), (17, 'Relational database', 0, 2), (17, 'File system', 0, 3), (17, 'Cache system', 0, 4),
+(18, 'Using mongoose', 1, 1), (18, 'Using SQL', 0, 2), (18, 'Using HTTP', 0, 3), (18, 'Using FTP', 0, 4),
+(19, 'Cloud app hosting', 1, 1), (19, 'Database management', 0, 2), (19, 'File storage', 0, 3), (19, 'Email service', 0, 4),
+(20, 'Static site hosting', 1, 1), (20, 'Backend hosting', 0, 2), (20, 'Database hosting', 0, 3), (20, 'ML model hosting', 0, 4),
+(21, 'Demonstrate learned skills', 1, 1), (21, 'Write documentation', 0, 2), (21, 'Test APIs', 0, 3), (21, 'Debug code', 0, 4),
+(22, 'Git', 1, 1), (22, 'Docker', 0, 2), (22, 'Jenkins', 0, 3), (22, 'Webpack', 0, 4),
+-- Advanced JavaScript (CourseID 6, Questions for QuizIDs 26-34)
+(23, 'Function with lexical scope', 1, 1), (23, 'Global variable', 0, 2), (23, 'Object method', 0, 3), (23, 'Class instance', 0, 4),
+(24, 'Outer function’s variables', 1, 1), (24, 'Global state', 0, 2), (24, 'DOM elements', 0, 3), (24, 'Event listeners', 0, 4),
+(25, 'Object’s parent', 1, 1), (25, 'Class definition', 0, 2), (25, 'Global object', 0, 3), (25, 'Function scope', 0, 4),
+(26, 'Object.getPrototypeOf()', 1, 1), (26, 'Object.create()', 0, 2), (26, 'Object.defineProperty()', 0, 3), (26, 'Object.assign()', 0, 4),
+(27, 'Handle asynchronous code', 1, 1), (27, 'Define classes', 0, 2), (27, 'Manage state', 0, 3), (27, 'Style components', 0, 4),
+(28, 'Pauses async function', 1, 1), (28, 'Throws errors', 0, 2), (28, 'Loops arrays', 0, 3), (28, 'Binds events', 0, 4),
+(29, 'Arrow functions', 1, 1), (29, 'Global variables', 0, 2), (29, 'XML parsing', 0, 3), (29, 'CSS animations', 0, 4),
+(30, 'Spreads array elements', 1, 1), (30, 'Merges objects', 0, 2), (30, 'Clones functions', 0, 3), (30, 'Parses JSON', 0, 4),
+(31, 'Immutable functions', 1, 1), (31, 'Stateful classes', 0, 2), (31, 'Event-driven code', 0, 3), (31, 'DOM manipulation', 0, 4),
+(32, 'No side effects', 1, 1), (32, 'Mutates state', 0, 2), (32, 'Handles events', 0, 3), (32, 'Parses data', 0, 4),
+(33, 'Reusable code structure', 1, 1), (33, 'CSS rule', 0, 2), (33, 'Database query', 0, 3), (33, 'API endpoint', 0, 4),
+(34, 'Single instance object', 1, 1), (34, 'Multiple instances', 0, 2), (34, 'Event listener', 0, 3), (34, 'Data model', 0, 4),
+(35, 'Unit testing', 1, 1), (35, 'API development', 0, 2), (35, 'UI design', 0, 3), (35, 'DB management', 0, 4),
+(36, 'Tests individual functions', 1, 1), (36, 'Tests UI', 0, 2), (36, 'Tests APIs', 0, 3), (36, 'Tests databases', 0, 4),
+(37, 'DOM manipulation', 1, 1), (37, 'CSS rendering', 0, 2), (37, 'SQL queries', 0, 3), (37, 'File I/O', 0, 4),
+(38, 'Minify code', 1, 1), (38, 'Add comments', 0, 2), (38, 'Increase loops', 0, 3), (38, 'Use globals', 0, 4),
+(39, 'NPM', 1, 1), (39, 'SQL', 0, 2), (39, 'CSS', 0, 3), (39, 'XML', 0, 4),
+(40, 'Module bundling', 1, 1), (40, 'Database queries', 0, 2), (40, 'UI rendering', 0, 3), (40, 'File compression', 0, 4),
+-- Machine Learning Fundamentals (CourseID 7, Questions for QuizIDs 35-44)
+(41, 'Data-driven predictions', 1, 1), (41, 'Rule-based logic', 0, 2), (41, 'Manual coding', 0, 3), (41, 'UI design', 0, 4),
+(42, 'Uses labeled data', 1, 1), (42, 'No labels needed', 0, 2), (42, 'Manual input', 0, 3), (42, 'Random sampling', 0, 4),
+(43, 'Linear regression', 1, 1), (43, 'K-means', 0, 2), (43, 'DBSCAN', 0, 3), (43, 'Apriori', 0, 4),
+(44, 'Predicts continuous values', 1, 1), (44, 'Classifies data', 0, 2), (44, 'Clusters data', 0, 3), (44, 'Reduces dimensions', 0, 4);
+-- Continuing from the provided LightHouseCourse database script
+-- Adding remaining Answers for Questions already inserted
+-- Completing Answers for Questions in Machine Learning Fundamentals (CourseID 7, Questions for QuizIDs 35-44)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(45, 'No labeled data', 1, 1), (45, 'Uses labels', 0, 2), (45, 'Manual rules', 0, 3), (45, 'Fixed outputs', 0, 4),
+(46, 'Groups similar data', 1, 1), (46, 'Predicts values', 0, 2), (46, 'Classifies labels', 0, 3), (46, 'Optimizes code', 0, 4),
+(47, 'Creating new features', 1, 1), (47, 'Training models', 0, 2), (47, 'Testing code', 0, 3), (47, 'Deploying apps', 0, 4),
+(48, 'Improves model accuracy', 1, 1), (48, 'Reduces data size', 0, 2), (48, 'Encrypts data', 0, 3), (48, 'Formats code', 0, 4),
+(49, 'Assessing model performance', 1, 1), (49, 'Building models', 0, 2), (49, 'Cleaning data', 0, 3), (49, 'Visualizing data', 0, 4),
+(50, 'Shows classification results', 1, 1), (50, 'Plots data points', 0, 2), (50, 'Stores data', 0, 3), (50, 'Encrypts data', 0, 4),
+(51, 'Interconnected nodes', 1, 1), (51, 'Database tables', 0, 2), (51, 'UI components', 0, 3), (51, 'API endpoints', 0, 4),
+(52, 'Transforms inputs', 1, 1), (52, 'Stores data', 0, 2), (52, 'Renders UI', 0, 3), (52, 'Parses JSON', 0, 4),
+(53, 'Multiple layers NN', 1, 1), (53, 'Single layer NN', 0, 2), (53, 'Database system', 0, 3), (53, 'UI framework', 0, 4),
+(54, 'TensorFlow', 1, 1), (54, 'React', 0, 2), (54, 'Django', 0, 3), (54, 'Unity', 0, 4),
+(55, 'Recommendation systems', 1, 1), (55, 'File compression', 0, 2), (55, 'UI design', 0, 3), (55, 'Network security', 0, 4),
+(56, 'Convolutional NN', 1, 1), (56, 'Linear regression', 0, 2), (56, 'K-means', 0, 3), (56, 'Decision trees', 0, 4),
+(57, 'Data bias', 1, 1), (57, 'UI rendering', 0, 2), (57, 'Code optimization', 0, 3), (57, 'File storage', 0, 4),
+(58, 'Skews predictions', 1, 1), (58, 'Improves speed', 0, 2), (58, 'Reduces cost', 0, 3), (58, 'Enhances UI', 0, 4),
+(59, 'Solve a problem', 1, 1), (59, 'Design UI', 0, 2), (59, 'Write tests', 0, 3), (59, 'Secure network', 0, 4),
+(60, 'MNIST', 1, 1), (60, 'HTML5', 0, 2), (60, 'CSS3', 0, 3), (60, 'SQL', 0, 4);
 
--- User 6's second quiz attempt - Quiz 6 (Pandas Library)
-(9, 6, 19, 1), -- Using JS questions for Pandas quiz
-(9, 7, 23, 1),
+-- Completing Answers for iOS App Development with Swift (CourseID 8, Questions for QuizIDs 45-54)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(61, 'Programming language', 1, 1), (61, 'UI framework', 0, 2), (61, 'Database system', 0, 3), (61, 'Game engine', 0, 4),
+(62, 'Declared with var', 1, 1), (62, 'Global constant', 0, 2), (62, 'Function name', 0, 3), (62, 'Class instance', 0, 4),
+(63, 'App structure pattern', 1, 1), (63, 'Database schema', 0, 2), (63, 'Network protocol', 0, 3), (63, 'File format', 0, 4),
+(64, 'Separates view logic', 1, 1), (64, 'Handles routing', 0, 2), (64, 'Encrypts data', 0, 3), (64, 'Parses JSON', 0, 4),
+(65, 'UI framework', 1, 1), (65, 'Database tool', 0, 2), (65, 'API client', 0, 3), (65, 'Testing tool', 0, 4),
+(66, 'Base UI component', 1, 1), (66, 'Data model', 0, 2), (66, 'Network request', 0, 3), (66, 'Event handler', 0, 4),
+(67, 'Declarative UI', 1, 1), (67, 'Imperative UI', 0, 2), (67, 'Database query', 0, 3), (67, 'File parser', 0, 4),
+(68, 'UI element', 1, 1), (68, 'Data store', 0, 2), (68, 'API call', 0, 3), (68, 'Test case', 0, 4),
+(69, 'Storing app data', 1, 1), (69, 'Rendering UI', 0, 2), (69, 'Handling events', 0, 3), (69, 'Networking', 0, 4),
+(70, 'Stores small data', 1, 1), (70, 'Manages state', 0, 2), (70, 'Renders views', 0, 3), (70, 'Parses XML', 0, 4),
+(71, 'Handles HTTP requests', 1, 1), (71, 'Stores data', 0, 2), (71, 'Renders UI', 0, 3), (71, 'Tests code', 0, 4),
+(72, 'Converts JSON to objects', 1, 1), (72, 'Encrypts data', 0, 2), (72, 'Formats UI', 0, 3), (72, 'Logs errors', 0, 4),
+(73, 'Data persistence', 1, 1), (73, 'UI rendering', 0, 2), (73, 'API calls', 0, 3), (73, 'Event handling', 0, 4),
+(74, 'Managed data object', 1, 1), (74, 'UI component', 0, 2), (74, 'Network request', 0, 3), (74, 'Test case', 0, 4),
+(75, 'Testing framework', 1, 1), (75, 'UI library', 0, 2), (75, 'Database tool', 0, 3), (75, 'Network client', 0, 4),
+(76, 'Tests user interactions', 1, 1), (76, 'Tests data models', 0, 2), (76, 'Tests APIs', 0, 3), (76, 'Tests security', 0, 4),
+(77, 'App submission', 1, 1), (77, 'Code compilation', 0, 2), (77, 'Data storage', 0, 3), (77, 'UI design', 0, 4),
+(78, 'Unique app identifier', 1, 1), (78, 'Version number', 0, 2), (78, 'Database key', 0, 3), (78, 'API token', 0, 4),
+(79, 'Build functional app', 1, 1), (79, 'Write tests', 0, 2), (79, 'Design UI', 0, 3), (79, 'Secure network', 0, 4),
+(80, 'Core Data', 1, 1), (80, 'React', 0, 2), (80, 'Django', 0, 3), (80, 'Unity', 0, 4);
 
--- User 6's third quiz attempt - Quiz 7 (Data Visualization)
-(10, 6, 20, 0), -- Using JS questions for Data Visualization quiz
-(10, 7, 24, 0),
+-- Completing Answers for SQL Database Mastery (CourseID 9, Questions for QuizIDs 55-63)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(81, 'Data storage system', 1, 1), (81, 'Programming language', 0, 2), (81, 'UI framework', 0, 3), (81, 'Game engine', 0, 4),
+(82, 'Uses tables', 1, 1), (82, 'Key-value store', 0, 2), (82, 'File system', 0, 3), (82, 'Graph database', 0, 4),
+(83, 'Fetches data', 1, 1), (83, 'Updates data', 0, 2), (83, 'Deletes data', 0, 3), (83, 'Inserts data', 0, 4),
+(84, 'Adds new records', 1, 1), (84, 'Fetches records', 0, 2), (84, 'Updates records', 0, 3), (84, 'Deletes records', 0, 4),
+(85, 'Combines tables', 1, 1), (85, 'Filters rows', 0, 2), (85, 'Sorts data', 0, 3), (85, 'Groups data', 0, 4),
+(86, 'Includes all left table rows', 1, 1), (86, 'Includes all right table rows', 0, 2), (86, 'Matches both tables', 0, 3), (86, 'Excludes matches', 0, 4),
+(87, 'Reduces redundancy', 1, 1), (87, 'Increases storage', 0, 2), (87, 'Encrypts data', 0, 3), (87, 'Formats queries', 0, 4),
+(88, 'Third normal form', 1, 1), (88, 'First normal form', 0, 2), (88, 'Second normal form', 0, 3), (88, 'No normalization', 0, 4),
+(89, 'Speeds up queries', 1, 1), (89, 'Stores data', 0, 2), (89, 'Encrypts data', 0, 3), (89, 'Formats data', 0, 4),
+(90, 'Primary key index', 1, 1), (90, 'Non-unique index', 0, 2), (90, 'Foreign key index', 0, 3), (90, 'Temporary index', 0, 4),
+(91, 'Reusable SQL code', 1, 1), (91, 'Database table', 0, 2), (91, 'UI component', 0, 3), (91, 'Network request', 0, 4),
+(92, 'Auto-executes on events', 1, 1), (92, 'Fetches data', 0, 2), (92, 'Renders UI', 0, 3), (92, 'Logs errors', 0, 4),
+(93, 'Atomic operations', 1, 1), (93, 'Temporary tables', 0, 2), (93, 'Query results', 0, 3), (93, 'UI elements', 0, 4),
+(94, 'Ensures data integrity', 1, 1), (94, 'Speeds up queries', 0, 2), (94, 'Formats data', 0, 3), (94, 'Encrypts data', 0, 4),
+(95, 'Protects data', 1, 1), (95, 'Speeds queries', 0, 2), (95, 'Renders UI', 0, 3), (95, 'Logs errors', 0, 4),
+(96, 'Malicious query injection', 1, 1), (96, 'Data encryption', 0, 2), (96, 'Query optimization', 0, 3), (96, 'UI rendering', 0, 4),
+(97, 'Build efficient DB', 1, 1), (97, 'Design UI', 0, 2), (97, 'Write tests', 0, 3), (97, 'Secure network', 0, 4),
+(98, 'MySQL Workbench', 1, 1), (98, 'React', 0, 2), (98, 'Django', 0, 3), (98, 'Unity', 0, 4);
 
--- User 4's fourth quiz attempt - Quiz 8 (React Native Basics)
-(11, 4, 11, 1), -- Using CSS questions for React Native quiz
-(11, 5, 15, 1);
+-- Completing Answers for DevOps Engineering (CourseID 10, Questions for QuizIDs 64-73)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(99, 'Collaboration and automation', 1, 1), (99, 'UI design', 0, 2), (99, 'Database management', 0, 3), (99, 'Game development', 0, 4),
+(100, 'Continuous delivery', 1, 1), (100, 'Manual testing', 0, 2), (100, 'UI rendering', 0, 3), (100, 'Data encryption', 0, 4),
+(101, 'Version control', 1, 1), (101, 'UI framework', 0, 2), (101, 'Database system', 0, 3), (101, 'Game engine', 0, 4),
+(102, 'Code isolation', 1, 1), (102, 'Data storage', 0, 2), (102, 'UI component', 0, 3), (102, 'API endpoint', 0, 4),
+(103, 'Automates builds', 1, 1), (103, 'Renders UI', 0, 2), (103, 'Stores data', 0, 3), (103, 'Encrypts data', 0, 4),
+(104, 'CI/CD tool', 1, 1), (104, 'UI library', 0, 2), (104, 'Database tool', 0, 3), (104, 'Game engine', 0, 4),
+(105, 'Containerization', 1, 1), (105, 'UI rendering', 0, 2), (105, 'Data storage', 0, 3), (105, 'Network protocol', 0, 4),
+(106, 'Isolated environment', 1, 1), (106, 'Database table', 0, 2), (106, 'UI component', 0, 3), (106, 'API request', 0, 4),
+(107, 'Container orchestration', 1, 1), (107, 'UI framework', 0, 2), (107, 'Database system', 0, 3), (107, 'Game engine', 0, 4),
+(108, 'Container group', 1, 1), (108, 'Data model', 0, 2), (108, 'UI element', 0, 3), (108, 'API call', 0, 4),
+(109, 'Infrastructure as Code', 1, 1), (109, 'UI design', 0, 2), (109, 'Database schema', 0, 3), (109, 'Game logic', 0, 4),
+(110, 'Manages infrastructure', 1, 1), (110, 'Renders UI', 0, 2), (110, 'Stores data', 0, 3), (110, 'Encrypts data', 0, 4),
+(111, 'Tracks system performance', 1, 1), (111, 'Renders UI', 0, 2), (111, 'Stores data', 0, 3), (111, 'Encrypts data', 0, 4),
+(112, 'Monitoring tool', 1, 1), (112, 'UI library', 0, 2), (112, 'Database tool', 0, 3), (112, 'Game engine', 0, 4),
+(113, 'Cloud platform', 1, 1), (113, 'UI framework', 0, 2), (113, 'Database engine', 0, 3), (113, 'Game engine', 0, 4),
+(114, 'Virtual machine', 1, 1), (114, 'UI component', 0, 2), (114, 'Data model', 0, 3), (114, 'API endpoint', 0, 4),
+(115, 'Streamline processes', 1, 1), (115, 'Render UI', 0, 2), (115, 'Store data', 0, 3), (115, 'Encrypt data', 0, 4),
+(116, 'Reduces manual tasks', 1, 1), (116, 'Increases UI size', 0, 2), (116, 'Formats queries', 0, 3), (116, 'Logs errors', 0, 4),
+(117, 'Automate deployment', 1, 1), (117, 'Design UI', 0, 2), (117, 'Write tests', 0, 3), (117, 'Secure network', 0, 4),
+(118, 'Jenkins', 1, 1), (118, 'React', 0, 2), (118, 'Django', 0, 3), (118, 'Unity', 0, 4);
 
-GO
+-- Completing Answers for Ethical Hacking (CourseID 11, Questions for QuizIDs 74-85)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(119, 'Authorized security testing', 1, 1), (119, 'Malicious hacking', 0, 2), (119, 'UI design', 0, 3), (119, 'Database management', 0, 4),
+(120, 'Simulates attacks', 1, 1), (120, 'Renders UI', 0, 2), (120, 'Stores data', 0, 3), (120, 'Encrypts data', 0, 4),
+(121, 'Information gathering', 1, 1), (121, 'Data encryption', 0, 2), (121, 'UI rendering', 0, 3), (121, 'Code testing', 0, 4),
+(122, 'Open-source intelligence', 1, 1), (122, 'Network protocol', 0, 2), (122, 'UI framework', 0, 3), (122, 'Database tool', 0, 4),
+(123, 'Identifies open ports', 1, 1), (123, 'Encrypts data', 0, 2), (123, 'Renders UI', 0, 3), (123, 'Stores data', 0, 4),
+(124, 'Network scanning tool', 1, 1), (124, 'UI library', 0, 2), (124, 'Database engine', 0, 3), (124, 'Game engine', 0, 4),
+(125, 'Extracts system info', 1, 1), (125, 'Renders UI', 0, 2), (125, 'Stores data', 0, 3), (125, 'Encrypts data', 0, 4),
+(126, 'Network protocol', 1, 1), (126, 'UI component', 0, 2), (126, 'Data model', 0, 3), (126, 'API endpoint', 0, 4),
+(127, 'Finds security flaws', 1, 1), (127, 'Encrypts data', 0, 2), (127, 'Renders UI', 0, 3), (127, 'Stores data', 0, 4),
+(128, 'Vulnerability scanner', 1, 1), (128, 'UI library', 0, 2), (128, 'Database tool', 0, 3), (128, 'Game engine', 0, 4),
+(129, 'Gains unauthorized access', 1, 1), (129, 'Renders UI', 0, 2), (129, 'Stores data', 0, 3), (129, 'Encrypts data', 0, 4),
+(130, 'Tries multiple passwords', 1, 1), (130, 'Encrypts data', 0, 2), (130, 'Renders UI', 0, 3), (130, 'Formats code', 0, 4),
+(131, 'Malicious software', 1, 1), (131, 'UI component', 0, 2), (131, 'Data model', 0, 3), (131, 'API endpoint', 0, 4),
+(132, 'Self-replicating code', 1, 1), (132, 'Network protocol', 0, 2), (132, 'UI framework', 0, 3), (132, 'Database tool', 0, 4),
+(133, 'Captures network packets', 1, 1), (133, 'Renders UI', 0, 2), (133, 'Stores data', 0, 3), (133, 'Encrypts data', 0, 4),
+(134, 'Packet analyzer', 1, 1), (134, 'UI library', 0, 2), (134, 'Database engine', 0, 3), (134, 'Game engine', 0, 4),
+(135, 'Manipulates human behavior', 1, 1), (135, 'Encrypts data', 0, 2), (135, 'Renders UI', 0, 3), (135, 'Stores data', 0, 4),
+(136, 'Fraudulent emails', 1, 1), (136, 'Network protocol', 0, 2), (136, 'UI component', 0, 3), (136, 'Data model', 0, 4),
+(137, 'Overloads systems', 1, 1), (137, 'Renders UI', 0, 2), (137, 'Stores data', 0, 3), (137, 'Encrypts data', 0, 4),
+(138, 'Distributed DoS', 1, 1), (138, 'Single-source attack', 0, 2), (138, 'UI attack', 0, 3), (138, 'Data leak', 0, 4),
+(139, 'Steals session data', 1, 1), (139, 'Renders UI', 0, 2), (139, 'Stores data', 0, 3), (139, 'Encrypts data', 0, 4),
+(140, 'Authentication cookie', 1, 1), (140, 'UI component', 0, 2), (140, 'Data model', 0, 3), (140, 'API key', 0, 4),
+(141, 'Cross-site scripting', 1, 1), (141, 'UI rendering', 0, 2), (141, 'Data storage', 0, 3), (141, 'Network protocol', 0, 4),
+(142, 'Cross-site request forgery', 1, 1), (142, 'SQL injection', 0, 2), (142, 'UI attack', 0, 3), (142, 'File upload', 0, 4);
 
--- Create Index
-CREATE INDEX IX_Users_Username ON Users(Username);
-CREATE INDEX IX_Users_Email ON Users(Email);
-CREATE INDEX IX_Orders_UserID ON Orders(UserID);
-CREATE INDEX IX_Orders_OrderDate ON Orders(OrderDate);
-CREATE INDEX IX_OrderDetails_OrderID ON OrderDetails(OrderID);
-CREATE INDEX IX_OrderDetails_CourseID ON OrderDetails(CourseID);
-CREATE INDEX IX_CourseCategory_CategoryID ON CourseCategory(CategoryID);
-CREATE INDEX IX_CourseProgress_UserID ON CourseProgress(UserID);
-CREATE INDEX IX_CourseProgress_CourseID ON CourseProgress(CourseID);
-CREATE INDEX IX_RefundRequests_UserID ON RefundRequests(UserID);
-CREATE INDEX IX_RefundRequests_Status ON RefundRequests(Status);
-CREATE INDEX IX_Discussions_CourseID ON Discussions(CourseID);
-CREATE INDEX IX_Discussions_LessonID ON Discussions(LessonID);
-CREATE INDEX IX_Discussions_UserID ON Discussions(UserID);
-CREATE INDEX IX_DiscussionReplies_DiscussionID ON DiscussionReplies(DiscussionID);
-CREATE INDEX IX_DiscussionReplies_UserID ON DiscussionReplies(UserID);
-CREATE INDEX IX_Quizzes_LessonID ON Quizzes(LessonID);
-CREATE INDEX IX_Questions_QuizID ON Questions(QuizID);
-CREATE INDEX IX_Answers_QuestionID ON Answers(QuestionID);
-CREATE INDEX IX_QuizAttempts_QuizID ON QuizAttempts(QuizID);
-CREATE INDEX IX_QuizAttempts_UserID ON QuizAttempts(UserID);
-CREATE INDEX IX_UserAnswers_AttemptID ON UserAnswers(AttemptID);
-CREATE INDEX IX_UserAnswers_QuestionID ON UserAnswers(QuestionID);
-CREATE INDEX IX_PaymentTransactions_OrderID ON PaymentTransactions(OrderID);
-CREATE INDEX IX_PaymentTransactions_RefundRequestID ON PaymentTransactions(RefundRequestID);
-CREATE INDEX IX_PaymentTransactions_ProviderTransactionID ON PaymentTransactions(ProviderTransactionID);
-CREATE INDEX IX_LessonItems_LessonID ON LessonItems(LessonID);
-CREATE INDEX IX_LessonItems_ItemType_ItemID ON LessonItems(ItemType, ItemID);
-CREATE INDEX IX_LessonItemProgress_UserID ON LessonItemProgress(UserID);
-CREATE INDEX IX_LessonItemProgress_LessonItemID ON LessonItemProgress(LessonItemID);
-GO
+-- Completing Answers for Deep Learning with TensorFlow (CourseID 12, Questions for QuizIDs 86-95)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(143, 'Advanced neural networks', 1, 1), (143, 'Basic ML algorithms', 0, 2), (143, 'UI frameworks', 0, 3), (143, 'Databases', 0, 4),
+(144, 'Interconnected nodes', 1, 1), (144, 'Database tables', 0, 2), (144, 'UI components', 0, 3), (144, 'API endpoints', 0, 4),
+(145, 'ML framework', 1, 1), (145, 'UI library', 0, 2), (145, 'Database tool', 0, 3), (145, 'Game engine', 0, 4),
+(146, 'High-level API', 1, 1), (146, 'Low-level API', 0, 2), (146, 'UI framework', 0, 3), (146, 'Network protocol', 0, 4),
+(147, 'Processes inputs', 1, 1), (147, 'Stores data', 0, 2), (147, 'Renders UI', 0, 3), (147, 'Encrypts data', 0, 4),
+(148, 'Computes outputs', 1, 1), (148, 'Formats data', 0, 2), (148, 'Renders UI', 0, 3), (148, 'Logs errors', 0, 4),
+(149, 'Image processing', 1, 1), (149, 'Text processing', 0, 2), (149, 'UI rendering', 0, 3), (149, 'Data storage', 0, 4),
+(150, 'Feature extraction', 1, 1), (150, 'Data encryption', 0, 2), (150, 'UI design', 0, 3), (150, 'File compression', 0, 4),
+(151, 'Sequential data', 1, 1), (151, 'Image data', 0, 2), (151, 'UI data', 0, 3), (151, 'Database data', 0, 4),
+(152, 'Long-term memory', 1, 1), (152, 'Short-term memory', 0, 2), (152, 'UI component', 0, 3), (152, 'Data model', 0, 4),
+(153, 'Uses pre-trained models', 1, 1), (153, 'Builds new models', 0, 2), (153, 'Renders UI', 0, 3), (153, 'Stores data', 0, 4),
+(154, 'Trained NN weights', 1, 1), (154, 'UI templates', 0, 2), (154, 'Database schemas', 0, 3), (154, 'API endpoints', 0, 4),
+(155, 'Generative adversarial network', 1, 1), (155, 'Classification model', 0, 2), (155, 'Regression model', 0, 3), (155, 'UI component', 0, 4),
+(156, 'Creates new data', 1, 1), (156, 'Classifies data', 0, 2), (156, 'Renders UI', 0, 3), (156, 'Stores data', 0, 4),
+(157, 'Text processing', 1, 1), (157, 'Image processing', 0, 2), (157, 'UI rendering', 0, 3), (157, 'Data storage', 0, 4),
+(158, 'Splits text into tokens', 1, 1), (158, 'Encrypts text', 0, 2), (158, 'Renders text', 0, 3), (158, 'Stores text', 0, 4),
+(159, 'Image analysis', 1, 1), (159, 'Text analysis', 0, 2), (159, 'UI rendering', 0, 3), (159, 'Data storage', 0, 4),
+(160, 'Labels images', 1, 1), (160, 'Encrypts images', 0, 2), (160, 'Renders images', 0, 3), (160, 'Stores images', 0, 4),
+(161, 'Serving models', 1, 1), (161, 'Building models', 0, 2), (161, 'Rendering UI', 0, 3), (161, 'Storing data', 0, 4),
+(162, 'Model serving tool', 1, 1), (162, 'UI library', 0, 2), (162, 'Database tool', 0, 3), (162, 'Game engine', 0, 4);
 
-PRINT 'LightHouseCourse database has been created successfully with sample data.'
-GO
+-- Completing Answers for Blockchain Development (CourseID 13, Questions for QuizIDs 96-105)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(163, 'Decentralized ledger', 1, 1), (163, 'Centralized database', 0, 2), (163, 'UI framework', 0, 3), (163, 'Game engine', 0, 4),
+(164, 'Shared transaction record', 1, 1), (164, 'Local storage', 0, 2), (164, 'UI component', 0, 3), (164, 'API endpoint', 0, 4),
+(165, 'Secures data', 1, 1), (165, 'Renders UI', 0, 2), (165, 'Stores data', 0, 3), (165, 'Formats code', 0, 4),
+(166, 'Creates unique output', 1, 1), (166, 'Encrypts files', 0, 2), (166, 'Renders UI', 0, 3), (166, 'Logs errors', 0, 4),
+(167, 'Cryptocurrency', 1, 1), (167, 'UI framework', 0, 2), (167, 'Database system', 0, 3), (167, 'Game engine', 0, 4),
+(168, 'Stores private keys', 1, 1), (168, 'Renders UI', 0, 2), (168, 'Stores data', 0, 3), (168, 'Encrypts data', 0, 4),
+(169, 'Blockchain platform', 1, 1), (169, 'UI library', 0, 2), (169, 'Database tool', 0, 3), (169, 'Game engine', 0, 4),
+(170, 'Self-executing code', 1, 1), (170, 'UI component', 0, 2), (170, 'Data model', 0, 3), (170, 'API endpoint', 0, 4),
+(171, 'Smart contract language', 1, 1), (171, 'UI framework', 0, 2), (171, 'Database query', 0, 3), (171, 'Game script', 0, 4),
+(172, 'Executes contract logic', 1, 1), (172, 'Renders UI', 0, 2), (172, 'Stores data', 0, 3), (172, 'Encrypts data', 0, 4),
+(173, 'Decentralized app', 1, 1), (173, 'Centralized app', 0, 2), (173, 'UI framework', 0, 3), (173, 'Database system', 0, 4),
+(174, 'Blockchain interaction', 1, 1), (174, 'UI rendering', 0, 2), (174, 'Data storage', 0, 3), (174, 'Code testing', 0, 4),
+(175, 'Connects to blockchain', 1, 1), (175, 'Renders UI', 0, 2), (175, 'Stores data', 0, 3), (175, 'Encrypts data', 0, 4),
+(176, 'Browser wallet', 1, 1), (176, 'UI library', 0, 2), (176, 'Database tool', 0, 3), (176, 'Game engine', 0, 4),
+(177, 'Verifies contract logic', 1, 1), (177, 'Renders UI', 0, 2), (177, 'Stores data', 0, 3), (177, 'Encrypts data', 0, 4),
+(178, 'Development framework', 1, 1), (178, 'UI framework', 0, 2), (178, 'Database tool', 0, 3), (178, 'Game engine', 0, 4),
+(179, 'Protects contracts', 1, 1), (179, 'Renders UI', 0, 2), (179, 'Stores data', 0, 3), (179, 'Encrypts data', 0, 4),
+(180, 'Exploits contract calls', 1, 1), (180, 'UI attack', 0, 2), (180, 'Data leak', 0, 3), (180, 'Network flood', 0, 4),
+(181, 'Build DApp', 1, 1), (181, 'Design UI', 0, 2), (181, 'Write tests', 0, 3), (181, 'Secure network', 0, 4),
+(182, 'Hardhat', 1, 1), (182, 'React', 0, 2), (182, 'Django', 0, 3), (182, 'Unity', 0, 4);
+
+-- Completing Answers for Internet of Things Fundamentals (CourseID 14, Questions for QuizIDs 106-115)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(183, 'Connected devices', 1, 1), (183, 'UI framework', 0, 2), (183, 'Database system', 0, 3), (183, 'Game engine', 0, 4),
+(184, 'Smart hardware', 1, 1), (184, 'UI component', 0, 2), (184, 'Data model', 0, 3), (184, 'API endpoint', 0, 4),
+(185, 'Detects environment', 1, 1), (185, 'Renders UI', 0, 2), (185, 'Stores data', 0, 3), (185, 'Encrypts data', 0, 4),
+(186, 'Performs actions', 1, 1), (186, 'Fetches data', 0, 2), (186, 'Renders UI', 0, 3), (186, 'Logs errors', 0, 4),
+(187, 'Microcontroller', 1, 1), (187, 'UI library', 0, 2), (187, 'Database tool', 0, 3), (187, 'Game engine', 0, 4),
+(188, 'Arduino program', 1, 1), (188, 'UI component', 0, 2), (188, 'Data model', 0, 3), (188, 'API request', 0, 4),
+(189, 'Single-board computer', 1, 1), (189, 'UI framework', 0, 2), (189, 'Database system', 0, 3), (189, 'Game engine', 0, 4),
+(190, 'Input/output pin', 1, 1), (190, 'UI element', 0, 2), (190, 'Data field', 0, 3), (190, 'API key', 0, 4),
+(191, 'Messaging protocol', 1, 1), (191, 'UI protocol', 0, 2), (191, 'Data format', 0, 3), (191, 'Encryption method', 0, 4),
+(192, 'Lightweight protocol', 1, 1), (192, 'UI framework', 0, 2), (192, 'Database tool', 0, 3), (192, 'Game engine', 0, 4),
+(193, 'Manages IoT data', 1, 1), (193, 'Renders UI', 0, 2), (193, 'Stores files', 0, 3), (193, 'Encrypts data', 0, 4),
+(194, 'Cloud IoT service', 1, 1), (194, 'UI library', 0, 2), (194, 'Database engine', 0, 3), (194, 'Game engine', 0, 4),
+(195, 'Protects devices', 1, 1), (195, 'Renders UI', 0, 2), (195, 'Stores data', 0, 3), (195, 'Formats code', 0, 4),
+(196, 'Botnet attack', 1, 1), (196, 'UI attack', 0, 2), (196, 'Data leak', 0, 3), (196, 'SQL injection', 0, 4),
+(197, 'Processes IoT data', 1, 1), (197, 'Renders UI', 0, 2), (197, 'Stores files', 0, 3), (197, 'Encrypts data', 0, 4),
+(198, 'Instant data processing', 1, 1), (198, 'Batch processing', 0, 2), (198, 'UI rendering', 0, 3), (198, 'Data encryption', 0, 4),
+(199, 'End-to-end system', 1, 1), (199, 'UI design', 0, 2), (199, 'Data model', 0, 3), (199, 'API endpoint', 0, 4),
+(200, 'Connects devices', 1, 1), (200, 'Renders UI', 0, 2), (200, 'Stores data', 0, 3), (200, 'Encrypts data', 0, 4),
+(201, 'Smart automation', 1, 1), (201, 'UI framework', 0, 2), (201, 'Database system', 0, 3), (201, 'Game engine', 0, 4),
+(202, 'Home automation', 1, 1), (202, 'UI rendering', 0, 2), (202, 'Data storage', 0, 3), (202, 'Code testing', 0, 4);
+
+-- Completing Answers for Vue.js for Frontend Development (CourseID 15, Questions for QuizIDs 116-125)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(203, 'JavaScript framework', 1, 1), (203, 'UI library', 0, 2), (203, 'Database tool', 0, 3), (203, 'Game engine', 0, 4),
+(204, 'Core Vue object', 1, 1), (204, 'UI component', 0, 2), (204, 'Data model', 0, 3), (204, 'API endpoint', 0, 4),
+(205, 'Reusable UI part', 1, 1), (205, 'Database table', 0, 2), (205, 'Network request', 0, 3), (205, 'Event handler', 0, 4),
+(206, 'Component input', 1, 1), (206, 'UI style', 0, 2), (206, 'Data field', 0, 3), (206, 'API key', 0, 4),
+(207, 'UI instruction', 1, 1), (207, 'Data model', 0, 2), (207, 'Network request', 0, 3), (207, 'Event handler', 0, 4),
+(208, 'Binds attributes', 1, 1), (208, 'Handles events', 0, 2), (208, 'Stores data', 0, 3), (208, 'Renders UI', 0, 4),
+(209, 'Auto-updates UI', 1, 1), (209, 'Encrypts data', 0, 2), (209, 'Formats code', 0, 3), (209, 'Logs errors', 0, 4),
+(210, 'Tracks data changes', 1, 1), (210, 'Renders UI', 0, 2), (210, 'Stores files', 0, 3), (210, 'Encrypts data', 0, 4),
+(211, 'Navigation tool', 1, 1), (211, 'UI library', 0, 2), (211, 'Database tool', 0, 3), (211, 'Game engine', 0, 4),
+(212, 'URL mapping', 1, 1), (212, 'Data model', 0, 2), (212, 'UI component', 0, 3), (212, 'API endpoint', 0, 4),
+(213, 'State management', 1, 1), (213, 'UI framework', 0, 2), (213, 'Database system', 0, 3), (213, 'Game engine', 0, 4),
+(214, 'Central data store', 1, 1), (214, 'UI component', 0, 2), (214, 'Data model', 0, 3), (214, 'API request', 0, 4),
+(215, 'Handles user input', 1, 1), (215, 'Renders UI', 0, 2), (215, 'Stores data', 0, 3), (215, 'Encrypts data', 0, 4),
+(216, 'Two-way binding', 1, 1), (216, 'Event handler', 0, 2), (216, 'Data fetcher', 0, 3), (216, 'UI renderer', 0, 4),
+(217, 'Efficient code', 1, 1), (217, 'UI rendering', 0, 2), (217, 'Data storage', 0, 3), (217, 'Code encryption', 0, 4),
+(218, 'Reduces duplication', 1, 1), (218, 'Increases size', 0, 2), (218, 'Formats data', 0, 3), (218, 'Logs errors', 0, 4),
+(219, 'Verifies app behavior', 1, 1), (219, 'Renders UI', 0, 2), (219, 'Stores data', 0, 3), (219, 'Encrypts data', 0, 4),
+(220, 'Testing library', 1, 1), (220, 'UI framework', 0, 2), (220, 'Database tool', 0, 3), (220, 'Game engine', 0, 4),
+(221, 'Build UI app', 1, 1), (221, 'Design database', 0, 2), (221, 'Write tests', 0, 3), (221, 'Secure network', 0, 4),
+(222, 'Vue CLI', 1, 1), (222, 'React', 0, 2), (222, 'Django', 0, 3), (222, 'Unity', 0, 4);
+
+-- Completing Answers for Django Web Framework (CourseID 16, Questions for QuizIDs 126-135)
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(223, 'Python web framework', 1, 1), (223, 'UI library', 0, 2), (223, 'Database tool', 0, 3), (223, 'Game engine', 0, 4),
+(224, 'App structure', 1, 1), (224, 'UI component', 0, 2), (224, 'Data model', 0, 3), (224, 'API endpoint', 0, 4),
+(225, 'Data representation', 1, 1), (225, 'UI component', 0, 2), (225, 'Network request', 0, 3), (225, 'Event handler', 0, 4),
+(226, 'Database column', 1, 1), (226, 'UI style', 0, 2), (226, 'API key', 0, 3), (226, 'Event trigger', 0, 4),
+(227, 'Handles requests', 1, 1), (227, 'Renders UI', 0, 2), (227, 'Stores data', 0, 3), (227, 'Encrypts data', 0, 4),
+(228, 'HTML renderer', 1, 1), (228, 'Data model', 0, 2), (228, 'Network request', 0, 3), (228, 'Event handler', 0, 4),
+(229, 'Processes user input', 1, 1), (229, 'Renders UI', 0, 2), (229, 'Stores data', 0, 3), (229, 'Encrypts data', 0, 4),
+(230, 'Binds model to form', 1, 1), (230, 'Renders UI', 0, 2), (230, 'Fetches data', 0, 3), (230, 'Logs errors', 0, 4),
+(231, 'Manages site admin', 1, 1), (231, 'Renders UI', 0, 2), (231, 'Stores data', 0, 3), (231, 'Encrypts data', 0, 4),
+(232, 'Custom operations', 1, 1), (232, 'UI components', 0, 2), (232, 'Data models', 0, 3), (232, 'API requests', 0, 4),
+(233, 'User authentication', 1, 1), (233, 'UI rendering', 0, 2), (233, 'Data storage', 0, 3), (233, 'Code testing', 0, 4),
+(234, 'Handles user data', 1, 1), (234, 'Renders UI', 0, 2), (234, 'Fetches data', 0, 3), (234, 'Logs errors', 0, 4),
+(235, 'API framework', 1, 1), (235, 'UI library', 0, 2), (235, 'Database tool', 0, 3), (235, 'Game engine', 0, 4),
+(236, 'Converts data', 1, 1), (236, 'Renders UI', 0, 2), (236, 'Stores data', 0, 3), (236, 'Encrypts data', 0, 4),
+(237, 'Verifies app logic', 1, 1), (237, 'Renders UI', 0, 2), (237, 'Stores data', 0, 3), (237, 'Encrypts data', 0, 4),
+(238, 'Testing class', 1, 1), (238, 'UI component', 0, 2), (238, 'Data model', 0, 3), (238, 'API endpoint', 0, 4),
+(239, 'Hosts app', 1, 1), (239, 'Renders UI', 0, 2), (239, 'Stores data', 0, 3), (239, 'Encrypts data', 0, 4),
+(240, 'WSGI server', 1, 1), (240, 'UI library', 0, 2), (240, 'Database tool', 0, 3), (240, 'Game engine', 0, 4),
+(241, 'Build web app', 1, 1), (241, 'Design UI', 0, 2), (241, 'Write tests', 0, 3), (241, 'Secure network', 0, 4),
+(242, 'Pip', 1, 1), (242, 'React', 0, 2), (242, 'Vue', 0, 3), (242, 'Unity', 0, 4);
+
+-- Adding missing Videos for remaining lessons in Courses 1-16
+INSERT INTO Videos (LessonID, Title, Description, VideoUrl, Duration)
+VALUES
+-- Web Development Bootcamp (CourseID 1, LessonIDs 4, 7, 9-12 missing videos)
+(4, 'Building a Website', 'Creating a simple website project', '/assets/videos/website-building.mp4', 2400),
+(7, 'React App Development', 'Building a full React application', '/assets/videos/react-app-dev.mp4', 2700),
+(9, 'RESTful API Basics', 'Creating a RESTful API with Node.js', '/assets/videos/rest-api-basics.mp4', 2500),
+(10, 'Database Integration', 'Connecting MongoDB to your app', '/assets/videos/db-integration.mp4', 2300),
+(11, 'App Deployment', 'Deploying apps with Heroku and Netlify', '/assets/videos/app-deployment.mp4', 2200),
+(12, 'Capstone Project', 'Building a complete web app', '/assets/videos/web-capstone.mp4', 3600),
+-- Python for Data Science (CourseID 2, LessonIDs 13-20, all missing videos)
+(13, 'Python Basics', 'Introduction to Python programming', '/assets/videos/python-basics.mp4', 2100),
+(14, 'Pandas Data Analysis', 'Using Pandas for data manipulation', '/assets/videos/pandas-analysis.mp4', 2300),
+(15, 'Data Visualization', 'Creating visualizations with Matplotlib', '/assets/videos/data-viz.mp4', 2200),
+(16, 'Statistical Analysis', 'Performing statistical analysis', '/assets/videos/stat-analysis.mp4', 2400),
+(17, 'Scikit-learn ML', 'Machine learning with Scikit-learn', '/assets/videos/scikit-learn.mp4', 2500),
+(18, 'Data Cleaning', 'Cleaning and preprocessing data', '/assets/videos/data-cleaning.mp4', 2300),
+(19, 'API Data Fetching', 'Working with external APIs', '/assets/videos/api-fetching.mp4', 2200),
+(20, 'Big Data Processing', 'Handling large datasets', '/assets/videos/big-data.mp4', 2400),
+-- React Native Mobile Apps (CourseID 3, LessonIDs 21-30, all missing videos)
+(21, 'React Native Setup', 'Setting up React Native environment', '/assets/videos/rn-setup.mp4', 2100),
+(22, 'First App Build', 'Building your first mobile app', '/assets/videos/rn-first-app.mp4', 2300),
+(23, 'Navigation Setup', 'Implementing navigation in apps', '/assets/videos/rn-navigation.mp4', 2400),
+(24, 'State Management', 'Managing app state', '/assets/videos/rn-state.mp4', 2200),
+(25, 'Native Components', 'Using native device features', '/assets/videos/rn-native.mp4', 2300),
+(26, 'User Input Handling', 'Handling forms and inputs', '/assets/videos/rn-input.mp4', 2200),
+(27, 'Networking Basics', 'Fetching data from APIs', '/assets/videos/rn-networking.mp4', 2400),
+(28, 'App Store Deployment', 'Publishing to app stores', '/assets/videos/rn-deployment.mp4', 2300),
+(29, 'Performance Tuning', 'Optimizing app performance', '/assets/videos/rn-performance.mp4', 2200),
+(30, 'React Native Capstone', 'Building a complete mobile app', '/assets/videos/rn-capstone.mp4', 3600),
+-- Game Development with Unity (CourseID 4, LessonIDs 31-40, all missing videos)
+(31, 'Unity Introduction', 'Getting started with Unity', '/assets/videos/unity-intro.mp4', 2100),
+(32, 'Game Objects', 'Working with game objects', '/assets/videos/unity-objects.mp4', 2300),
+(33, 'C# Scripting', 'Scripting with C# in Unity', '/assets/videos/unity-csharp.mp4', 2400),
+(34, 'Game Physics', 'Implementing physics in games', '/assets/videos/unity-physics.mp4', 2200),
+(35, 'Game UI Design', 'Creating game UI', '/assets/videos/unity-ui.mp4', 2300),
+(36, 'Game Audio', 'Adding audio to games', '/assets/videos/unity-audio.mp4', 2200),
+(37, 'Character Animation', 'Animating game characters', '/assets/videos/unity-animation.mp4', 2400),
+(38, 'Game AI Basics', 'Implementing basic AI', '/assets/videos/unity-ai.mp4', 2300),
+(39, 'Game Optimization', 'Optimizing game performance', '/assets/videos/unity-optimization.mp4', 2200),
+(40, 'Game Publishing', 'Publishing your game', '/assets/videos/unity-publishing.mp4', 3600),
+-- UI/UX Design Principles (CourseID 5, LessonIDs 41-48, all missing videos)
+(41, 'Design Fundamentals', 'Core principles of design', '/assets/videos/uiux-fundamentals.mp4', 2100),
+(42, 'User Research', 'Conducting user research', '/assets/videos/uiux-research.mp4', 2300),
+(43, 'Wireframing Basics', 'Creating wireframes and prototypes', '/assets/videos/uiux-wireframing.mp4', 2400),
+(44, 'Color Theory', 'Applying color in UI design', '/assets/videos/uiux-color.mp4', 2200),
+(45, 'Typography Design', 'Using typography effectively', '/assets/videos/uiux-typography.mp4', 2300),
+(46, 'User Personas', 'Creating user personas', '/assets/videos/uiux-personas.mp4', 2200),
+(47, 'Usability Testing', 'Conducting usability tests', '/assets/videos/uiux-testing.mp4', 2400),
+(48, 'Mobile-First Design', 'Designing for mobile devices', '/assets/videos/uiux-mobile.mp4', 2300),
+-- Advanced JavaScript (CourseID 6, LessonIDs 49-57, all missing videos)
+(49, 'JS Closures', 'Understanding closures in JS', '/assets/videos/js-closures.mp4', 2100),
+(50, 'JS Prototypes', 'Working with prototypes', '/assets/videos/js-prototypes.mp4', 2300),
+(51, 'Async JS', 'Mastering asynchronous JS', '/assets/videos/js-async.mp4', 2400),
+(52, 'ES6+ Features', 'Exploring modern JS features', '/assets/videos/js-es6.mp4', 2200),
+(53, 'Functional JS', 'Functional programming in JS', '/assets/videos/js-functional.mp4', 2300),
+(54, 'JS Design Patterns', 'Common design patterns in JS', '/assets/videos/js-patterns.mp4', 2200),
+(55, 'JS Testing', 'Testing with Jest', '/assets/videos/js-testing.mp4', 2400),
+(56, 'JS Performance', 'Optimizing JS performance', '/assets/videos/js-performance.mp4', 2300),
+(57, 'JS Capstone', 'Building a complex JS project', '/assets/videos/js-capstone.mp4', 3600),
+-- Machine Learning Fundamentals (CourseID 7, LessonIDs 58-67, all missing videos)
+(58, 'ML Introduction', 'Overview of machine learning', '/assets/videos/ml-intro.mp4', 2100),
+(59, 'Supervised Learning', 'Supervised learning algorithms', '/assets/videos/ml-supervised.mp4', 2300),
+(60, 'Unsupervised Learning', 'Unsupervised learning methods', '/assets/videos/ml-unsupervised.mp4', 2400),
+(61, 'Feature Engineering', 'Crafting effective features', '/assets/videos/ml-features.mp4', 2200),
+(62, 'Model Evaluation', 'Evaluating ML models', '/assets/videos/ml-evaluation.mp4', 2300),
+(63, 'Neural Networks', 'Introduction to neural networks', '/assets/videos/ml-neural.mp4', 2200),
+(64, 'Deep Learning Intro', 'Basics of deep learning', '/assets/videos/ml-deep.mp4', 2400),
+(65, 'ML Applications', 'Real-world ML applications', '/assets/videos/ml-apps.mp4', 2300),
+(66, 'AI Ethics', 'Ethical considerations in AI', '/assets/videos/ml-ethics.mp4', 2200),
+(67, 'ML Capstone', 'Building an ML project', '/assets/videos/ml-capstone.mp4', 3600),
+-- iOS App Development with Swift (CourseID 8, LessonIDs 68-77, all missing videos)
+(68, 'Swift Fundamentals', 'Core Swift programming', '/assets/videos/swift-fundamentals.mp4', 2100),
+(69, 'iOS Architecture', 'App architecture patterns', '/assets/videos/ios-architecture.mp4', 2300),
+(70, 'UIKit Basics', 'Working with UIKit', '/assets/videos/ios-uikit.mp4', 2400),
+(71, 'SwiftUI Basics', 'Introduction to SwiftUI', '/assets/videos/ios-swiftui.mp4', 2200),
+(72, 'Data Management', 'Handling data in iOS', '/assets/videos/ios-data.mp4', 2300),
+(73, 'iOS Networking', 'Networking and APIs in iOS', '/assets/videos/ios-networking.mp4', 2200),
+(74, 'Core Data Basics', 'Using Core Data', '/assets/videos/ios-coredata.mp4', 2400),
+(75, 'iOS Testing', 'Testing iOS applications', '/assets/videos/ios-testing.mp4', 2300),
+(76, 'App Store Submission', 'Publishing to App Store', '/assets/videos/ios-appstore.mp4', 2200),
+(77, 'iOS Capstone', 'Building a complete iOS app', '/assets/videos/ios-capstone.mp4', 3600),
+-- SQL Database Mastery (CourseID 9, LessonIDs 78-86, all missing videos)
+(78, 'Database Introduction', 'Overview of databases', '/assets/videos/db-intro.mp4', 2100),
+(79, 'SQL CRUD Basics', 'Basic SQL operations', '/assets/videos/sql-crud.mp4', 2300),
+(80, 'Advanced SQL Queries', 'Complex SQL queries', '/assets/videos/sql-advanced.mp4', 2400),
+(81, 'Database Design', 'Designing and normalizing DBs', '/assets/videos/db-design.mp4', 2200),
+(82, 'Indexing Basics', 'Optimizing with indexes', '/assets/videos/db-indexing.mp4', 2300),
+(83, 'Stored Procedures', 'Writing stored procedures', '/assets/videos/db-procedures.mp4', 2200),
+(84, 'Transactions Basics', 'Managing transactions', '/assets/videos/db-transactions.mp4', 2400),
+(85, 'Database Security', 'Securing databases', '/assets/videos/db-security.mp4', 2300),
+(86, 'DB Projects', 'Real-world database projects', '/assets/videos/db-projects.mp4', 3600),
+-- DevOps Engineering (CourseID 10, LessonIDs 87-96, all missing videos)
+(87, 'DevOps Introduction', 'Core DevOps concepts', '/assets/videos/devops-intro.mp4', 2100),
+(88, 'Git Basics', 'Version control with Git', '/assets/videos/devops-git.mp4', 2300),
+(89, 'CI/CD Basics', 'Continuous integration/deployment', '/assets/videos/devops-cicd.mp4', 2400),
+(90, 'Docker Basics', 'Containerization with Docker', '/assets/videos/devops-docker.mp4', 2200),
+(91, 'Kubernetes Basics', 'Orchestration with Kubernetes', '/assets/videos/devops-k8s.mp4', 2300),
+(92, 'Infrastructure as Code', 'Using Terraform', '/assets/videos/devops-iac.mp4', 2200),
+(93, 'Monitoring Basics', 'Monitoring and logging', '/assets/videos/devops-monitoring.mp4', 2400),
+(94, 'Cloud Services', 'Working with cloud platforms', '/assets/videos/devops-cloud.mp4', 2300),
+(95, 'DevOps Practices', 'Best practices in DevOps', '/assets/videos/devops-practices.mp4', 2200),
+(96, 'DevOps Capstone', 'Building a DevOps pipeline', '/assets/videos/devops-capstone.mp4', 3600),
+-- Ethical Hacking (CourseID 11, LessonIDs 97-108, all missing videos)
+(97, 'Hacking Introduction', 'Overview of ethical hacking', '/assets/videos/hacking-intro.mp4', 2100),
+(98, 'Reconnaissance', 'Information gathering techniques', '/assets/videos/hacking-recon.mp4', 2300),
+(99, 'Network Scanning', 'Scanning networks', '/assets/videos/hacking-scanning.mp4', 2400),
+(100, 'Enumeration Basics', 'System enumeration', '/assets/videos/hacking-enumeration.mp4', 2200),
+(101, 'Vulnerability Analysis', 'Finding vulnerabilities', '/assets/videos/hacking-vuln.mp4', 2300),
+(102, 'System Hacking', 'Exploiting systems', '/assets/videos/hacking-system.mp4', 2200),
+(103, 'Malware Basics', 'Understanding malware', '/assets/videos/hacking-malware.mp4', 2400),
+(104, 'Packet Sniffing', 'Capturing network packets', '/assets/videos/hacking-sniffing.mp4', 2300),
+(105, 'Social Engineering', 'Manipulating human behavior', '/assets/videos/hacking-social.mp4', 2200),
+(106, 'DoS Attacks', 'Denial-of-service attacks', '/assets/videos/hacking-dos.mp4', 2300),
+(107, 'Session Hijacking', 'Stealing sessions', '/assets/videos/hacking-session.mp4', 2200),
+(108, 'Web Security', 'Securing web applications', '/assets/videos/hacking-web.mp4', 3600),
+-- Deep Learning with TensorFlow (CourseID 12, LessonIDs 109-118, all missing videos)
+(109, 'Deep Learning Intro', 'Overview of deep learning', '/assets/videos/dl-intro.mp4', 2100),
+(110, 'TensorFlow Basics', 'Getting started with TensorFlow', '/assets/videos/dl-tensorflow.mp4', 2300),
+(111, 'Neural Networks', 'Building neural networks', '/assets/videos/dl-neural.mp4', 2400),
+(112, 'CNN Basics', 'Convolutional neural networks', '/assets/videos/dl-cnn.mp4', 2200),
+(113, 'RNN Basics', 'Recurrent neural networks', '/assets/videos/dl-rnn.mp4', 2300),
+(114, 'Transfer Learning', 'Using pre-trained models', '/assets/videos/dl-transfer.mp4', 2200),
+(115, 'Generative Models', 'Creating generative models', '/assets/videos/dl-generative.mp4', 2400),
+(116, 'NLP Basics', 'Natural language processing', '/assets/videos/dl-nlp.mp4', 2300),
+(117, 'Computer Vision', 'Vision applications', '/assets/videos/dl-vision.mp4', 2200),
+(118, 'DL Deployment', 'Deploying deep learning models', '/assets/videos/dl-deployment.mp4', 3600),
+-- Blockchain Development (CourseID 13, LessonIDs 119-128, all missing videos)
+(119, 'Blockchain Basics', 'Introduction to blockchain', '/assets/videos/blockchain-intro.mp4', 2100),
+(120, 'Cryptography Basics', 'Core cryptographic concepts', '/assets/videos/blockchain-crypto.mp4', 2300),
+(121, 'Bitcoin Protocol', 'Understanding Bitcoin', '/assets/videos/blockchain-bitcoin.mp4', 2400),
+(122, 'Ethereum Basics', 'Working with Ethereum', '/assets/videos/blockchain-ethereum.mp4', 2200),
+(123, 'Solidity Programming', 'Coding with Solidity', '/assets/videos/blockchain-solidity.mp4', 2300),
+(124, 'DApp Development', 'Building decentralized apps', '/assets/videos/blockchain-dapp.mp4', 2200),
+(125, 'Web3 Integration', 'Connecting to blockchain', '/assets/videos/blockchain-web3.mp4', 2400),
+(126, 'Contract Testing', 'Testing smart contracts', '/assets/videos/blockchain-testing.mp4', 2300),
+(127, 'Blockchain Security', 'Securing blockchain apps', '/assets/videos/blockchain-security.mp4', 2200),
+(128, 'Blockchain Capstone', 'Building a blockchain project', '/assets/videos/blockchain-capstone.mp4', 3600),
+-- Internet of Things Fundamentals (CourseID 14, LessonIDs 129-138, all missing videos)
+(129, 'IoT Introduction', 'Overview of IoT', '/assets/videos/iot-intro.mp4', 2100),
+(130, 'Sensors and Actuators', 'Working with IoT hardware', '/assets/videos/iot-sensors.mp4', 2300),
+(131, 'Arduino Basics', 'Programming with Arduino', '/assets/videos/iot-arduino.mp4', 2400),
+(132, 'Raspberry Pi Basics', 'Using Raspberry Pi', '/assets/videos/iot-raspberry.mp4', 2200),
+(133, 'IoT Networking', 'Networking protocols for IoT', '/assets/videos/iot-networking.mp4', 2300),
+(134, 'IoT Cloud', 'Using cloud platforms', '/assets/videos/iot-cloud.mp4', 2200),
+(135, 'IoT Security', 'Securing IoT devices', '/assets/videos/iot-security.mp4', 2400),
+(136, 'IoT Analytics', 'Analyzing IoT data', '/assets/videos/iot-analytics.mp4', 2300),
+(137, 'IoT Solutions', 'Building IoT systems', '/assets/videos/iot-solutions.mp4', 2200),
+(138, 'IoT Applications', 'Real-world IoT use cases', '/assets/videos/iot-applications.mp4', 3600);
+
+-- Adding missing Quizzes for Courses 1-16 (already partially covered in original, ensuring all lessons have quizzes)
+INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore)
+VALUES
+-- Python for Data Science (CourseID 2, LessonIDs 13-20)
+(13, 'Python Basics Quiz', 'Test your Python fundamentals', 1800, 70),
+(14, 'Pandas Quiz', 'Assess Pandas data analysis skills', 1800, 70),
+(15, 'Visualization Quiz', 'Test data visualization knowledge', 1800, 70),
+(16, 'Statistics Quiz', 'Assess statistical analysis skills', 1800, 70),
+(17, 'Scikit-learn Quiz', 'Test machine learning skills', 1800, 70),
+(18, 'Data Cleaning Quiz', 'Assess data preprocessing skills', 1800, 70),
+(19, 'API Quiz', 'Test API interaction knowledge', 1800, 70),
+(20, 'Big Data Quiz', 'Assess big data processing skills', 1800, 70),
+-- React Native Mobile Apps (CourseID 3, LessonIDs 21-30)
+(21, 'React Native Setup Quiz', 'Test setup knowledge', 1800, 70),
+(22, 'First App Quiz', 'Assess app building skills', 1800, 70),
+(23, 'Navigation Quiz', 'Test navigation knowledge', 1800, 70),
+(24, 'State Management Quiz', 'Assess state management skills', 1800, 70),
+(25, 'Native Components Quiz', 'Test native feature usage', 1800, 70),
+(26, 'Input Handling Quiz', 'Assess input handling skills', 1800, 70),
+(27, 'Networking Quiz', 'Test networking knowledge', 1800, 70),
+(28, 'Deployment Quiz', 'Assess app store deployment', 1800, 70),
+(29, 'Performance Quiz', 'Test optimization knowledge', 1800, 70),
+(30, 'React Native Capstone Quiz', 'Test project knowledge', 1800, 70),
+-- Game Development with Unity (CourseID 4, LessonIDs 31-40)
+(31, 'Unity Basics Quiz', 'Test Unity fundamentals', 1800, 70),
+(32, 'Game Objects Quiz', 'Assess object handling skills', 1800, 70),
+(33, 'C# Scripting Quiz', 'Test C# scripting knowledge', 1800, 70),
+(34, 'Physics Quiz', 'Assess physics implementation', 1800, 70),
+(35, 'Game UI Quiz', 'Test UI development skills', 1800, 70),
+(36, 'Audio Quiz', 'Assess audio implementation', 1800, 70),
+(37, 'Animation Quiz', 'Test animation skills', 1800, 70),
+(38, 'Game AI Quiz', 'Assess AI implementation', 1800, 70),
+(39, 'Optimization Quiz', 'Test performance optimization', 1800, 70),
+(40, 'Publishing Quiz', 'Assess game publishing skills', 1800, 70),
+-- UI/UX Design Principles (CourseID 5, LessonIDs 41-48)
+(41, 'Design Principles Quiz', 'Test design fundamentals', 1800, 70),
+(42, 'User Research Quiz', 'Assess research skills', 1800, 70),
+(43, 'Wireframing Quiz', 'Test prototyping skills', 1800, 70),
+(44, 'Color Theory Quiz', 'Assess color usage knowledge', 1800, 70),
+(45, 'Typography Quiz', 'Test typography skills', 1800, 70),
+(46, 'Personas Quiz', 'Assess persona creation', 1800, 70),
+(47, 'Usability Testing Quiz', 'Test testing skills', 1800, 70),
+(48, 'Mobile Design Quiz', 'Assess mobile-first design', 1800, 70);
+
+-- Adding Questions for newly inserted Quizzes
+INSERT INTO Questions (QuizID, Content, Type, Points, OrderIndex)
+VALUES
+-- Python for Data Science (CourseID 2, QuizIDs for LessonIDs 13-20)
+(136, 'What is Python?', 'multiple_choice', 1, 1),
+(136, 'What is a Python list?', 'multiple_choice', 1, 2),
+(137, 'What is Pandas?', 'multiple_choice', 1, 1),
+(137, 'What is a DataFrame?', 'multiple_choice', 1, 2),
+(138, 'What is Matplotlib?', 'multiple_choice', 1, 1),
+(138, 'What is a scatter plot?', 'multiple_choice', 1, 2),
+(139, 'What is statistical analysis?', 'multiple_choice', 1, 1),
+(139, 'What is a mean?', 'multiple_choice', 1, 2),
+(140, 'What is Scikit-learn?', 'multiple_choice', 1, 1),
+(140, 'What is a classifier?', 'multiple_choice', 1, 2),
+(141, 'What is data cleaning?', 'multiple_choice', 1, 1),
+(141, 'What is missing data?', 'multiple_choice', 1, 2),
+(142, 'What is an API?', 'multiple_choice', 1, 1),
+(142, 'What is JSON?', 'multiple_choice', 1, 2),
+(143, 'What is big data?', 'multiple_choice', 1, 1),
+(143, 'What is Hadoop?', 'multiple_choice', 1, 2),
+-- React Native Mobile Apps (CourseID 3, QuizIDs for LessonIDs 21-30)
+(144, 'What is React Native?', 'multiple_choice', 1, 1),
+(144, 'What is a component?', 'multiple_choice', 1, 2),
+(145, 'What is an app bundle?', 'multiple_choice', 1, 1),
+(145, 'What is JSX?', 'multiple_choice', 1, 2),
+(146, 'What is navigation?', 'multiple_choice', 1, 1),
+(146, 'What is a stack navigator?', 'multiple_choice', 1, 2),
+(147, 'What is state?', 'multiple_choice', 1, 1),
+(147, 'What is Redux?', 'multiple_choice', 1, 2),
+(148, 'What is a native module?', 'multiple_choice', 1, 1),
+(148, 'What is a camera API?', 'multiple_choice', 1, 2),
+(149, 'What is a form?', 'multiple_choice', 1, 1),
+(149, 'What is TextInput?', 'multiple_choice', 1, 2);
+-- Continuing from the provided database script, adding missing data for Materials, Videos, Quizzes, Questions, and Answers
+-- Ensuring all lessons for Courses 1-16 have corresponding entries where missing
+-- Maintaining logical consistency, correct ordering, and error-free SQL
+
+-- Adding missing Quizzes for Courses 1, 6-16 (continuing from Course 5, LessonIDs 49-138)
+INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore)
+VALUES
+-- Web Development Bootcamp (CourseID 1, LessonIDs 1-12)
+(1, 'HTML Basics Quiz', 'Test your HTML fundamentals', 1800, 70),
+(2, 'CSS Basics Quiz', 'Assess CSS styling skills', 1800, 70),
+(3, 'JavaScript Basics Quiz', 'Test JavaScript knowledge', 1800, 70),
+(4, 'Website Building Quiz', 'Assess website creation skills', 1800, 70),
+(5, 'Responsive Design Quiz', 'Test responsive design skills', 1800, 70),
+(6, 'React Basics Quiz', 'Assess React fundamentals', 1800, 70),
+(7, 'React App Quiz', 'Test React app development', 1800, 70),
+(8, 'Node.js Basics Quiz', 'Assess Node.js knowledge', 1800, 70),
+(9, 'REST API Quiz', 'Test API creation skills', 1800, 70),
+(10, 'Database Integration Quiz', 'Assess DB integration skills', 1800, 70),
+(11, 'Deployment Quiz', 'Test deployment knowledge', 1800, 70),
+(12, 'Web Capstone Quiz', 'Assess complete web project', 1800, 70),
+-- Advanced JavaScript (CourseID 6, LessonIDs 49-58)
+(49, 'Closures Quiz', 'Test closure understanding', 1800, 70),
+(50, 'Prototypes Quiz', 'Assess prototype knowledge', 1800, 70),
+(51, 'Async JS Quiz', 'Test asynchronous JS skills', 1800, 70),
+(52, 'ES6 Quiz', 'Assess ES6+ feature knowledge', 1800, 70),
+(53, 'Functional JS Quiz', 'Test functional programming', 1800, 70),
+(54, 'Design Patterns Quiz', 'Assess JS design patterns', 1800, 70),
+(55, 'Testing Quiz', 'Test JS testing skills', 1800, 70),
+(56, 'Performance Quiz', 'Assess JS optimization', 1800, 70),
+(57, 'JS Capstone Quiz', 'Test advanced JS project', 1800, 70),
+-- Machine Learning Fundamentals (CourseID 7, LessonIDs 58-67)
+(58, 'ML Intro Quiz', 'Test ML fundamentals', 1800, 70),
+(59, 'Supervised Learning Quiz', 'Assess supervised learning', 1800, 70),
+(60, 'Unsupervised Learning Quiz', 'Test unsupervised learning', 1800, 70),
+(61, 'Feature Engineering Quiz', 'Assess feature crafting', 1800, 70),
+(62, 'Model Evaluation Quiz', 'Test model evaluation', 1800, 70),
+(63, 'Neural Networks Quiz', 'Assess neural network basics', 1800, 70),
+(64, 'Deep Learning Quiz', 'Test deep learning intro', 1800, 70),
+(65, 'ML Applications Quiz', 'Assess ML applications', 1800, 70),
+(66, 'AI Ethics Quiz', 'Test ethical considerations', 1800, 70),
+(67, 'ML Capstone Quiz', 'Assess ML project skills', 1800, 70),
+-- iOS App Development with Swift (CourseID 8, LessonIDs 68-77)
+(68, 'Swift Basics Quiz', 'Test Swift fundamentals', 1800, 70),
+(69, 'iOS Architecture Quiz', 'Assess app architecture', 1800, 70),
+(70, 'UIKit Quiz', 'Test UIKit knowledge', 1800, 70),
+(71, 'SwiftUI Quiz', 'Assess SwiftUI basics', 1800, 70),
+(72, 'Data Management Quiz', 'Test data handling', 1800, 70),
+(73, 'Networking Quiz', 'Assess iOS networking', 1800, 70),
+(74, 'Core Data Quiz', 'Test Core Data skills', 1800, 70),
+(75, 'iOS Testing Quiz', 'Assess testing skills', 1800, 70),
+(76, 'App Store Quiz', 'Test app store submission', 1800, 70),
+(77, 'iOS Capstone Quiz', 'Assess complete iOS project', 1800, 70),
+-- SQL Database Mastery (CourseID 9, LessonIDs 78-86)
+(78, 'Database Intro Quiz', 'Test database basics', 1800, 70),
+(79, 'SQL CRUD Quiz', 'Assess SQL operations', 1800, 70),
+(80, 'Advanced SQL Quiz', 'Test complex queries', 1800, 70),
+(81, 'DB Design Quiz', 'Assess database design', 1800, 70),
+(82, 'Indexing Quiz', 'Test indexing knowledge', 1800, 70),
+(83, 'Stored Procedures Quiz', 'Assess procedure skills', 1800, 70),
+(84, 'Transactions Quiz', 'Test transaction management', 1800, 70),
+(85, 'DB Security Quiz', 'Assess security practices', 1800, 70),
+(86, 'DB Projects Quiz', 'Test real-world DB skills', 1800, 70),
+-- DevOps Engineering (CourseID 10, LessonIDs 87-96)
+(87, 'DevOps Intro Quiz', 'Test DevOps concepts', 1800, 70),
+(88, 'Git Quiz', 'Assess version control skills', 1800, 70),
+(89, 'CI/CD Quiz', 'Test CI/CD knowledge', 1800, 70),
+(90, 'Docker Quiz', 'Assess containerization', 1800, 70),
+(91, 'Kubernetes Quiz', 'Test orchestration skills', 1800, 70),
+(92, 'IaC Quiz', 'Assess infrastructure as code', 1800, 70),
+(93, 'Monitoring Quiz', 'Test monitoring skills', 1800, 70),
+(94, 'Cloud Quiz', 'Assess cloud integration', 1800, 70),
+(95, 'DevOps Practices Quiz', 'Test best practices', 1800, 70),
+(96, 'DevOps Capstone Quiz', 'Assess pipeline project', 1800, 70),
+-- Ethical Hacking (CourseID 11, LessonIDs 97-108)
+(97, 'Hacking Intro Quiz', 'Test hacking fundamentals', 1800, 70),
+(98, 'Reconnaissance Quiz', 'Assess info gathering', 1800, 70),
+(99, 'Scanning Quiz', 'Test network scanning', 1800, 70),
+(100, 'Enumeration Quiz', 'Assess system enumeration', 1800, 70),
+(101, 'Vuln Analysis Quiz', 'Test vulnerability skills', 1800, 70),
+(102, 'System Hacking Quiz', 'Assess exploitation skills', 1800, 70),
+(103, 'Malware Quiz', 'Test malware knowledge', 1800, 70),
+(104, 'Sniffing Quiz', 'Assess packet capture skills', 1800, 70),
+(105, 'Social Eng Quiz', 'Test social engineering', 1800, 70),
+(106, 'DoS Quiz', 'Assess denial-of-service', 1800, 70),
+(107, 'Session Hijack Quiz', 'Test session hijacking', 1800, 70),
+(108, 'Web Security Quiz', 'Assess web app security', 1800, 70),
+-- Deep Learning with TensorFlow (CourseID 12, LessonIDs 109-118)
+(109, 'DL Intro Quiz', 'Test deep learning basics', 1800, 70),
+(110, 'TensorFlow Quiz', 'Assess TensorFlow skills', 1800, 70),
+(111, 'Neural Networks Quiz', 'Test neural network skills', 1800, 70),
+(112, 'CNN Quiz', 'Assess convolutional networks', 1800, 70),
+(113, 'RNN Quiz', 'Test recurrent networks', 1800, 70),
+(114, 'Transfer Learning Quiz', 'Assess pre-trained models', 1800, 70),
+(115, 'Generative Models Quiz', 'Test generative models', 1800, 70),
+(116, 'NLP Quiz', 'Assess NLP skills', 1800, 70),
+(117, 'Vision Quiz', 'Test computer vision skills', 1800, 70),
+(118, 'DL Deployment Quiz', 'Assess model deployment', 1800, 70),
+-- Blockchain Development (CourseID 13, LessonIDs 119-128)
+(119, 'Blockchain Basics Quiz', 'Test blockchain fundamentals', 1800, 70),
+(120, 'Cryptography Quiz', 'Assess crypto knowledge', 1800, 70),
+(121, 'Bitcoin Quiz', 'Test Bitcoin protocol', 1800, 70),
+(122, 'Ethereum Quiz', 'Assess Ethereum skills', 1800, 70),
+(123, 'Solidity Quiz', 'Test Solidity programming', 1800, 70),
+(124, 'DApp Quiz', 'Assess DApp development', 1800, 70),
+(125, 'Web3 Quiz', 'Test blockchain integration', 1800, 70),
+(126, 'Contract Testing Quiz', 'Assess contract testing', 1800, 70),
+(127, 'Blockchain Security Quiz', 'Test security practices', 1800, 70),
+(128, 'Blockchain Capstone Quiz', 'Assess blockchain project', 1800, 70),
+-- Internet of Things Fundamentals (CourseID 14, LessonIDs 129-138)
+(129, 'IoT Intro Quiz', 'Test IoT fundamentals', 1800, 70),
+(130, 'Sensors Quiz', 'Assess sensor knowledge', 1800, 70),
+(131, 'Arduino Quiz', 'Test Arduino skills', 1800, 70),
+(132, 'Raspberry Pi Quiz', 'Assess Raspberry Pi skills', 1800, 70),
+(133, 'IoT Networking Quiz', 'Test networking protocols', 1800, 70),
+(134, 'IoT Cloud Quiz', 'Assess cloud platforms', 1800, 70),
+(135, 'IoT Security Quiz', 'Test IoT security', 1800, 70),
+(136, 'IoT Analytics Quiz', 'Assess data analytics', 1800, 70),
+(137, 'IoT Solutions Quiz', 'Test IoT system building', 1800, 70),
+(138, 'IoT Applications Quiz', 'Assess IoT use cases', 1800, 70),
+-- Vue.js for Frontend Development (CourseID 15, LessonIDs 139-148)
+(139, 'Vue Basics Quiz', 'Test Vue.js fundamentals', 1800, 70),
+(140, 'Vue Components Quiz', 'Assess component knowledge', 1800, 70),
+(141, 'Directives Quiz', 'Test directive usage', 1800, 70),
+(142, 'Reactivity Quiz', 'Assess reactivity system', 1800, 70),
+(143, 'Vue Router Quiz', 'Test navigation skills', 1800, 70),
+(144, 'Vuex Quiz', 'Assess state management', 1800, 70),
+(145, 'Forms Quiz', 'Test form handling skills', 1800, 70),
+(146, 'Vue Best Practices Quiz', 'Assess best practices', 1800, 70),
+(147, 'Vue Testing Quiz', 'Test testing skills', 1800, 70),
+(148, 'Vue Capstone Quiz', 'Assess complete Vue project', 1800, 70),
+-- Django Web Framework (CourseID 16, LessonIDs 149-158)
+(149, 'Django Intro Quiz', 'Test Django fundamentals', 1800, 70),
+(150, 'Models Quiz', 'Assess model knowledge', 1800, 70),
+(151, 'Views Quiz', 'Test view handling', 1800, 70),
+(152, 'Forms Quiz', 'Assess form processing', 1800, 70),
+(153, 'Admin Interface Quiz', 'Test admin skills', 1800, 70),
+(154, 'Authentication Quiz', 'Assess auth knowledge', 1800, 70),
+(155, 'REST API Quiz', 'Test API development', 1800, 70),
+(156, 'Django Testing Quiz', 'Assess testing skills', 1800, 70),
+(157, 'Deployment Quiz', 'Test deployment knowledge', 1800, 70),
+(158, 'Django Capstone Quiz', 'Assess complete Django project', 1800, 70);
+
+-- Adding Questions for newly inserted Quizzes
+INSERT INTO Questions (QuizID, Content, Type, Points, OrderIndex)
+VALUES
+-- Web Development Bootcamp (CourseID 1, QuizIDs for LessonIDs 1-12)
+(1, 'What is HTML?', 'multiple_choice', 1, 1),
+(1, 'What is a tag?', 'multiple_choice', 1, 2),
+(2, 'What is CSS?', 'multiple_choice', 1, 1),
+(2, 'What is a selector?', 'multiple_choice', 1, 2),
+(3, 'What is JavaScript?', 'multiple_choice', 1, 1),
+(3, 'What is a variable?', 'multiple_choice', 1, 2),
+(4, 'What is a webpage?', 'multiple_choice', 1, 1),
+(4, 'What is a layout?', 'multiple_choice', 1, 2),
+(5, 'What is responsive design?', 'multiple_choice', 1, 1),
+(5, 'What is a media query?', 'multiple_choice', 1, 2),
+(6, 'What is React?', 'multiple_choice', 1, 1),
+(6, 'What is a component?', 'multiple_choice', 1, 2),
+(7, 'What is a React app?', 'multiple_choice', 1, 1),
+(7, 'What is state?', 'multiple_choice', 1, 2),
+(8, 'What is Node.js?', 'multiple_choice', 1, 1),
+(8, 'What is npm?', 'multiple_choice', 1, 2),
+(9, 'What is a REST API?', 'multiple_choice', 1, 1),
+(9, 'What is JSON?', 'multiple_choice', 1, 2),
+(10, 'What is a database?', 'multiple_choice', 1, 1),
+(10, 'What is MongoDB?', 'multiple_choice', 1, 2),
+(11, 'What is deployment?', 'multiple_choice', 1, 1),
+(11, 'What is Heroku?', 'multiple_choice', 1, 2),
+(12, 'What is a capstone project?', 'multiple_choice', 1, 1),
+(12, 'What is a full-stack app?', 'multiple_choice', 1, 2),
+-- Advanced JavaScript (CourseID 6, QuizIDs for LessonIDs 49-58)
+(49, 'What is a closure?', 'multiple_choice', 1, 1),
+(49, 'What is scope?', 'multiple_choice', 1, 2),
+(50, 'What is a prototype?', 'multiple_choice', 1, 1),
+(50, 'What is inheritance?', 'multiple_choice', 1, 2),
+(51, 'What is async programming?', 'multiple_choice', 1, 1),
+(51, 'What is a Promise?', 'multiple_choice', 1, 2),
+(52, 'What is ES6?', 'multiple_choice', 1, 1),
+(52, 'What is an arrow function?', 'multiple_choice', 1, 2),
+(53, 'What is functional programming?', 'multiple_choice', 1, 1),
+(53, 'What is map?', 'multiple_choice', 1, 2),
+(54, 'What is a design pattern?', 'multiple_choice', 1, 1),
+(54, 'What is the singleton pattern?', 'multiple_choice', 1, 2),
+(55, 'What is testing?', 'multiple_choice', 1, 1),
+(55, 'What is Jest?', 'multiple_choice', 1, 2),
+(56, 'What is performance optimization?', 'multiple_choice', 1, 1),
+(56, 'What is memoization?', 'multiple_choice', 1, 2),
+(57, 'What is a JS project?', 'multiple_choice', 1, 1),
+(57, 'What is a module?', 'multiple_choice', 1, 2),
+-- Machine Learning Fundamentals (CourseID 7, QuizIDs for LessonIDs 58-67)
+(58, 'What is machine learning?', 'multiple_choice', 1, 1),
+(58, 'What is an algorithm?', 'multiple_choice', 1, 2),
+(59, 'What is supervised learning?', 'multiple_choice', 1, 1),
+(59, 'What is regression?', 'multiple_choice', 1, 2),
+(60, 'What is unsupervised learning?', 'multiple_choice', 1, 1),
+(60, 'What is clustering?', 'multiple_choice', 1, 2),
+(61, 'What is feature engineering?', 'multiple_choice', 1, 1),
+(61, 'What is a feature?', 'multiple_choice', 1, 2),
+(62, 'What is model evaluation?', 'multiple_choice', 1, 1),
+(62, 'What is accuracy?', 'multiple_choice', 1, 2),
+(63, 'What is a neural network?', 'multiple_choice', 1, 1),
+(63, 'What is a neuron?', 'multiple_choice', 1, 2),
+(64, 'What is deep learning?', 'multiple_choice', 1, 1),
+(64, 'What is a layer?', 'multiple_choice', 1, 2),
+(65, 'What is an ML application?', 'multiple_choice', 1, 1),
+(65, 'What is image recognition?', 'multiple_choice', 1, 2),
+(66, 'What is AI ethics?', 'multiple_choice', 1, 1),
+(66, 'What is bias?', 'multiple_choice', 1, 2),
+(67, 'What is an ML project?', 'multiple_choice', 1, 1),
+(67, 'What is a dataset?', 'multiple_choice', 1, 2),
+-- iOS App Development with Swift (CourseID 8, QuizIDs for LessonIDs 68-77)
+(68, 'What is Swift?', 'multiple_choice', 1, 1),
+(68, 'What is a variable?', 'multiple_choice', 1, 2),
+(69, 'What is app architecture?', 'multiple_choice', 1, 1),
+(69, 'What is MVC?', 'multiple_choice', 1, 2),
+(70, 'What is UIKit?', 'multiple_choice', 1, 1),
+(70, 'What is a view controller?', 'multiple_choice', 1, 2),
+(71, 'What is SwiftUI?', 'multiple_choice', 1, 1),
+(71, 'What is a view?', 'multiple_choice', 1, 2),
+(72, 'What is data management?', 'multiple_choice', 1, 1),
+(72, 'What is Core Data?', 'multiple_choice', 1, 2),
+(73, 'What is networking?', 'multiple_choice', 1, 1),
+(73, 'What is URLSession?', 'multiple_choice', 1, 2),
+(74, 'What is persistence?', 'multiple_choice', 1, 1),
+(74, 'What is a managed object?', 'multiple_choice', 1, 2),
+(75, 'What is testing?', 'multiple_choice', 1, 1),
+(75, 'What is XCTest?', 'multiple_choice', 1, 2),
+(76, 'What is App Store submission?', 'multiple_choice', 1, 1),
+(76, 'What is Xcode?', 'multiple_choice', 1, 2),
+(77, 'What is an iOS project?', 'multiple_choice', 1, 1),
+(77, 'What is a storyboard?', 'multiple_choice', 1, 2),
+-- SQL Database Mastery (CourseID 9, QuizIDs for LessonIDs 78-86)
+(78, 'What is a database?', 'multiple_choice', 1, 1),
+(78, 'What is a table?', 'multiple_choice', 1, 2),
+(79, 'What is SQL?', 'multiple_choice', 1, 1),
+(79, 'What is a query?', 'multiple_choice', 1, 2),
+(80, 'What is a JOIN?', 'multiple_choice', 1, 1),
+(80, 'What is a subquery?', 'multiple_choice', 1, 2),
+(81, 'What is normalization?', 'multiple_choice', 1, 1),
+(81, 'What is a primary key?', 'multiple_choice', 1, 2),
+(82, 'What is an index?', 'multiple_choice', 1, 1),
+(82, 'What is a clustered index?', 'multiple_choice', 1, 2),
+(83, 'What is a stored procedure?', 'multiple_choice', 1, 1),
+(83, 'What is a function?', 'multiple_choice', 1, 2),
+(84, 'What is a transaction?', 'multiple_choice', 1, 1),
+(84, 'What is ACID?', 'multiple_choice', 1, 2),
+(85, 'What is database security?', 'multiple_choice', 1, 1),
+(85, 'What is SQL injection?', 'multiple_choice', 1, 2),
+(86, 'What is a DB project?', 'multiple_choice', 1, 1),
+(86, 'What is a schema?', 'multiple_choice', 1, 2),
+-- DevOps Engineering (CourseID 10, QuizIDs for LessonIDs 87-96)
+(87, 'What is DevOps?', 'multiple_choice', 1, 1),
+(87, 'What is CI/CD?', 'multiple_choice', 1, 2),
+(88, 'What is Git?', 'multiple_choice', 1, 1),
+(88, 'What is a commit?', 'multiple_choice', 1, 2),
+(89, 'What is continuous integration?', 'multiple_choice', 1, 1),
+(89, 'What is a pipeline?', 'multiple_choice', 1, 2),
+(90, 'What is Docker?', 'multiple_choice', 1, 1),
+(90, 'What is a container?', 'multiple_choice', 1, 2),
+(91, 'What is Kubernetes?', 'multiple_choice', 1, 1),
+(91, 'What is a pod?', 'multiple_choice', 1, 2),
+(92, 'What is IaC?', 'multiple_choice', 1, 1),
+(92, 'What is Terraform?', 'multiple_choice', 1, 2),
+(93, 'What is monitoring?', 'multiple_choice', 1, 1),
+(93, 'What is Prometheus?', 'multiple_choice', 1, 2),
+(94, 'What is a cloud service?', 'multiple_choice', 1, 1),
+(94, 'What is AWS?', 'multiple_choice', 1, 2),
+(95, 'What is a DevOps practice?', 'multiple_choice', 1, 1),
+(95, 'What is automation?', 'multiple_choice', 1, 2),
+(96, 'What is a DevOps pipeline?', 'multiple_choice', 1, 1),
+(96, 'What is Jenkins?', 'multiple_choice', 1, 2),
+-- Ethical Hacking (CourseID 11, QuizIDs for LessonIDs 97-108)
+(97, 'What is ethical hacking?', 'multiple_choice', 1, 1),
+(97, 'What is penetration testing?', 'multiple_choice', 1, 2),
+(98, 'What is reconnaissance?', 'multiple_choice', 1, 1),
+(98, 'What is OSINT?', 'multiple_choice', 1, 2),
+(99, 'What is scanning?', 'multiple_choice', 1, 1),
+(99, 'What is Nmap?', 'multiple_choice', 1, 2),
+(100, 'What is enumeration?', 'multiple_choice', 1, 1),
+(100, 'What is NetBIOS?', 'multiple_choice', 1, 2),
+(101, 'What is vulnerability analysis?', 'multiple_choice', 1, 1),
+(101, 'What is Nessus?', 'multiple_choice', 1, 2),
+(102, 'What is system hacking?', 'multiple_choice', 1, 1),
+(102, 'What is a password cracker?', 'multiple_choice', 1, 2),
+(103, 'What is malware?', 'multiple_choice', 1, 1),
+(103, 'What is a virus?', 'multiple_choice', 1, 2),
+(104, 'What is sniffing?', 'multiple_choice', 1, 1),
+(104, 'What is Wireshark?', 'multiple_choice', 1, 2),
+(105, 'What is social engineering?', 'multiple_choice', 1, 1),
+(105, 'What is phishing?', 'multiple_choice', 1, 2),
+(106, 'What is DoS?', 'multiple_choice', 1, 1),
+(106, 'What is DDoS?', 'multiple_choice', 1, 2),
+(107, 'What is session hijacking?', 'multiple_choice', 1, 1),
+(107, 'What is a session cookie?', 'multiple_choice', 1, 2),
+(108, 'What is XSS?', 'multiple_choice', 1, 1),
+(108, 'What is CSRF?', 'multiple_choice', 1, 2),
+-- Deep Learning with TensorFlow (CourseID 12, QuizIDs for LessonIDs 109-118)
+(109, 'What is deep learning?', 'multiple_choice', 1, 1),
+(109, 'What is a neural network?', 'multiple_choice', 1, 2),
+(110, 'What is TensorFlow?', 'multiple_choice', 1, 1),
+(110, 'What is Keras?', 'multiple_choice', 1, 2),
+(111, 'What is a layer?', 'multiple_choice', 1, 1),
+(111, 'What is a neuron?', 'multiple_choice', 1, 2),
+(112, 'What is a CNN?', 'multiple_choice', 1, 1),
+(112, 'What is convolution?', 'multiple_choice', 1, 2),
+(113, 'What is an RNN?', 'multiple_choice', 1, 1),
+(113, 'What is LSTM?', 'multiple_choice', 1, 2),
+(114, 'What is transfer learning?', 'multiple_choice', 1, 1),
+(114, 'What is a pre-trained model?', 'multiple_choice', 1, 2),
+(115, 'What is a GAN?', 'multiple_choice', 1, 1),
+(115, 'What is a generative model?', 'multiple_choice', 1, 2),
+(116, 'What is NLP?', 'multiple_choice', 1, 1),
+(116, 'What is tokenization?', 'multiple_choice', 1, 2),
+(117, 'What is computer vision?', 'multiple_choice', 1, 1),
+(117, 'What is image classification?', 'multiple_choice', 1, 2),
+(118, 'What is model deployment?', 'multiple_choice', 1, 1),
+(118, 'What is TensorFlow Serving?', 'multiple_choice', 1, 2),
+-- Blockchain Development (CourseID 13, QuizIDs for LessonIDs 119-128)
+(119, 'What is a blockchain?', 'multiple_choice', 1, 1),
+(119, 'What is a ledger?', 'multiple_choice', 1, 2),
+(120, 'What is cryptography?', 'multiple_choice', 1, 1),
+(120, 'What is a hash?', 'multiple_choice', 1, 2),
+(121, 'What is Bitcoin?', 'multiple_choice', 1, 1),
+(121, 'What is a wallet?', 'multiple_choice', 1, 2),
+(122, 'What is Ethereum?', 'multiple_choice', 1, 1),
+(122, 'What is a smart contract?', 'multiple_choice', 1, 2),
+(123, 'What is Solidity?', 'multiple_choice', 1, 1),
+(123, 'What is a contract function?', 'multiple_choice', 1, 2),
+(124, 'What is a DApp?', 'multiple_choice', 1, 1),
+(124, 'What is Web3.js?', 'multiple_choice', 1, 2),
+(125, 'What is blockchain integration?', 'multiple_choice', 1, 1),
+(125, 'What is MetaMask?', 'multiple_choice', 1, 2),
+(126, 'What is contract testing?', 'multiple_choice', 1, 1),
+(126, 'What is Truffle?', 'multiple_choice', 1, 2),
+(127, 'What is blockchain security?', 'multiple_choice', 1, 1),
+(127, 'What is a reentrancy attack?', 'multiple_choice', 1, 2),
+(128, 'What is a blockchain project?', 'multiple_choice', 1, 1),
+(128, 'What is Hardhat?', 'multiple_choice', 1, 2),
+-- Internet of Things Fundamentals (CourseID 14, QuizIDs for LessonIDs 129-138)
+(129, 'What is IoT?', 'multiple_choice', 1, 1),
+(129, 'What is a smart device?', 'multiple_choice', 1, 2),
+(130, 'What is a sensor?', 'multiple_choice', 1, 1),
+(130, 'What is an actuator?', 'multiple_choice', 1, 2),
+(131, 'What is Arduino?', 'multiple_choice', 1, 1),
+(131, 'What is a sketch?', 'multiple_choice', 1, 2),
+(132, 'What is Raspberry Pi?', 'multiple_choice', 1, 1),
+(132, 'What is a GPIO pin?', 'multiple_choice', 1, 2),
+(133, 'What is MQTT?', 'multiple_choice', 1, 1),
+(133, 'What is a protocol?', 'multiple_choice', 1, 2),
+(134, 'What is an IoT platform?', 'multiple_choice', 1, 1),
+(134, 'What is AWS IoT?', 'multiple_choice', 1, 2),
+(135, 'What is IoT security?', 'multiple_choice', 1, 1),
+(135, 'What is a botnet?', 'multiple_choice', 1, 2),
+(136, 'What is IoT analytics?', 'multiple_choice', 1, 1),
+(136, 'What is edge computing?', 'multiple_choice', 1, 2),
+(137, 'What is an IoT system?', 'multiple_choice', 1, 1),
+(137, 'What is a gateway?', 'multiple_choice', 1, 2),
+(138, 'What is IoT automation?', 'multiple_choice', 1, 1),
+(138, 'What is a smart home?', 'multiple_choice', 1, 2),
+-- Vue.js for Frontend Development (CourseID 15, QuizIDs for LessonIDs 139-148)
+(139, 'What is Vue.js?', 'multiple_choice', 1, 1),
+(139, 'What is a Vue instance?', 'multiple_choice', 1, 2),
+(140, 'What is a Vue component?', 'multiple_choice', 1, 1),
+(140, 'What is a prop?', 'multiple_choice', 1, 2),
+(141, 'What is a directive?', 'multiple_choice', 1, 1),
+(141, 'What is v-bind?', 'multiple_choice', 1, 2),
+(142, 'What is reactivity?', 'multiple_choice', 1, 1),
+(142, 'What is a computed property?', 'multiple_choice', 1, 2),
+(143, 'What is Vue Router?', 'multiple_choice', 1, 1),
+(143, 'What is a route?', 'multiple_choice', 1, 2),
+(144, 'What is Vuex?', 'multiple_choice', 1, 1),
+(144, 'What is a store?', 'multiple_choice', 1, 2),
+(145, 'What is a Vue form?', 'multiple_choice', 1, 1),
+(145, 'What is v-model?', 'multiple_choice', 1, 2),
+(146, 'What is a Vue best practice?', 'multiple_choice', 1, 1),
+(146, 'What is component reuse?', 'multiple_choice', 1, 2),
+(147, 'What is Vue testing?', 'multiple_choice', 1, 1),
+(147, 'What is Vue Test Utils?', 'multiple_choice', 1, 2),
+(148, 'What is a Vue project?', 'multiple_choice', 1, 1),
+(148, 'What is Vue CLI?', 'multiple_choice', 1, 2),
+-- Django Web Framework (CourseID 16, QuizIDs for LessonIDs 149-158)
+(149, 'What is Django?', 'multiple_choice', 1, 1),
+(149, 'What is a Django project?', 'multiple_choice', 1, 2),
+(150, 'What is a Django model?', 'multiple_choice', 1, 1),
+(150, 'What is a field?', 'multiple_choice', 1, 2),
+(151, 'What is a Django view?', 'multiple_choice', 1, 1),
+(151, 'What is a template?', 'multiple_choice', 1, 2),
+(152, 'What is a Django form?', 'multiple_choice', 1, 1),
+(152, 'What is a ModelForm?', 'multiple_choice', 1, 2),
+(153, 'What is the Django admin?', 'multiple_choice', 1, 1),
+(153, 'What is a superuser?', 'multiple_choice', 1, 2),
+(154, 'What is authentication?', 'multiple_choice', 1, 1),
+(154, 'What is a user model?', 'multiple_choice', 1, 2),
+(155, 'What is Django REST?', 'multiple_choice', 1, 1),
+(155, 'What is a serializer?', 'multiple_choice', 1, 2),
+(156, 'What is Django testing?', 'multiple_choice', 1, 1),
+(156, 'What is a TestCase?', 'multiple_choice', 1, 2),
+(157, 'What is Django deployment?', 'multiple_choice', 1, 1),
+(157, 'What is a WSGI?', 'multiple_choice', 1, 2),
+(158, 'What is a Django app?', 'multiple_choice', 1, 1),
+(158, 'What is manage.py?', 'multiple_choice', 1, 2);
+
+-- Adding Answers for newly inserted Questions
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+-- Web Development Bootcamp (CourseID 1, Questions for QuizIDs 1-12)
+(243, 'Markup language', 1, 1), (243, 'Programming language', 0, 2), (243, 'Database system', 0, 3), (243, 'UI framework', 0, 4),
+(244, 'HTML element', 1, 1), (244, 'CSS style', 0, 2), (244, 'JS function', 0, 3), (244, 'API endpoint', 0, 4),
+(245, 'Styles webpages', 1, 1), (245, 'Scripts logic', 0, 2), (245, 'Manages data', 0, 3), (245, 'Renders UI', 0, 4),
+(246, 'Targets elements', 1, 1), (246, 'Formats data', 0, 2), (246, 'Executes code', 0, 3), (246, 'Stores data', 0, 4),
+(247, 'Scripting language', 1, 1), (247, 'Markup language', 0, 2), (247, 'Database tool', 0, 3), (247, 'UI library', 0, 4),
+(248, 'Stores data', 1, 1), (248, 'Styles page', 0, 2), (248, 'Renders UI', 0, 3), (248, 'Handles requests', 0, 4),
+(249, 'HTML structure', 1, 1), (249, 'JS logic', 0, 2), (249, 'CSS design', 0, 3), (249, 'API call', 0, 4),
+(250, 'Page arrangement', 1, 1), (250, 'Data model', 0, 2), (250, 'UI component', 0, 3), (250, 'Network request', 0, 4),
+(251, 'Adapts to screens', 1, 1), (251, 'Fixed layout', 0, 2), (251, 'Database query', 0, 3), (251, 'Code script', 0, 4),
+(252, 'CSS rule', 1, 1), (252, 'JS function', 0, 2), (252, 'HTML tag', 0, 3), (252, 'API request', 0, 4),
+(253, 'JS framework', 1, 1), (253, 'CSS framework', 0, 2), (253, 'Database tool', 0, 3), (253, 'Game engine', 0, 4),
+(254, 'Reusable UI', 1, 1), (254, 'Data model', 0, 2), (254, 'API endpoint', 0, 3), (254, 'Event handler', 0, 4),
+(255, 'React application', 1, 1), (255, 'HTML page', 0, 2), (255, 'CSS file', 0, 3), (255, 'JS script', 0, 4),
+(256, 'Dynamic data', 1, 1), (256, 'Static content', 0, 2), (256, 'UI style', 0, 3), (256, 'Database table', 0, 4),
+(257, 'JS runtime', 1, 1), (257, 'UI framework', 0, 2), (257, 'Database system', 0, 3), (257, 'Game engine', 0, 4),
+(258, 'Package manager', 1, 1), (258, 'Code editor', 0, 2), (258, 'UI library', 0, 3), (258, 'API tool', 0, 4),
+(259, 'Web service', 1, 1), (259, 'UI component', 0, 2), (259, 'Data model', 0, 3), (259, 'Network protocol', 0, 4),
+(260, 'Data format', 1, 1), (260, 'UI style', 0, 2), (260, 'Code syntax', 0, 3), (260, 'Database query', 0, 4),
+(261, 'Stores data', 1, 1), (261, 'Renders UI', 0, 2), (261, 'Handles requests', 0, 3), (261, 'Formats code', 0, 4),
+(262, 'NoSQL database', 1, 1), (262, 'SQL database', 0, 2), (262, 'UI framework', 0, 3), (262, 'API tool', 0, 4),
+(263, 'Publishes app', 1, 1), (263, 'Designs UI', 0, 2), (263, 'Stores data', 0, 3), (263, 'Encrypts data', 0, 4),
+(264, 'Cloud platform', 1, 1), (264, 'UI library', 0, 2), (264, 'Database tool', 0, 3), (264, 'Game engine', 0, 4),
+(265, 'Final project', 1, 1), (265, 'Code test', 0, 2), (265, 'UI design', 0, 3), (265, 'Data model', 0, 4),
+(266, 'Complete system', 1, 1), (266, 'Single page', 0, 2), (266, 'API call', 0, 3), (266, 'Database table', 0, 4),
+-- Advanced JavaScript (CourseID 6, Questions for QuizIDs 49-58)
+(267, 'Function in function', 1, 1), (267, 'UI component', 0, 2), (267, 'Data model', 0, 3), (267, 'API endpoint', 0, 4),
+(268, 'Variable access', 1, 1), (268, 'Code style', 0, 2), (268, 'Network request', 0, 3), (268, 'Event handler', 0, 4),
+(269, 'Object blueprint', 1, 1), (269, 'UI template', 0, 2), (269, 'Data table', 0, 3), (269, 'API call', 0, 4),
+(270, 'Property sharing', 1, 1), (270, 'Code execution', 0, 2), (270, 'UI rendering', 0, 3), (270, 'Data storage', 0, 4),
+(271, 'Non-blocking code', 1, 1), (271, 'UI rendering', 0, 2), (271, 'Data storage', 0, 3), (271, 'Code styling', 0, 4),
+(272, 'Async result', 1, 1), (272, 'UI component', 0, 2), (272, 'Data model', 0, 3), (272, 'API request', 0, 4),
+(273, 'Modern JS', 1, 1), (273, 'UI framework', 0, 2), (273, 'Database tool', 0, 3), (273, 'Game engine', 0, 4),
+(274, 'Concise function', 1, 1), (274, 'Data model', 0, 2), (274, 'UI element', 0, 3), (274, 'Network call', 0, 4),
+(275, 'Pure functions', 1, 1), (275, 'UI rendering', 0, 2), (275, 'Data storage', 0, 3), (275, 'Code formatting', 0, 4),
+(276, 'Array transformer', 1, 1), (276, 'UI component', 0, 2), (276, 'Data field', 0, 3), (276, 'API endpoint', 0, 4),
+(277, 'Code structure', 1, 1), (277, 'UI design', 0, 2), (277, 'Data model', 0, 3), (277, 'Network protocol', 0, 4),
+(278, 'Single instance', 1, 1), (278, 'Multiple instances', 0, 2), (278, 'UI element', 0, 3), (278, 'API call', 0, 4),
+(279, 'Code verification', 1, 1), (279, 'UI rendering', 0, 2), (279, 'Data storage', 0, 3), (279, 'Code styling', 0, 4),
+(280, 'Testing framework', 1, 1), (280, 'UI library', 0, 2), (280, 'Database tool', 0, 3), (280, 'Game engine', 0, 4),
+(281, 'Optimizes speed', 1, 1), (281, 'Renders UI', 0, 2), (281, 'Stores data', 0, 3), (281, 'Encrypts data', 0, 4),
+(282, 'Caches results', 1, 1), (282, 'Formats code', 0, 2), (282, 'UI component', 0, 3), (282, 'Data model', 0, 4),
+(283, 'Complex app', 1, 1), (283, 'Simple script', 0, 2), (283, 'UI design', 0, 3), (283, 'Database query', 0, 4),
+(284, 'Code unit', 1, 1), (284, 'UI element', 0, 2), (284, 'Data table', 0, 3), (284, 'API endpoint', 0, 4),
+-- Machine Learning Fundamentals (CourseID 7, Questions for QuizIDs 58-67)
+(285, 'Data-driven AI', 1, 1), (285, 'UI framework', 0, 2), (285, 'Database system', 0, 3), (285, 'Game engine', 0, 4),
+(286, 'Predictive model', 1, 1), (286, 'UI component', 0, 2), (286, 'Data model', 0, 3), (286, 'API endpoint', 0, 4),
+(287, 'Labeled data', 1, 1), (287, 'Unlabeled data', 0, 2), (287, 'UI rendering', 0, 3), (287, 'Code styling', 0, 4),
+(288, 'Predicts numbers', 1, 1), (288, 'Classifies data', 0, 2), (288, 'Renders UI', 0, 3), (288, 'Stores data', 0, 4),
+(289, 'Finds patterns', 1, 1), (289, 'UI design', 0, 2), (289, 'Data storage', 0, 3), (289, 'Code execution', 0, 4),
+(290, 'Groups data', 1, 1), (290, 'UI component', 0, 2), (290, 'Data model', 0, 3), (290, 'API call', 0, 4),
+(291, 'Data preparation', 1, 1), (291, 'UI rendering', 0, 2), (291, 'Code testing', 0, 3), (291, 'Data storage', 0, 4),
+(292, 'Input variable', 1, 1), (292, 'UI element', 0, 2), (292, 'API request', 0, 3), (292, 'Network protocol', 0, 4),
+(293, 'Performance check', 1, 1), (293, 'UI rendering', 0, 2), (293, 'Data storage', 0, 3), (293, 'Code styling', 0, 4),
+(294, 'Correctness metric', 1, 1), (294, 'UI metric', 0, 2), (294, 'Data size', 0, 3), (294, 'Code speed', 0, 4),
+(295, 'Layered model', 1, 1), (295, 'UI framework', 0, 2), (295, 'Database system', 0, 3), (295, 'Game engine', 0, 4),
+(296, 'Processing unit', 1, 1), (296, 'UI component', 0, 2), (296, 'Data field', 0, 3), (296, 'API endpoint', 0, 4),
+(297, 'Complex ML', 1, 1), (297, 'Basic ML', 0, 2), (297, 'UI rendering', 0, 3), (297, 'Data storage', 0, 4),
+(298, 'Neural layer', 1, 1), (298, 'UI element', 0, 2), (298, 'Data model', 0, 3), (298, 'API request', 0, 4),
+(299, 'Real-world use', 1, 1), (299, 'UI design', 0, 2), (299, 'Data storage', 0, 3), (299, 'Code testing', 0, 4),
+(300, 'Identifies images', 1, 1), (300, 'Formats code', 0, 2), (300, 'Renders UI', 0, 3), (300, 'Stores data', 0, 4),
+(301, 'Fair AI', 1, 1), (301, 'UI framework', 0, 2), (301, 'Database tool', 0, 3), (301, 'Game engine', 0, 4),
+(302, 'Unfair predictions', 1, 1), (302, 'UI errors', 0, 2), (302, 'Data leaks', 0, 3), (302, 'Code bugs', 0, 4),
+(303, 'ML application', 1, 1), (303, 'UI design', 0, 2), (303, 'Data model', 0, 3), (303, 'API endpoint', 0, 4),
+(304, 'Training data', 1, 1), (304, 'UI template', 0, 2), (304, 'Code script', 0, 3), (304, 'Network request', 0, 4),
+-- iOS App Development with Swift (CourseID 8, Questions for QuizIDs 68-77)
+(305, 'Programming language', 1, 1), (305, 'UI framework', 0, 2), (305, 'Database system', 0, 3), (305, 'Game engine', 0, 4),
+(306, 'Stores data', 1, 1), (306, 'Renders UI', 0, 2), (306, 'Handles requests', 0, 3), (306, 'Formats code', 0, 4),
+(307, 'App structure', 1, 1), (307, 'UI component', 0, 2), (307, 'Data model', 0, 3), (307, 'API endpoint', 0, 4),
+(308, 'Design pattern', 1, 1), (308, 'Code style', 0, 2), (308, 'Network protocol', 0, 3), (308, 'UI rendering', 0, 4),
+(309, 'UI framework', 1, 1), (309, 'Database tool', 0, 2), (309, 'Game engine', 0, 3), (309, 'API library', 0, 4),
+(310, 'UI controller', 1, 1), (310, 'Data model', 0, 2), (310, 'API request', 0, 3), (310, 'Code script', 0, 4),
+(311, 'Declarative UI', 1, 1), (311, 'Procedural UI', 0, 2), (311, 'Data storage', 0, 3), (311, 'Code testing', 0, 4),
+(312, 'UI element', 1, 1), (312, 'Data field', 0, 2), (312, 'Network call', 0, 3), (312, 'Event handler', 0, 4),
+(313, 'Handles data', 1, 1), (313, 'Renders UI', 0, 2), (313, 'Stores files', 0, 3), (313, 'Encrypts data', 0, 4),
+(314, 'Persistent storage', 1, 1), (314, 'UI component', 0, 2), (314, 'API endpoint', 0, 3), (314, 'Code style', 0, 4),
+(315, 'Fetches data', 1, 1), (315, 'Renders UI', 0, 2), (315, 'Stores data', 0, 3), (315, 'Formats code', 0, 4),
+(316, 'HTTP client', 1, 1), (316, 'UI library', 0, 2), (316, 'Database tool', 0, 3), (316, 'Game engine', 0, 4),
+(317, 'Data framework', 1, 1), (317, 'UI framework', 0, 2), (317, 'Network protocol', 0, 3), (317, 'Code tester', 0, 4),
+(318, 'Data entity', 1, 1), (318, 'UI element', 0, 2), (318, 'API call', 0, 3), (318, 'Data model', 0, 4),
+(319, 'Code verification', 1, 1), (319, 'UI rendering', 0, 2), (319, 'Data storage', 0, 3), (319, 'Code styling', 0, 4),
+(320, 'Testing framework', 1, 1), (320, 'UI library', 0, 2), (320, 'Database tool', 0, 3), (320, 'Game engine', 0, 4),
+(321, 'Publishes app', 1, 1), (321, 'Designs UI', 0, 2), (321, 'Stores data', 0, 3), (321, 'Encrypts data', 0, 4),
+(322, 'Build tool', 1, 1), (322, 'UI framework', 0, 2), (322, 'Database system', 0, 3), (322, 'Game engine', 0, 4),
+(323, 'iOS application', 1, 1), (323, 'Web app', 0, 2), (323, 'UI design', 0, 3), (323, 'Data model', 0, 4),
+(324, 'UI layout', 1, 1), (324, 'Code script', 0, 2), (324, 'Data table', 0, 3), (324, 'API endpoint', 0, 4),
+-- SQL Database Mastery (CourseID 9, Questions for QuizIDs 78-86)
+(325, 'Data storage', 1, 1), (325, 'UI framework', 0, 2), (325, 'Code editor', 0, 3), (325, 'Game engine', 0, 4),
+(326, 'Data container', 1, 1), (326, 'UI component', 0, 2), (326, 'API request', 0, 3), (326, 'Event handler', 0, 4),
+(327, 'Query language', 1, 1), (327, 'Programming language', 0, 2), (327, 'UI library', 0, 3), (327, 'Game engine', 0, 4),
+(328, 'Data retrieval', 1, 1), (328, 'UI rendering', 0, 2), (328, 'Code styling', 0, 3), (328, 'Data storage', 0, 4),
+(329, 'Table connection', 1, 1), (329, 'UI component', 0, 2), (329, 'Data model', 0, 3), (329, 'API call', 0, 4),
+(330, 'Nested query', 1, 1), (330, 'Primary key', 0, 2), (330, 'UI element', 0, 3), (330, 'Network request', 0, 4),
+(331, 'Data organization', 1, 1), (331, 'UI design', 0, 2), (331, 'Code testing', 0, 3), (331, 'Data encryption', 0, 4),
+(332, 'Unique identifier', 1, 1), (332, 'Data field', 0, 2), (332, 'UI component', 0, 3), (332, 'API endpoint', 0, 4),
+(333, 'Performance boost', 1, 1), (333, 'UI rendering', 0, 2), (333, 'Data storage', 0, 3), (333, 'Code styling', 0, 4),
+(334, 'Index type', 1, 1), (334, 'Data model', 0, 2), (334, 'UI element', 0, 3), (334, 'API request', 0, 4),
+(335, 'Stored code', 1, 1), (335, 'UI component', 0, 2), (335, 'Data table', 0, 3), (335, 'Network call', 0, 4),
+(336, 'Reusable code', 1, 1), (336, 'UI framework', 0, 2), (336, 'Database tool', 0, 3), (336, 'Game engine', 0, 4),
+(337, 'Atomicity', 1, 1), (337, 'UI rendering', 0, 2), (337, 'Data storage', 0, 3), (337, 'Code execution', 0, 4),
+(338, 'Data integrity', 1, 1), (338, 'UI design', 0, 2), (338, 'Code testing', 0, 3), (338, 'Network protocol', 0, 4),
+(339, 'Protects data', 1, 1), (339, 'Renders UI', 0, 2), (339, 'Stores files', 0, 3), (339, 'Formats code', 0, 4),
+(340, 'Malicious code', 1, 1), (340, 'UI attack', 0, 2), (340, 'Data leak', 0, 3), (340, 'Network flood', 0, 4),
+(341, 'DB application', 1, 1), (341, 'UI design', 0, 2), (341, 'Code testing', 0, 3), (341, 'Network security', 0, 4),
+(342, 'Data structure', 1, 1), (342, 'UI template', 0, 2), (342, 'API endpoint', 0, 3), (342, 'Event handler', 0, 4),
+-- DevOps Engineering (CourseID 10, Questions for QuizIDs 87-96)
+(343, 'Collaboration culture', 1, 1), (343, 'UI framework', 0, 2), (343, 'Database system', 0, 3), (343, 'Game engine', 0, 4),
+(344, 'Automation pipeline', 1, 1), (344, 'UI component', 0, 2), (344, 'Data model', 0, 3), (344, 'API endpoint', 0, 4),
+(345, 'Version control', 1, 1), (345, 'UI library', 0, 2), (345, 'Database tool', 0, 3), (345, 'Game engine', 0, 4),
+(346, 'Code snapshot', 1, 1), (346, 'UI element', 0, 2), (346, 'Data field', 0, 3), (346, 'API request', 0, 4),
+(347, 'Automated builds', 1, 1), (347, 'UI rendering', 0, 2), (347, 'Data storage', 0, 3), (347, 'Code styling', 0, 4),
+(348, 'Build process', 1, 1), (348, 'UI component', 0, 2), (348, 'Data model', 0, 3), (348, 'Network call', 0, 4),
+(349, 'Container platform', 1, 1), (349, 'UI framework', 0, 2), (349, 'Database system', 0, 3), (349, 'Game engine', 0, 4),
+(350, 'Isolated app', 1, 1), (350, 'UI element', 0, 2), (350, 'Data table', 0, 3), (350, 'API endpoint', 0, 4),
+(351, 'Orchestration tool', 1, 1), (351, 'UI library', 0, 2), (351, 'Database tool', 0, 3), (351, 'Game engine', 0, 4),
+(352, 'Container unit', 1, 1), (352, 'UI component', 0, 2), (352, 'Data model', 0, 3), (352, 'API request', 0, 4),
+(353, 'Code-defined infra', 1, 1), (353, 'UI framework', 0, 2), (353, 'Database system', 0, 3), (353, 'Game engine', 0, 4),
+(354, 'Infra management', 1, 1), (354, 'UI rendering', 0, 2), (354, 'Data storage', 0, 3), (354, 'Code styling', 0, 4),
+(355, 'System tracking', 1, 1), (355, 'UI design', 0, 2), (355, 'Data storage', 0, 3), (355, 'Code testing', 0, 4),
+(356, 'Monitoring tool', 1, 1), (356, 'UI library', 0, 2), (356, 'Database tool', 0, 3), (356, 'Game engine', 0, 4),
+(357, 'Cloud computing', 1, 1), (357, 'UI framework', 0, 2), (357, 'Database system', 0, 3), (357, 'Game engine', 0, 4),
+(358, 'Cloud provider', 1, 1), (358, 'UI library', 0, 2), (358, 'Database tool', 0, 3), (358, 'Game engine', 0, 4),
+(359, 'Best practices', 1, 1), (359, 'UI design', 0, 2), (359, 'Data storage', 0, 3), (359, 'Code styling', 0, 4),
+(360, 'Task automation', 1, 1), (360, 'UI rendering', 0, 2), (360, 'Data storage', 0, 3), (360, 'Network protocol', 0, 4),
+(361, 'CI/CD system', 1, 1), (361, 'UI framework', 0, 2), (361, 'Database system', 0, 3), (361, 'Game engine', 0, 4),
+(362, 'Automation tool', 1, 1), (362, 'UI library', 0, 2), (362, 'Database tool', 0, 3), (362, 'Game engine', 0, 4),
+-- Ethical Hacking (CourseID 11, Questions for QuizIDs 97-108)
+(363, 'Security testing', 1, 1), (363, 'UI design', 0, 2), (363, 'Data storage', 0, 3), (363, 'Code styling', 0, 4),
+(364, 'Simulated attack', 1, 1), (364, 'UI rendering', 0, 2), (364, 'Data model', 0, 3), (364, 'API endpoint', 0, 4),
+(365, 'Info gathering', 1, 1), (365, 'UI framework', 0, 2), (365, 'Database tool', 0, 3), (365, 'Game engine', 0, 4),
+(366, 'Public data', 1, 1), (366, 'UI component', 0, 2), (366, 'Data table', 0, 3), (366, 'API request', 0, 4),
+(367, 'Network mapping', 1, 1), (367, 'UI rendering', 0, 2), (367, 'Data storage', 0, 3), (367, 'Code styling', 0, 4),
+(368, 'Scanning tool', 1, 1), (368, 'UI library', 0, 2), (368, 'Database tool', 0, 3), (368, 'Game engine', 0, 4),
+(369, 'System details', 1, 1), (369, 'UI design', 0, 2), (369, 'Data storage', 0, 3), (369, 'Code testing', 0, 4),
+(370, 'Network protocol', 1, 1), (370, 'UI component', 0, 2), (370, 'Data model', 0, 3), (370, 'API endpoint', 0, 4),
+(371, 'Security flaws', 1, 1), (371, 'UI rendering', 0, 2), (371, 'Data storage', 0, 3), (371, 'Code styling', 0, 4),
+(372, 'Vuln scanner', 1, 1), (372, 'UI library', 0, 2), (372, 'Database tool', 0, 3), (372, 'Game engine', 0, 4),
+(373, 'Unauthorized access', 1, 1), (373, 'UI design', 0, 2), (373, 'Data storage', 0, 3), (373, 'Code testing', 0, 4),
+(374, 'Password attack', 1, 1), (374, 'UI component', 0, 2), (374, 'Data model', 0, 3), (374, 'API request', 0, 4),
+(375, 'Malicious code', 1, 1), (375, 'UI framework', 0, 2), (375, 'Database system', 0, 3), (375, 'Game engine', 0, 4),
+(376, 'Infects systems', 1, 1), (376, 'Renders UI', 0, 2), (376, 'Stores data', 0, 3), (376, 'Formats code', 0, 4),
+(377, 'Packet capture', 1, 1), (377, 'UI rendering', 0, 2), (377, 'Data storage', 0, 3), (377, 'Code styling', 0, 4),
+(378, 'Sniffing tool', 1, 1), (378, 'UI library', 0, 2), (378, 'Database tool', 0, 3), (378, 'Game engine', 0, 4),
+(379, 'Human manipulation', 1, 1), (379, 'UI design', 0, 2), (379, 'Data storage', 0, 3), (379, 'Code testing', 0, 4),
+(380, 'Email scam', 1, 1), (380, 'UI component', 0, 2), (380, 'Data model', 0, 3), (380, 'API endpoint', 0, 4),
+(381, 'System overload', 1, 1), (381, 'UI rendering', 0, 2), (381, 'Data storage', 0, 3), (381, 'Code styling', 0, 4),
+(382, 'Multi-source attack', 1, 1), (382, 'UI attack', 0, 2), (382, 'Data leak', 0, 3), (382, 'Network flood', 0, 4),
+(383, 'Session theft', 1, 1), (383, 'UI design', 0, 2), (383, 'Data storage', 0, 3), (383, 'Code testing', 0, 4),
+(384, 'Auth token', 1, 1), (384, 'UI component', 0, 2), (384, 'Data model', 0, 3), (384, 'API key', 0, 4),
+(385, 'Script injection', 1, 1), (385, 'UI rendering', 0, 2), (385, 'Data storage', 0, 3), (385, 'Code styling', 0, 4),
+(386, 'Request forgery', 1, 1), (386, 'UI attack', 0, 2), (386, 'Data leak', 0, 3), (386, 'Network protocol', 0, 4),
+-- Deep Learning with TensorFlow (CourseID 12, Questions for QuizIDs 109-118)
+(387, 'Complex neural nets', 1, 1), (387, 'UI framework', 0, 2), (387, 'Database system', 0, 3), (387, 'Game engine', 0, 4),
+(388, 'Processing nodes', 1, 1), (388, 'UI component', 0, 2), (388, 'Data model', 0, 3), (388, 'API endpoint', 0, 4),
+(389, 'ML framework', 1, 1), (389, 'UI library', 0, 2), (389, 'Database tool', 0, 3), (389, 'Game engine', 0, 4),
+(390, 'High-level API', 1, 1), (390, 'UI framework', 0, 2), (390, 'Data storage', 0, 3), (390, 'Code styling', 0, 4),
+(391, 'Data processing', 1, 1), (391, 'UI rendering', 0, 2), (391, 'Data storage', 0, 3), (391, 'Code testing', 0, 4),
+(392, 'Output calculation', 1, 1), (392, 'UI component', 0, 2), (392, 'Data model', 0, 3), (392, 'API request', 0, 4),
+(393, 'Image networks', 1, 1), (393, 'Text networks', 0, 2), (393, 'UI framework', 0, 3), (393, 'Database system', 0, 4),
+(394, 'Feature detection', 1, 1), (394, 'UI rendering', 0, 2), (394, 'Data storage', 0, 3), (394, 'Code styling', 0, 4),
+(395, 'Sequential data', 1, 1), (395, 'Image data', 0, 2), (395, 'UI component', 0, 3), (395, 'Data model', 0, 4),
+(396, 'Memory retention', 1, 1), (396, 'UI rendering', 0, 2), (396, 'Data storage', 0, 3), (396, 'Code testing', 0, 4),
+(397, 'Pre-trained models', 1, 1), (397, 'UI framework', 0, 2), (397, 'Database tool', 0, 3), (397, 'Game engine', 0, 4),
+(398, 'Model weights', 1, 1), (398, 'UI template', 0, 2), (398, 'Data table', 0, 3), (398, 'API endpoint', 0, 4),
+(399, 'Adversarial nets', 1, 1), (399, 'UI component', 0, 2), (399, 'Data model', 0, 3), (399, 'API request', 0, 4),
+(400, 'Data creation', 1, 1), (400, 'UI rendering', 0, 2), (400, 'Data storage', 0, 3), (400, 'Code styling', 0, 4),
+(401, 'Text analysis', 1, 1), (401, 'Image processing', 0, 2), (401, 'UI framework', 0, 3), (401, 'Database system', 0, 4);
+-- Continuing from the provided database script for LightHouseCourse
+-- Adding Answers for remaining Questions (continuing from QuestionID 402)
+
+INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex)
+VALUES
+(402, 'Data storage', 0, 2), (402, 'Code testing', 0, 3), (402, 'Network request', 0, 4),
+(403, 'Image processing', 1, 1), (403, 'Text analysis', 0, 2), (403, 'UI framework', 0, 3), (403, 'Database system', 0, 4),
+(404, 'Classifies images', 1, 1), (404, 'Formats code', 0, 2), (404, 'Renders UI', 0, 3), (404, 'Stores data', 0, 4),
+(405, 'Serving models', 1, 1), (405, 'UI rendering', 0, 2), (405, 'Data storage', 0, 3), (405, 'Code styling', 0, 4),
+(406, 'Model serving', 1, 1), (406, 'UI library', 0, 2), (406, 'Database tool', 0, 3), (406, 'Game engine', 0, 4),
+-- Blockchain Development (CourseID 13, Questions for QuizIDs 119-128)
+(407, 'Distributed ledger', 1, 1), (407, 'Centralized database', 0, 2), (407, 'UI framework', 0, 3), (407, 'Game engine', 0, 4),
+(408, 'Transaction record', 1, 1), (408, 'UI component', 0, 2), (408, 'Data model', 0, 3), (408, 'API endpoint', 0, 4),
+(409, 'Data encryption', 1, 1), (409, 'UI rendering', 0, 2), (409, 'Data storage', 0, 3), (409, 'Code styling', 0, 4),
+(410, 'Data fingerprint', 1, 1), (410, 'UI element', 0, 2), (410, 'Data table', 0, 3), (410, 'API request', 0, 4),
+(411, 'Cryptocurrency', 1, 1), (411, 'UI framework', 0, 2), (411, 'Database system', 0, 3), (411, 'Game engine', 0, 4),
+(412, 'Stores funds', 1, 1), (412, 'Renders UI', 0, 2), (412, 'Formats code', 0, 3), (412, 'Handles requests', 0, 4),
+(413, 'Blockchain platform', 1, 1), (413, 'UI library', 0, 2), (413, 'Database tool', 0, 3), (413, 'Game engine', 0, 4),
+(414, 'Self-executing code', 1, 1), (414, 'UI component', 0, 2), (414, 'Data model', 0, 3), (414, 'API endpoint', 0, 4),
+(415, 'Smart contract lang', 1, 1), (415, 'UI framework', 0, 2), (415, 'Database system', 0, 3), (415, 'Game engine', 0, 4),
+(416, 'Contract method', 1, 1), (416, 'UI element', 0, 2), (416, 'Data field', 0, 3), (416, 'Network call', 0, 4),
+(417, 'Decentralized app', 1, 1), (417, 'UI framework', 0, 2), (417, 'Database tool', 0, 3), (417, 'Game engine', 0, 4),
+(418, 'Blockchain API', 1, 1), (418, 'UI library', 0, 2), (418, 'Data storage', 0, 3), (418, 'Code styling', 0, 4),
+(419, 'Frontend connection', 1, 1), (419, 'UI rendering', 0, 2), (419, 'Data storage', 0, 3), (419, 'Code testing', 0, 4),
+(420, 'Wallet browser', 1, 1), (420, 'UI component', 0, 2), (420, 'Data model', 0, 3), (420, 'API endpoint', 0, 4),
+(421, 'Verifies contracts', 1, 1), (421, 'UI rendering', 0, 2), (421, 'Data storage', 0, 3), (421, 'Code styling', 0, 4),
+(422, 'Testing framework', 1, 1), (422, 'UI library', 0, 2), (422, 'Database tool', 0, 3), (422, 'Game engine', 0, 4),
+(423, 'Protects blockchain', 1, 1), (423, 'UI design', 0, 2), (423, 'Data storage', 0, 3), (423, 'Code testing', 0, 4),
+(424, 'Code vulnerability', 1, 1), (424, 'UI attack', 0, 2), (424, 'Data leak', 0, 3), (424, 'Network issue', 0, 4),
+(425, 'Complete app', 1, 1), (425, 'UI design', 0, 2), (425, 'Data model', 0, 3), (425, 'API endpoint', 0, 4),
+(426, 'Dev environment', 1, 1), (426, 'UI framework', 0, 2), (426, 'Database tool', 0, 3), (426, 'Game engine', 0, 4),
+-- Internet of Things Fundamentals (CourseID 14, Questions for QuizIDs 129-138)
+(427, 'Connected devices', 1, 1), (427, 'UI framework', 0, 2), (427, 'Database system', 0, 3), (427, 'Game engine', 0, 4),
+(428, 'Smart appliance', 1, 1), (428, 'UI component', 0, 2), (428, 'Data model', 0, 3), (428, 'API endpoint', 0, 4),
+(429, 'Detects data', 1, 1), (429, 'Renders UI', 0, 2), (429, 'Stores data', 0, 3), (429, 'Formats code', 0, 4),
+(430, 'Performs actions', 1, 1), (430, 'UI element', 0, 2), (430, 'Data field', 0, 3), (430, 'Network call', 0, 4),
+(431, 'Microcontroller', 1, 1), (431, 'UI framework', 0, 2), (431, 'Database tool', 0, 3), (431, 'Game engine', 0, 4),
+(432, 'Arduino code', 1, 1), (432, 'UI template', 0, 2), (432, 'Data table', 0, 3), (432, 'API request', 0, 4),
+(433, 'Mini computer', 1, 1), (433, 'UI library', 0, 2), (433, 'Database system', 0, 3), (433, 'Game engine', 0, 4),
+(434, 'I/O pin', 1, 1), (434, 'UI component', 0, 2), (434, 'Data model', 0, 3), (434, 'API endpoint', 0, 4),
+(435, 'IoT protocol', 1, 1), (435, 'UI framework', 0, 2), (435, 'Database tool', 0, 3), (435, 'Game engine', 0, 4),
+(436, 'Data exchange', 1, 1), (436, 'UI rendering', 0, 2), (436, 'Data storage', 0, 3), (436, 'Code styling', 0, 4),
+(437, 'Cloud service', 1, 1), (437, 'UI library', 0, 2), (437, 'Database tool', 0, 3), (437, 'Game engine', 0, 4),
+(438, 'IoT platform', 1, 1), (438, 'UI component', 0, 2), (438, 'Data model', 0, 3), (438, 'API request', 0, 4),
+(439, 'Protects devices', 1, 1), (439, 'UI design', 0, 2), (439, 'Data storage', 0, 3), (439, 'Code testing', 0, 4),
+(440, 'Malware network', 1, 1), (440, 'UI attack', 0, 2), (440, 'Data leak', 0, 3), (440, 'Network flood', 0, 4),
+(441, 'Data processing', 1, 1), (441, 'UI rendering', 0, 2), (441, 'Data storage', 0, 3), (441, 'Code styling', 0, 4),
+(442, 'Local processing', 1, 1), (442, 'UI component', 0, 2), (442, 'Data model', 0, 3), (442, 'API endpoint', 0, 4),
+(443, 'Complete solution', 1, 1), (443, 'UI design', 0, 2), (443, 'Data storage', 0, 3), (443, 'Code testing', 0, 4),
+(444, 'Network bridge', 1, 1), (444, 'UI element', 0, 2), (444, 'Data table', 0, 3), (444, 'API request', 0, 4),
+(445, 'Smart systems', 1, 1), (445, 'UI framework', 0, 2), (445, 'Database tool', 0, 3), (445, 'Game engine', 0, 4),
+(446, 'Connected home', 1, 1), (446, 'UI component', 0, 2), (446, 'Data model', 0, 3), (446, 'API endpoint', 0, 4),
+-- Vue.js for Frontend Development (CourseID 15, Questions for QuizIDs 139-148)
+(447, 'JS framework', 1, 1), (447, 'UI library', 0, 2), (447, 'Database tool', 0, 3), (447, 'Game engine', 0, 4),
+(448, 'App instance', 1, 1), (448, 'UI component', 0, 2), (448, 'Data model', 0, 3), (448, 'API endpoint', 0, 4),
+(449, 'Reusable UI', 1, 1), (449, 'Data table', 0, 2), (449, 'Network call', 0, 3), (449, 'Code script', 0, 4),
+(450, 'Data passing', 1, 1), (450, 'UI rendering', 0, 2), (450, 'Data storage', 0, 3), (450, 'Code styling', 0, 4),
+(451, 'Custom attribute', 1, 1), (451, 'UI framework', 0, 2), (451, 'Database tool', 0, 3), (451, 'Game engine', 0, 4),
+(452, 'Data binding', 1, 1), (452, 'UI component', 0, 2), (452, 'Data model', 0, 3), (452, 'API request', 0, 4),
+(453, 'Data updates', 1, 1), (453, 'UI rendering', 0, 2), (453, 'Data storage', 0, 3), (453, 'Code testing', 0, 4),
+(454, 'Dynamic data', 1, 1), (454, 'Static content', 0, 2), (454, 'UI element', 0, 3), (454, 'Network call', 0, 4),
+(455, 'Navigation tool', 1, 1), (455, 'UI library', 0, 2), (455, 'Database tool', 0, 3), (455, 'Game engine', 0, 4),
+(456, 'URL mapping', 1, 1), (456, 'UI component', 0, 2), (456, 'Data model', 0, 3), (456, 'API endpoint', 0, 4),
+(457, 'State management', 1, 1), (457, 'UI framework', 0, 2), (457, 'Database system', 0, 3), (457, 'Game engine', 0, 4),
+(458, 'Central state', 1, 1), (458, 'UI element', 0, 2), (458, 'Data table', 0, 3), (458, 'API request', 0, 4),
+(459, 'User input', 1, 1), (459, 'UI rendering', 0, 2), (459, 'Data storage', 0, 3), (459, 'Code styling', 0, 4),
+(460, 'Two-way binding', 1, 1), (460, 'UI component', 0, 2), (460, 'Data model', 0, 3), (460, 'API endpoint', 0, 4),
+(461, 'Code guidelines', 1, 1), (461, 'UI design', 0, 2), (461, 'Data storage', 0, 3), (461, 'Code testing', 0, 4),
+(462, 'Modular code', 1, 1), (462, 'UI rendering', 0, 2), (462, 'Data model', 0, 3), (462, 'API request', 0, 4),
+(463, 'Unit testing', 1, 1), (463, 'UI framework', 0, 2), (463, 'Database tool', 0, 3), (463, 'Game engine', 0, 4),
+(464, 'Testing library', 1, 1), (464, 'UI component', 0, 2), (464, 'Data model', 0, 3), (464, 'API endpoint', 0, 4),
+(465, 'Complete app', 1, 1), (465, 'UI design', 0, 2), (465, 'Data storage', 0, 3), (465, 'Code testing', 0, 4),
+(466, 'Build tool', 1, 1), (466, 'UI library', 0, 2), (466, 'Database tool', 0, 3), (466, 'Game engine', 0, 4),
+-- Django Web Framework (CourseID 16, Questions for QuizIDs 149-158)
+(467, 'Web framework', 1, 1), (467, 'UI library', 0, 2), (467, 'Database system', 0, 3), (467, 'Game engine', 0, 4),
+(468, 'App structure', 1, 1), (468, 'UI component', 0, 2), (468, 'Data model', 0, 3), (468, 'API endpoint', 0, 4),
+(469, 'Data definition', 1, 1), (469, 'UI rendering', 0, 2), (469, 'Data storage', 0, 3), (469, 'Code styling', 0, 4),
+(470, 'Data attribute', 1, 1), (470, 'UI element', 0, 2), (470, 'Network call', 0, 3), (470, 'Code script', 0, 4),
+(471, 'Handles requests', 1, 1), (471, 'Renders UI', 0, 2), (471, 'Stores data', 0, 3), (471, 'Formats code', 0, 4),
+(472, 'HTML renderer', 1, 1), (472, 'UI component', 0, 2), (472, 'Data model', 0, 3), (472, 'API request', 0, 4),
+(473, 'User input', 1, 1), (473, 'UI framework', 0, 2), (473, 'Database tool', 0, 3), (473, 'Game engine', 0, 4),
+(474, 'Form model', 1, 1), (474, 'UI element', 0, 2), (474, 'Data table', 0, 3), (474, 'API endpoint', 0, 4),
+(475, 'Management UI', 1, 1), (475, 'UI library', 0, 2), (475, 'Database system', 0, 3), (475, 'Game engine', 0, 4),
+(476, 'Admin account', 1, 1), (476, 'UI component', 0, 2), (476, 'Data model', 0, 3), (476, 'API request', 0, 4),
+(477, 'User verification', 1, 1), (477, 'UI rendering', 0, 2), (477, 'Data storage', 0, 3), (477, 'Code styling', 0, 4),
+(478, 'Auth data', 1, 1), (478, 'UI element', 0, 2), (478, 'Data table', 0, 3), (478, 'API endpoint', 0, 4),
+(479, 'API framework', 1, 1), (479, 'UI library', 0, 2), (479, 'Database tool', 0, 3), (479, 'Game engine', 0, 4),
+(480, 'Data converter', 1, 1), (480, 'UI component', 0, 2), (480, 'Data model', 0, 3), (480, 'API request', 0, 4),
+(481, 'Code verification', 1, 1), (481, 'UI rendering', 0, 2), (481, 'Data storage', 0, 3), (481, 'Code styling', 0, 4),
+(482, 'Testing class', 1, 1), (482, 'UI framework', 0, 2), (482, 'Database tool', 0, 3), (482, 'Game engine', 0, 4),
+(483, 'Publishes app', 1, 1), (483, 'UI design', 0, 2), (483, 'Data storage', 0, 3), (483, 'Code testing', 0, 4),
+(484, 'Server interface', 1, 1), (484, 'UI component', 0, 2), (484, 'Data model', 0, 3), (484, 'API endpoint', 0, 4),
+(485, 'App component', 1, 1), (485, 'UI framework', 0, 2), (485, 'Database system', 0, 3), (485, 'Game engine', 0, 4),
+(486, 'Django CLI', 1, 1), (486, 'UI library', 0, 2), (486, 'Data table', 0, 3), (486, 'API request', 0, 4);

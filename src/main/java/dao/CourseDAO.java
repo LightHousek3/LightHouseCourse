@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import db.DBContext;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,7 @@ import model.Category;
 import model.Course;
 import model.Instructor;
 import model.Lesson;
-import model.User;
+import db.DBContext;
 
 /**
  * Data Access Object for Course entity.
@@ -25,12 +24,12 @@ import model.User;
  */
 public class CourseDAO extends DBContext {
 
-    private UserDAO userDAO;
+    private SuperUserDAO superUserDAO;
     private RatingDAO ratingDAO;
     private LessonDAO lessonDAO;
 
     public CourseDAO() {
-        this.userDAO = new UserDAO();
+        this.superUserDAO = new SuperUserDAO();
         this.ratingDAO = new RatingDAO();
         this.lessonDAO = new LessonDAO();
     }
@@ -131,9 +130,9 @@ public class CourseDAO extends DBContext {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<Instructor> instructors = new ArrayList<>();
-        String sql = "SELECT i.*, u.FullName, u.Email FROM Instructors i "
+        String sql = "SELECT i.*, su.FullName, su.Email FROM Instructors i "
                 + "JOIN CourseInstructors ci ON i.InstructorID = ci.InstructorID "
-                + "JOIN Users u ON i.UserID = u.UserID "
+                + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
                 + "WHERE ci.CourseID = ?";
 
         try {
@@ -145,7 +144,7 @@ public class CourseDAO extends DBContext {
             while (rs.next()) {
                 Instructor instructor = new Instructor();
                 instructor.setInstructorID(rs.getInt("InstructorID"));
-                instructor.setUserID(rs.getInt("UserID"));
+                instructor.setSuperUserID(rs.getInt("SuperUserID"));
                 instructor.setBiography(rs.getString("Biography"));
                 instructor.setSpecialization(rs.getString("Specialization"));
 
@@ -154,9 +153,8 @@ public class CourseDAO extends DBContext {
                     instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
                 }
 
-                // Set User from user data
-                String fullName = rs.getString("FullName");
-                instructor.setName(fullName);
+                // Set name and email directly from SuperUser data
+                instructor.setName(rs.getString("FullName"));
                 instructor.setEmail(rs.getString("Email"));
 
                 instructors.add(instructor);
@@ -202,9 +200,9 @@ public class CourseDAO extends DBContext {
     /**
      * Get all courses with pagination.
      *
-     * @param offset The offset (for pagination)
-     * @param limit The limit (for pagination)
-     * @param sortBy The field to sort by (optional)
+     * @param offset    The offset (for pagination)
+     * @param limit     The limit (for pagination)
+     * @param sortBy    The field to sort by (optional)
      * @param sortOrder The sort order (ASC or DESC, optional)
      * @return List of courses
      */
@@ -300,14 +298,14 @@ public class CourseDAO extends DBContext {
     /**
      * Delete course instructors
      *
-     * @param conn The database connection
+     * @param conn     The database connection
      * @param courseId The course ID
      * @throws SQLException If a database error occurs
      */
     private void deleteCourseInstructors(Connection conn, int courseId) throws SQLException {
         String sql = "DELETE FROM CourseInstructors WHERE CourseID = ?";
 
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
             ps.executeUpdate();
         }
@@ -316,8 +314,8 @@ public class CourseDAO extends DBContext {
     /**
      * Insert course instructors
      *
-     * @param conn The database connection
-     * @param courseId The course ID
+     * @param conn        The database connection
+     * @param courseId    The course ID
      * @param instructors The list of instructors to insert
      * @throws SQLException If a database error occurs
      */
@@ -325,7 +323,7 @@ public class CourseDAO extends DBContext {
             throws SQLException {
         String sql = "INSERT INTO CourseInstructors (CourseID, InstructorID) VALUES (?, ?)";
 
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (Instructor instructor : instructors) {
                 ps.setInt(1, courseId);
                 ps.setInt(2, instructor.getInstructorID());
@@ -338,7 +336,7 @@ public class CourseDAO extends DBContext {
     private void insertCourseCategories(Connection conn, int courseId, List<Category> categories) throws SQLException {
         String sql = "INSERT INTO CourseCategory (CourseID, CategoryID) VALUES (?, ?)";
 
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (Category category : categories) {
                 ps.setInt(1, courseId);
                 ps.setInt(2, category.getCategoryID());
@@ -351,14 +349,14 @@ public class CourseDAO extends DBContext {
     /**
      * Delete course categories
      *
-     * @param conn The database connection
+     * @param conn     The database connection
      * @param courseId The course ID
      * @throws SQLException If a database error occurs
      */
     private void deleteCourseCategories(Connection conn, int courseId) throws SQLException {
         String sql = "DELETE FROM CourseCategory WHERE CourseID = ?";
 
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
             ps.executeUpdate();
         }
@@ -415,17 +413,9 @@ public class CourseDAO extends DBContext {
                 }
 
                 // Delete old instructors and insert new ones
-                if (course.getInstructors() != null) {
+                if (course.getInstructors() != null && !course.getInstructors().isEmpty()) {
                     deleteCourseInstructors(conn, course.getCourseID());
                     insertCourseInstructors(conn, course.getCourseID(), course.getInstructors());
-                } else if (course.getInstructorId() > 0) {
-                    // Handle case where we have only instructorId but no instructors list
-                    deleteCourseInstructors(conn, course.getCourseID());
-                    Instructor instructor = new Instructor();
-                    instructor.setInstructorID(course.getInstructorId());
-                    List<Instructor> instructors = new ArrayList<>();
-                    instructors.add(instructor);
-                    insertCourseInstructors(conn, course.getCourseID(), instructors);
                 }
 
                 // Update lessons
@@ -465,10 +455,12 @@ public class CourseDAO extends DBContext {
         String checkSql = "SELECT ApprovalStatus FROM Courses WHERE CourseID = ?";
         String updateSql = "UPDATE Courses SET ApprovalStatus = 'banned' WHERE CourseID = ?";
 
-        try ( Connection conn = getConnection();  PreparedStatement checkStmt = conn.prepareStatement(checkSql);  PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+                PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
 
             checkStmt.setInt(1, courseID);
-            try ( ResultSet rs = checkStmt.executeQuery()) {
+            try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next() && "approved".equalsIgnoreCase(rs.getString("ApprovalStatus"))) {
                     updateStmt.setInt(1, courseID);
                     return updateStmt.executeUpdate() == 1;
@@ -484,10 +476,12 @@ public class CourseDAO extends DBContext {
         String checkSql = "SELECT ApprovalStatus FROM Courses WHERE CourseID = ?";
         String updateSql = "UPDATE Courses SET ApprovalStatus = 'approved' WHERE CourseID = ?";
 
-        try ( Connection conn = getConnection();  PreparedStatement checkStmt = conn.prepareStatement(checkSql);  PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+                PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
 
             checkStmt.setInt(1, courseID);
-            try ( ResultSet rs = checkStmt.executeQuery()) {
+            try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next() && "banned".equalsIgnoreCase(rs.getString("ApprovalStatus"))) {
                     updateStmt.setInt(1, courseID);
                     return updateStmt.executeUpdate() == 1;
@@ -535,7 +529,7 @@ public class CourseDAO extends DBContext {
                 courses.add(course);
             }
 
-            // Lấy dữ liệu phụ thêm nếu có
+            // Additional data
             for (Course course : courses) {
                 try {
                     List<Category> categories = getCourseCategories(course.getCourseID());
@@ -608,8 +602,8 @@ public class CourseDAO extends DBContext {
                 + "        FROM Courses c\n"
                 + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
                 + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
-                + "        LEFT JOIN Users u ON i.UserID = u.UserID\n"
-                + "        WHERE c.Name LIKE ? OR u.FullName LIKE ?\n"
+                + "        LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID\n"
+                + "        WHERE c.Name LIKE ? OR su.FullName LIKE ?\n"
                 + "        ORDER BY c.CourseID\n"
                 + "        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
@@ -666,16 +660,16 @@ public class CourseDAO extends DBContext {
                 + "        FROM Courses c\n"
                 + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
                 + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
-                + "        LEFT JOIN Users u ON i.UserID = u.UserID\n"
-                + "        WHERE c.Name LIKE ? OR u.FullName LIKE ?";
+                + "        LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID\n"
+                + "        WHERE c.Name LIKE ? OR su.FullName LIKE ?";
 
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             String likeKeyword = "%" + keyword + "%";
             ps.setString(1, likeKeyword);
             ps.setString(2, likeKeyword);
 
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
@@ -700,17 +694,16 @@ public class CourseDAO extends DBContext {
                 + "        FROM Courses c\n"
                 + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
                 + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
-                + "        LEFT JOIN Users u ON i.UserID = u.UserID\n"
+                + "        LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID\n"
                 + "        LEFT JOIN CourseCategory cc ON c.CourseID = cc.CourseID\n"
-                + "        WHERE 1 = 1"
-        );
+                + "        WHERE 1 = 1");
 
         List<Object> params = new ArrayList<>();
         String likeKeyword = "%" + (keyword == null ? "" : keyword.trim()) + "%";
 
         // Search keyword
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (c.Name LIKE ? OR u.FullName LIKE ?) ");
+            sql.append(" AND (c.Name LIKE ? OR su.FullName LIKE ?) ");
             params.add(likeKeyword);
             params.add(likeKeyword);
         }
@@ -802,16 +795,15 @@ public class CourseDAO extends DBContext {
                 + "        FROM Courses c\n"
                 + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
                 + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
-                + "        LEFT JOIN Users u ON i.UserID = u.UserID\n"
+                + "        LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID\n"
                 + "        LEFT JOIN CourseCategory cc ON c.CourseID = cc.CourseID\n"
-                + "        WHERE 1=1"
-        );
+                + "        WHERE 1=1");
 
         List<Object> params = new ArrayList<>();
         String likeKeyword = "%" + (keyword == null ? "" : keyword.trim()) + "%";
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (c.Name LIKE ? OR u.FullName LIKE ?) ");
+            sql.append(" AND (c.Name LIKE ? OR su.FullName LIKE ?) ");
             params.add(likeKeyword);
             params.add(likeKeyword);
         }
@@ -826,13 +818,13 @@ public class CourseDAO extends DBContext {
             params.add(approvalStatus);
         }
 
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
 
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
@@ -890,12 +882,12 @@ public class CourseDAO extends DBContext {
 
     public boolean isCourseStatus(int courseId, String status) {
         String sql = "SELECT 1 FROM Courses WHERE CourseID = ? AND ApprovalStatus = ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, courseId);
             stmt.setString(2, status);
 
-            try ( ResultSet rs = stmt.executeQuery()) {
+            try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next(); // true nếu tồn tại 1 record phù hợp
             }
 
@@ -903,6 +895,252 @@ public class CourseDAO extends DBContext {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * Gets count of courses for a specific instructor
+     * 
+     * @param instructorId The instructor ID
+     * @return The number of courses created by the instructor
+     */
+    public int getCoursesCountByInstructorId(int instructorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT COUNT(*) AS total FROM CourseInstructors WHERE InstructorID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting courses by instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return count;
+    }
+
+    /**
+     * Gets count of students enrolled in an instructor's courses
+     * 
+     * @param instructorId The instructor ID
+     * @return The number of students enrolled in the instructor's courses
+     */
+    public int getStudentsCountByInstructorId(int instructorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT COUNT(DISTINCT cp.CustomerID) AS total "
+                    + "FROM CourseProgress cp "
+                    + "JOIN CourseInstructors ci ON cp.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting students by instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return count;
+    }
+
+    /**
+     * Gets total revenue from an instructor's courses
+     * 
+     * @param instructorId The instructor ID
+     * @return The total revenue from the instructor's courses
+     */
+    public double getRevenueByInstructorId(int instructorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        double revenue = 0.0;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT SUM(od.Price) AS total "
+                    + "FROM OrderDetails od "
+                    + "JOIN Orders o ON od.OrderID = o.OrderID "
+                    + "JOIN CourseInstructors ci ON od.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ? AND o.Status = 'completed'";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                revenue = rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error calculating revenue by instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return revenue;
+    }
+
+    /**
+     * Gets recent courses for an instructor
+     * 
+     * @param instructorId The instructor ID
+     * @param limit        The maximum number of courses to return
+     * @return List of recent courses
+     */
+    public List<Course> getRecentCoursesByInstructorId(int instructorId, int limit) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Course> courses = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.* FROM Courses c "
+                    + "JOIN CourseInstructors ci ON c.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ? "
+                    + "ORDER BY c.SubmissionDate DESC";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+
+            // Set the limit for the results
+            if (limit > 0) {
+                ps.setMaxRows(limit);
+            }
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Course course = mapCourse(rs);
+
+                // Add enrollment count
+                int enrollmentCount = countEnrollmentsForCourse(course.getCourseID());
+                course.setEnrollmentCount(enrollmentCount);
+
+                courses.add(course);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting recent courses by instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return courses;
+    }
+
+    /**
+     * Gets all courses from a specific instructor
+     * 
+     * @param instructorId The instructor ID
+     * @return List of courses
+     */
+    public List<Course> getCoursesByInstructorId(int instructorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Course> courses = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.* FROM Courses c "
+                    + "JOIN CourseInstructors ci ON c.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Course course = mapCourse(rs);
+                courses.add(course);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error finding courses by instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return courses;
+    }
+
+    /**
+     * Counts the number of enrollments for a course
+     * 
+     * @param courseId The course ID
+     * @return The enrollment count
+     */
+    private int countEnrollmentsForCourse(int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT COUNT(*) AS total FROM CourseProgress WHERE CourseID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, courseId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting enrollments: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return count;
+    }
+
+    /**
+     * Gets all courses from a specific instructor using their SuperUserID
+     * 
+     * @param superUserId The super user ID of the instructor
+     * @return List of courses
+     */
+    public List<Course> getCoursesBySuperUserId(int superUserId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Course> courses = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.* FROM Courses c "
+                    + "JOIN CourseInstructors ci ON c.CourseID = ci.CourseID "
+                    + "JOIN Instructors i ON ci.InstructorID = i.InstructorID "
+                    + "WHERE i.SuperUserID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, superUserId);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Course course = mapCourse(rs);
+                courses.add(course);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error finding courses by super user ID: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return courses;
     }
 
 }

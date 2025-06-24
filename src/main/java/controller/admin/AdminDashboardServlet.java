@@ -12,12 +12,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import dao.CourseDAO;
-import dao.OrderDAO;
-import dao.UserDAO;
+import dao.CustomerDAO;
 import dao.RefundRequestDAO;
+import dao.SuperUserDAO;
+import jakarta.servlet.http.HttpSession;
 import model.Course;
-import model.Order;
 import model.RefundRequest;
+import model.SuperUser;
 
 /**
  * Admin dashboard controller.
@@ -28,21 +29,21 @@ import model.RefundRequest;
 public class AdminDashboardServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
-    private OrderDAO orderDAO;
-    private UserDAO userDAO;
     private RefundRequestDAO refundRequestDAO;
+    private SuperUserDAO superUserDAO;
+    private CustomerDAO customerDAO;
 
     @Override
     public void init() throws ServletException {
         super.init();
         courseDAO = new CourseDAO();
-        orderDAO = new OrderDAO();
-        userDAO = new UserDAO();
         refundRequestDAO = new RefundRequestDAO();
+        superUserDAO = new SuperUserDAO();
+        customerDAO = new CustomerDAO();
     }
 
     /**
-     * Handles the HTTP GET request - displaying the admin dashboard.
+     * Handles the HTTP <code>GET</code> method.
      *
      * @param request servlet request
      * @param response servlet response
@@ -52,30 +53,49 @@ public class AdminDashboardServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Check if admin is logged in
+        HttpSession session = request.getSession();
+        // Test account si exist
+        SuperUser superUser = superUserDAO.getSuperUserById(1);
+        session.setAttribute("user", superUser);
+        // End test
+        
+        SuperUser admin = (SuperUser) session.getAttribute("user");
+        
+        // Get dashboard data
+        int totalCourses = courseDAO.countAllCourses(null);
+        int totalCustomers = customerDAO.countCustomers();
+        int totalInstructors = superUserDAO.countSuperUserWithRole("instructor");
 
-        System.out.println("login success");
-        // Total courses
-        int totalCourses = courseDAO.countAllCourses();
+        // Get recent refund requests
+        List<RefundRequest> recentRefundRequests = refundRequestDAO.getAllRefundRequestsWithLimit(5);
+
+        // Get recent course
+        List<Course> recentCourses = courseDAO.getAllCoursesWithLimit(0, 5, null);
+
+        // Set attributes for the JSP
+        request.setAttribute("admin", admin);
         request.setAttribute("totalCourses", totalCourses);
-
-        // Total customers
-        int totalCustomers = userDAO.countUserWithRole("customer");
         request.setAttribute("totalCustomers", totalCustomers);
-
-        // Total instructor
-        int totalInstructors = userDAO.countUserWithRole("instructor");
         request.setAttribute("totalInstructors", totalInstructors);
-
-        // Recent courses (last 5)
-        List<Course> recentCourses = courseDAO.getAllCoursesWithLimit(0, 5, null, "DESC");
+        request.setAttribute("recentRefundRequests", recentRefundRequests);
         request.setAttribute("recentCourses", recentCourses);
 
-        // Recent refund requests (last 5)
-        List<RefundRequest> recentRefundRequests = refundRequestDAO.getAllRefundRequestsWithLimit(5);
-        request.setAttribute("recentRefundRequests", recentRefundRequests);
-
-        // Forward to dashboard page
         request.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(request, response);
+    }
+
+    /**
+     * Handles the HTTP <code>POST</code> method.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -85,7 +105,7 @@ public class AdminDashboardServlet extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Admin Dashboard Servlet - Displays the admin dashboard";
+        return "Admin Dashboard Servlet";
     }
 
 }

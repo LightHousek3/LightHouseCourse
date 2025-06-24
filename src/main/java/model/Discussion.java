@@ -17,14 +17,15 @@ public class Discussion {
     private int discussionID;
     private int courseID;
     private int lessonID;
-    private int userID;
+    private int authorID;
+    private String authorType;
     private String content;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private boolean isResolved;
 
     // Add additional fields to display
-    private String userName;
+    private String authorName;
     private String courseName;
     private String lessonTitle;
     private int replyCount;
@@ -34,10 +35,21 @@ public class Discussion {
     public Discussion() {
     }
 
+    public Discussion(int courseID, int lessonID, int authorID, String authorType, String content) {
+        this.courseID = courseID;
+        this.lessonID = lessonID;
+        this.authorID = authorID;
+        this.authorType = authorType;
+        this.content = content;
+        this.isResolved = false;
+    }
+
+    // Legacy constructor for backward compatibility
     public Discussion(int courseID, int lessonID, int userID, String content) {
         this.courseID = courseID;
         this.lessonID = lessonID;
-        this.userID = userID;
+        this.authorID = userID;
+        this.authorType = "customer"; // Default to customer for backward compatibility
         this.content = content;
         this.isResolved = false;
     }
@@ -67,12 +79,32 @@ public class Discussion {
         this.lessonID = lessonID;
     }
 
+    public int getAuthorID() {
+        return authorID;
+    }
+
+    public void setAuthorID(int authorID) {
+        this.authorID = authorID;
+    }
+
+    public String getAuthorType() {
+        return authorType;
+    }
+
+    public void setAuthorType(String authorType) {
+        this.authorType = authorType;
+    }
+
+    // Legacy methods for backward compatibility
     public int getUserID() {
-        return userID;
+        return authorID;
     }
 
     public void setUserID(int userID) {
-        this.userID = userID;
+        this.authorID = userID;
+        if (this.authorType == null) {
+            this.authorType = "customer"; // Default to customer for backward compatibility
+        }
     }
 
     public String getContent() {
@@ -116,12 +148,21 @@ public class Discussion {
         this.isResolved = resolved;
     }
 
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
+    }
+
+    // Legacy methods for backward compatibility
     public String getUserName() {
-        return userName;
+        return authorName;
     }
 
     public void setUserName(String userName) {
-        this.userName = userName;
+        this.authorName = userName;
     }
 
     public String getCourseName() {
@@ -162,7 +203,8 @@ public class Discussion {
                 + "discussionID=" + discussionID
                 + ", courseID=" + courseID
                 + ", lessonID=" + lessonID
-                + ", userID=" + userID
+                + ", authorID=" + authorID
+                + ", authorType='" + authorType + '\''
                 + ", isResolved=" + isResolved
                 + ", createdAt=" + createdAt
                 + '}';

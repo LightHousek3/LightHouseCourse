@@ -6,7 +6,7 @@
 
     <head>
 
-        <title>Manage Course Reviews - LightHouseCourse</title>
+        <title>Manage Course Reviews - LightHouse Admin</title>
         <jsp:include page="../common/head.jsp" />
         <style>
             .rating {
@@ -73,14 +73,14 @@
                 justify-content: space-between;
                 align-items: center;
                 margin-top: auto;
-               /* Push to the bottom */
+                /* Push to the bottom */
                 padding-top: 15px;
                 font-size: 0.85rem;
                 color: #6c757d;
                 flex-shrink: 0;
-               /* Do not allow shrinking */
+                /* Do not allow shrinking */
                 border-top: 1px solid #e9ecef;
-               /* Add borders to separate */
+                /* Add borders to separate */
             }
 
             .rating-filter {
@@ -91,59 +91,6 @@
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             }
 
-            .search-container {
-                position: relative;
-                max-width: 300px;
-            }
-
-            .search-container i {
-                position: absolute;
-                left: 10px;
-                top: 10px;
-                color: #6c757d;
-            }
-
-            .search-input {
-                padding-left: 30px;
-                border-radius: 5px;
-                border: 1px solid #ced4da;
-                width: 100%;
-                padding: 0.375rem 0.75rem 0.375rem 30px;
-            }
-
-           /* Make sure Cols have equal heights - Automatic according to the highest box */
-            .row {
-                display: flex;
-                flex-wrap: wrap;
-            }
-
-            .row>[class*="col-"] {
-                display: flex;
-                align-items: stretch;
-                /* Stretch the cards to have equal height */
-            }
-
-            /* Fix cho responsive - vẫn giữ chiều cao auto trên mobile */
-            @media (max-width: 768px) {
-                .rating-meta {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 5px;
-                }
-            }
-
-            @media (max-width: 1200px) {
-                .rating-filter .row {
-                    flex-direction: column;
-                }
-
-                .rating-filter .row>[class*="col-"] {
-                    width: 100% !important;
-                    margin-bottom: 10px;
-                }
-            }
-
-            /* Style for hiding reviews */
             .review-item.hidden {
                 display: none !important;
             }
@@ -151,6 +98,8 @@
             /* Style for the no results message */
             #noResultsMessage {
                 display: none;
+                flex-direction: column;
+                align-items: center;
                 padding: 30px;
                 text-align: center;
                 width: 100%;
@@ -174,10 +123,11 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <h2 class="m-0 d-none d-lg-block">Manage Reviews</h2>
-                    <div class="search-container">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" class="search-input"
-                               placeholder="Search comments...">
+                    <div class="d-flex gap-2">
+                        <a href="${pageContext.request.contextPath}/admin/reviews"
+                           class="col-md-3 btn btn-lg btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-2"></i>Reset Filters
+                        </a>
                     </div>
                 </div>
 
@@ -201,44 +151,52 @@
 
                 <!-- Filter Section -->
                 <div class="rating-filter">
-                    <form action="${pageContext.request.contextPath}/admin/reviews" method="get"
-                          class="row g-3">
-                        <div class="col-md-3">
-                            <label for="courseFilter" class="form-label">Filter by Course</label>
-                            <select class="form-select" id="courseFilter" name="courseId">
-                                <option value="">All Courses</option>
-                                <c:forEach var="course" items="${courses}">
-                                    <option value="${course.courseID}" ${param.courseId eq
-                                                     course.courseID.toString() ? 'selected' : '' }>
-                                                ${course.name}
-                                            </option>
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <div class="me-3 mb-2">
+                                <label class="me-2">Search reviews</label>
+                            </div>
+                            <div class="search-container">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchInput" class="search-input"
+                                       placeholder="Search reviews...">
+                            </div>
+                        </div>
+                        <form action="${pageContext.request.contextPath}/admin/reviews" method="get"
+                              class="col-lg-9">
+                            <div class="row">
+                                <div class="col-lg-4 d-flex flex-column">
+                                    <label for="courseFilter" class="form-label">Filter by Course</label>
+                                    <select class="form-select" id="courseFilter" name="courseId">
+                                        <option value="">All Courses</option>
+                                        <c:forEach var="course" items="${courses}">
+                                            <option value="${course.courseID}" ${param.courseId eq
+                                                             course.courseID.toString() ? 'selected' : '' }>
+                                                        ${course.name}
+                                                    </option>
 
-                                    </c:forEach>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="ratingFilter" class="form-label">Filter by Rating</label>
-                                <select class="form-select" id="ratingFilter" name="rating">
-                                    <option value="">All Ratings</option>
-                                    <option value="5" ${param.rating eq '5' ? 'selected' : '' }>5 Stars</option>
-                                    <option value="4" ${param.rating eq '4' ? 'selected' : '' }>4 Stars</option>
-                                    <option value="3" ${param.rating eq '3' ? 'selected' : '' }>3 Stars</option>
-                                    <option value="2" ${param.rating eq '2' ? 'selected' : '' }>2 Stars</option>
-                                    <option value="1" ${param.rating eq '1' ? 'selected' : '' }>1 Star</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-filter me-2"></i>Apply Filter
-                                </button>
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <a href="${pageContext.request.contextPath}/admin/reviews"
-                                   class="btn btn-outline-secondary w-100">
-                                    <i class="fas fa-sync-alt me-2"></i>Reset Filters
-                                </a>
-                            </div>
-                        </form>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-4 d-flex flex-column">
+                                        <label for="ratingFilter" class="form-label">Filter by Stars</label>
+                                        <select class="form-select" id="ratingFilter" name="rating">
+                                            <option value="">All Stars</option>
+                                            <option value="5" ${param.rating eq '5' ? 'selected' : '' }>5 Stars</option>
+                                            <option value="4" ${param.rating eq '4' ? 'selected' : '' }>4 Stars</option>
+                                            <option value="3" ${param.rating eq '3' ? 'selected' : '' }>3 Stars</option>
+                                            <option value="2" ${param.rating eq '2' ? 'selected' : '' }>2 Stars</option>
+                                            <option value="1" ${param.rating eq '1' ? 'selected' : '' }>1 Star</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-4 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-md btn-primary">
+                                            Apply Filter
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
 
                     <!-- Ratings List -->
@@ -313,7 +271,7 @@
                                 <h3>No Matching Reviews</h3>
                                 <p class="text-muted">No reviews match your search criteria. Try different keywords.
                                 </p>
-                                <button id="clearSearchBtn" class="btn btn-outline-secondary mt-2">
+                                <button id="clearSearchBtn" class="btn btn-lg btn-outline-secondary mt-2">
                                     <i class="fas fa-times me-2"></i>Clear Search
                                 </button>
                             </div>
@@ -358,7 +316,7 @@
 
                         // Show/hide no results message
                         if (visibleCount === 0 && searchTerm !== '') {
-                            noResultsMessage.style.display = 'block';
+                            noResultsMessage.style.display = 'flex';
                         } else {
                             noResultsMessage.style.display = 'none';
                         }

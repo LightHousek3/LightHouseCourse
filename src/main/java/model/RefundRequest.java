@@ -15,18 +15,18 @@ public class RefundRequest {
 
     private int refundID;
     private int orderID;
-    private int userID;
+    private int customerID; // Changed from userID to customerID
     private Timestamp requestDate;
     private String status; // 'pending', 'approved', 'rejected'
     private double refundAmount;
     private String reason; // Required reason from user
     private Timestamp processedDate;
-    private int processedBy; // Admin who processed the request
+    private int superUserID; // Changed from processedBy to superUserID (Admin who processed the request)
     private String adminMessage; // Required message from admin when processing
     private int refundPercentage; // Default 80%
 
     // Additional information for display purposes
-    private String userName;
+    private String customerName; // Changed from userName to customerName
     private double originalAmount;
     private String adminName;
     private String courseName; // For display purposes, showing affected course(s)
@@ -41,13 +41,32 @@ public class RefundRequest {
      * Constructor with essential fields
      *
      * @param orderID      The order ID
-     * @param userID       The user ID
+     * @param customerID   The customer ID
      * @param reason       The reason for refund request (required)
      * @param refundAmount The amount to be refunded
      */
-    public RefundRequest(int orderID, int userID, String reason, double refundAmount) {
+    public RefundRequest(int orderID, int customerID, String reason, double refundAmount) {
         this.orderID = orderID;
-        this.userID = userID;
+        this.customerID = customerID;
+        this.reason = reason;
+        this.refundAmount = refundAmount;
+        this.requestDate = new Timestamp(System.currentTimeMillis());
+        this.status = "pending";
+        this.refundPercentage = 80; // Default 80%
+    }
+
+    /**
+     * Legacy constructor for backward compatibility
+     *
+     * @param orderID      The order ID
+     * @param userID       The user ID (now treated as customer ID)
+     * @param reason       The reason for refund request (required)
+     * @param refundAmount The amount to be refunded
+     * @param legacy       Flag to indicate legacy constructor
+     */
+    public RefundRequest(int orderID, int userID, String reason, double refundAmount, boolean legacy) {
+        this.orderID = orderID;
+        this.customerID = userID; // Use userID as customerID
         this.reason = reason;
         this.refundAmount = refundAmount;
         this.requestDate = new Timestamp(System.currentTimeMillis());
@@ -72,12 +91,21 @@ public class RefundRequest {
         this.orderID = orderID;
     }
 
+    public int getCustomerID() {
+        return customerID;
+    }
+
+    public void setCustomerID(int customerID) {
+        this.customerID = customerID;
+    }
+
+    // Legacy methods for backward compatibility
     public int getUserID() {
-        return userID;
+        return customerID;
     }
 
     public void setUserID(int userID) {
-        this.userID = userID;
+        this.customerID = userID;
     }
 
     public Timestamp getRequestDate() {
@@ -120,12 +148,21 @@ public class RefundRequest {
         this.processedDate = processedDate;
     }
 
+    public int getSuperUserID() {
+        return superUserID;
+    }
+
+    public void setSuperUserID(int superUserID) {
+        this.superUserID = superUserID;
+    }
+
+    // Legacy methods for backward compatibility
     public Integer getProcessedBy() {
-        return processedBy;
+        return superUserID;
     }
 
     public void setProcessedBy(Integer processedBy) {
-        this.processedBy = processedBy;
+        this.superUserID = processedBy;
     }
 
     public String getAdminMessage() {
@@ -144,12 +181,21 @@ public class RefundRequest {
         this.refundPercentage = refundPercentage;
     }
 
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    // Legacy methods for backward compatibility
     public String getUserName() {
-        return userName;
+        return customerName;
     }
 
     public void setUserName(String userName) {
-        this.userName = userName;
+        this.customerName = userName;
     }
 
     public double getOriginalAmount() {
@@ -174,10 +220,6 @@ public class RefundRequest {
 
     public void setCourseName(String courseName) {
         this.courseName = courseName;
-    }
-
-    public void setProcessedBy(int processedBy) {
-        this.processedBy = processedBy;
     }
 
     // Helper methods
@@ -210,11 +252,11 @@ public class RefundRequest {
 
     @Override
     public String toString() {
-        return "RefundRequest{" + "refundID=" + refundID + ", orderID=" + orderID + ", userID=" + userID
+        return "RefundRequest{" + "refundID=" + refundID + ", orderID=" + orderID + ", customerID=" + customerID
                 + ", requestDate=" + requestDate + ", status=" + status + ", refundAmount=" + refundAmount + ", reason="
-                + reason + ", processedDate=" + processedDate + ", processedBy=" + processedBy + ", adminMessage="
+                + reason + ", processedDate=" + processedDate + ", superUserID=" + superUserID + ", adminMessage="
                 + adminMessage + ", refundPercentage=" + refundPercentage
-                + ", userName=" + userName + ", originalAmount=" + originalAmount
+                + ", customerName=" + customerName + ", originalAmount=" + originalAmount
                 + ", adminName=" + adminName + ", courseName=" + courseName + '}';
     }
 }

@@ -114,8 +114,8 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <h2 class="m-0 d-none d-lg-block">Edit Category</h2>
-                <a href="${pageContext.request.contextPath}/admin/categories${not empty param.page ? '?page='.concat(param.page) : ''}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Categories
+                <a href="${pageContext.request.contextPath}/admin/categories${not empty param.page ? '?page='.concat(param.page) : ''}" class="btn btn-lg btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i> Back
                 </a>
             </div>
 
@@ -235,13 +235,13 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="d-flex justify-content-end gap-3">
-                                        <a href="${pageContext.request.contextPath}/admin/categories${not empty param.page ? '?page='.concat(param.page) : ''}" class="btn btn-secondary">
+                                        <a href="${pageContext.request.contextPath}/admin/categories${not empty param.page ? '?page='.concat(param.page) : ''}" class="btn btn-md btn-secondary">
                                             <i class="fas fa-times me-1"></i>
                                             Cancel
                                         </a>
-                                        <button type="submit" class="btn btn-primary">
+                                        <button type="submit" class="btn btn-md btn-primary">
                                             <i class="fas fa-save me-1"></i>
-                                            Update Category
+                                            Update
                                         </button>
                                     </div>
                                 </div>

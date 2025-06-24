@@ -9,7 +9,7 @@ public class Validator {
     // Regular expressions for validation
     private static final String EMAIL_REGEX = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
     private static final String USERNAME_REGEX = "^[A-Za-z0-9_]{3,20}$";
-    private static final String FULLNAME_REGEX = "^[A-Za-z0-9_]{3,50}$";
+    private static final String FULLNAME_REGEX = "^[A-Za-z_ ]{3,50}$";
     private static final String PASSWORD_REGEX = "^.{6,}$"; // At least 6 characters
     private static final String PHONE_REGEX = "^\\d{10,11}$"; // 10-11 digits
     

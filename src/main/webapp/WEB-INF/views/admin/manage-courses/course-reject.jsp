@@ -32,8 +32,8 @@
                 <h2 class="mb-0 d-none d-lg-block">Reject Course</h2>
                 <div class="d-flex align-items-center">
                     <a href="${pageContext.request.contextPath}/admin/course/view/${course.courseID}"
-                       class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-arrow-left me-2"></i> Back to Course
+                       class="btn btn-lg btn-primary me-2">
+                        <i class="fas fa-arrow-left me-2"></i> Back
                     </a>
                 </div>
             </div>
@@ -41,7 +41,11 @@
             <!-- Course Info Summary -->
             <div class="course-info mb-4">
                 <h4>${course.name}</h4>
-                <p class="text-muted mb-0">Course ID: ${course.courseID} | Instructor: ${course.instructor}</p>
+                <p class="text-muted mb-0">Course ID: ${course.courseID} | Instructor: 
+                    <c:forEach var="i" items="${course.instructors}" varStatus="status">
+                        ${i.name}<c:if test="${!status.last}">, </c:if>
+                    </c:forEach>
+                </p>
             </div>
 
             <!-- Rejection Form -->
@@ -66,23 +70,23 @@
                         <div class="mb-3">
                             <label class="form-label">Common Reasons</label>
                             <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-secondary reason-btn"
+                                <button type="button" class="btn btn-lg btn-outline-secondary reason-btn"
                                         data-reason="Insufficient content quality. The course material does not meet our quality standards.">
                                     Content Quality
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary reason-btn"
+                                <button type="button" class="btn btn-lg btn-outline-secondary reason-btn"
                                         data-reason="Inadequate course structure. The curriculum needs better organization.">
                                     Poor Structure
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary reason-btn"
+                                <button type="button" class="btn btn-lg btn-outline-secondary reason-btn"
                                         data-reason="Copyright concerns. The course appears to contain copyrighted material without proper attribution or permissions.">
                                     Copyright Issues
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary reason-btn"
+                                <button type="button" class="btn btn-lg btn-outline-secondary reason-btn"
                                         data-reason="Technical problems with course materials. Please ensure all videos and resources are working properly.">
                                     Technical Issues
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary reason-btn"
+                                <button type="button" class="btn btn-lg btn-outline-secondary reason-btn"
                                         data-reason="Misleading course description or title. The content does not match what is promised.">
                                     Misleading Description
                                 </button>
@@ -91,11 +95,11 @@
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <a href="${pageContext.request.contextPath}/admin/course/view/${course.courseID}"
-                               class="btn btn-secondary">
+                               class="btn btn-md btn-secondary">
                                 Cancel
                             </a>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-times me-2"></i> Reject Course
+                            <button type="submit" class="btn btn-md btn-danger">
+                                <i class="fas fa-times me-2"></i> Reject
                             </button>
                         </div>
                     </form>

@@ -7,44 +7,40 @@ package model;
 import java.util.Date;
 
 /**
- * Instructor model class
- *
+ * Model class for Instructor based on database schema
+ * 
  * @author DangPH - CE180896
  */
 public class Instructor {
-
     private int instructorID;
-    private int userID;
+    private int superUserID;
     private String biography;
     private String specialization;
     private Date approvalDate;
 
-    // Statistical fields (not stored in database)
+    // Additional fields not in database but used for statistics
     private int totalCourses;
     private int totalStudents;
 
-    // Associated user
-    private User user;
+    // Associated SuperUser
+    private SuperUser superUser;
 
-    // Additional fields from User
+    // Convenience fields from SuperUser
     private String name;
     private String email;
 
-    // Default constructor
     public Instructor() {
     }
 
-    // Constructor with parameters
-    public Instructor(int instructorId, int userId, String biography, String specialization,
-            Date approvalDate) {
-        this.instructorID = instructorId;
-        this.userID = userId;
+    public Instructor(int instructorID, int superUserID, String biography, String specialization, Date approvalDate) {
+        this.instructorID = instructorID;
+        this.superUserID = superUserID;
         this.biography = biography;
         this.specialization = specialization;
         this.approvalDate = approvalDate;
     }
 
-    // Getters and setters
+    // Getters and Setters
     public int getInstructorID() {
         return instructorID;
     }
@@ -53,12 +49,21 @@ public class Instructor {
         this.instructorID = instructorID;
     }
 
+    public int getSuperUserID() {
+        return superUserID;
+    }
+
+    public void setSuperUserID(int superUserID) {
+        this.superUserID = superUserID;
+    }
+
+    // For backward compatibility
     public int getUserID() {
-        return userID;
+        return superUserID;
     }
 
     public void setUserID(int userID) {
-        this.userID = userID;
+        this.superUserID = userID;
     }
 
     public String getBiography() {
@@ -85,7 +90,6 @@ public class Instructor {
         this.approvalDate = approvalDate;
     }
 
-    // Statistical getters and setters
     public int getTotalCourses() {
         return totalCourses;
     }
@@ -102,13 +106,12 @@ public class Instructor {
         this.totalStudents = totalStudents;
     }
 
-    // User association
-    public User getUser() {
-        return user;
+    public SuperUser getSuperUser() {
+        return superUser;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setSuperUser(SuperUser superUser) {
+        this.superUser = superUser;
     }
 
     public String getName() {
@@ -129,7 +132,9 @@ public class Instructor {
 
     @Override
     public String toString() {
-        return "Instructor{" + "instructorID=" + instructorID + ", userID=" + userID + ", biography=" + biography + ", specialization=" + specialization + ", approvalDate=" + approvalDate + ", totalCourses=" + totalCourses + ", totalStudents=" + totalStudents + ", user=" + user + '}';
+        return "Instructor{" + "instructorID=" + instructorID + ", superUserID=" + superUserID +
+                ", biography=" + biography + ", specialization=" + specialization +
+                ", approvalDate=" + approvalDate + ", totalCourses=" + totalCourses +
+                ", totalStudents=" + totalStudents + '}';
     }
-
 }

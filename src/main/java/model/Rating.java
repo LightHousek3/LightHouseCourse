@@ -7,7 +7,7 @@ package model;
 import java.util.Date;
 
 /**
- * Represents a user's rating for a course.
+ * Represents a customer's rating for a course.
  *
  * @author DangPH - CE180896
  */
@@ -15,7 +15,7 @@ public class Rating {
 
     private int ratingID;
     private int courseID;
-    private int userID;
+    private int customerID;
     private int stars;
     private String comment;
     private Date createdAt;
@@ -30,19 +30,30 @@ public class Rating {
         this.updatedAt = new Date();
     }
 
-    public Rating(int courseID, int userID, int stars, String comment) {
+    public Rating(int courseID, int customerID, int stars, String comment) {
         this.courseID = courseID;
-        this.userID = userID;
+        this.customerID = customerID;
         this.stars = stars;
         this.comment = comment;
         this.createdAt = new Date();
         this.updatedAt = new Date();
     }
 
-    public Rating(int ratingID, int courseID, int userID, int stars, String comment, Date createdAt, Date updatedAt) {
+    // Legacy constructor for backward compatibility
+    public Rating(int courseID, int userID, int stars, String comment, boolean legacy) {
+        this.courseID = courseID;
+        this.customerID = userID; // Use the userID as customerID
+        this.stars = stars;
+        this.comment = comment;
+        this.createdAt = new Date();
+        this.updatedAt = new Date();
+    }
+
+    public Rating(int ratingID, int courseID, int customerID, int stars, String comment, Date createdAt,
+            Date updatedAt) {
         this.ratingID = ratingID;
         this.courseID = courseID;
-        this.userID = userID;
+        this.customerID = customerID;
         this.stars = stars;
         this.comment = comment;
         this.createdAt = createdAt;
@@ -65,12 +76,21 @@ public class Rating {
         this.courseID = courseID;
     }
 
+    public int getCustomerID() {
+        return customerID;
+    }
+
+    public void setCustomerID(int customerID) {
+        this.customerID = customerID;
+    }
+
+    // Legacy methods for backward compatibility
     public int getUserID() {
-        return userID;
+        return customerID;
     }
 
     public void setUserID(int userID) {
-        this.userID = userID;
+        this.customerID = userID;
     }
 
     public int getStars() {
@@ -126,7 +146,7 @@ public class Rating {
         return "Rating{"
                 + "ratingID=" + ratingID
                 + ", courseID=" + courseID
-                + ", userID=" + userID
+                + ", customerID=" + customerID
                 + ", stars=" + stars
                 + ", comment='" + comment + '\''
                 + ", createdAt=" + createdAt

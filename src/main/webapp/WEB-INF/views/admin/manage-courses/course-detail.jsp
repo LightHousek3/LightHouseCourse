@@ -228,8 +228,8 @@
                 </div>
                 <div class="d-flex align-items-center">
                     <a href="${pageContext.request.contextPath}/admin/courses"
-                       class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i> Back to Courses
+                       class="btn btn-lg btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i> Back
                     </a>
                 </div>
             </div>
@@ -248,13 +248,10 @@
                                             <span class="badge pending">Pending Approval</span>
                                         </c:when>
                                         <c:when test="${course.approvalStatus eq 'approved'}">
-                                            <span class="badge approved">Approved</span>
-                                            <p class="mb-0 small text-muted">Approved on:
-                                                <fmt:formatDate value="${course.approvalDate}"
-                                                                pattern="dd/MM/yyyy HH:mm" />                                            </p>
-                                            </c:when>
-                                            <c:when test="${course.approvalStatus eq 'rejected'}">
-                                            <span class="badge rejected">Rejected</span>
+                                            <span class="status-badge status-approved">Approved</span>
+                                        </c:when>
+                                        <c:when test="${course.approvalStatus eq 'rejected'}">
+                                            <span class="status-badge status-rejected">Rejected</span>
                                         </c:when>
                                         <c:otherwise>
                                             <span class="badge bg-secondary">Unknown</span>
@@ -394,11 +391,11 @@
 
                                                                                     <c:if
                                                                                         test="${not empty item.item.fileUrl}">
-                                                                                        <p>
+                                                                                        <p class="d-flex align-items-center gap-2">
                                                                                             <strong>File:</strong>
                                                                                             <a href="${pageContext.request.contextPath}/${item.item.fileUrl}"
                                                                                                target="_blank"
-                                                                                               class="btn btn-sm btn-outline-primary me-2">
+                                                                                               class="btn btn-lg btn-outline-primary me-2">
                                                                                                 <i class="fas fa-eye me-1"></i>
                                                                                                 View Material
                                                                                             </a>
@@ -601,7 +598,11 @@
 
                                 <div class="mb-3">
                                     <strong>Instructor:</strong>
-                                    <p class="mb-0">${course.instructor}</p>
+                                    <p class="mb-0">
+                                        <c:forEach var="i" items="${course.instructors}" varStatus="status">
+                                            ${i.name}<c:if test="${!status.last}">, </c:if>
+                                        </c:forEach>
+                                    </p>
                                 </div>
 
                                 <div class="mb-3">
@@ -628,14 +629,14 @@
                                     <p class="mb-0">
                                         <fmt:formatDate value="${course.submissionDate}" pattern="dd/MM/yyyy HH:mm" />
                                     </p>
-                                </div>
-
-                                <c:if test="${not empty course.requirements}">
-                                    <div class="mb-3">
-                                        <strong>Requirements:</strong>
-                                        <p class="mb-0">${course.requirements}</p>
-                                    </div>
-                                </c:if>
+                                </div>                                            
+                                <div class="mb-3">
+                                    <strong>Approved on:</strong>
+                                    <p class="mb-0">
+                                        <fmt:formatDate value="${course.approvalDate}"
+                                                        pattern="dd/MM/yyyy HH:mm" />                                            
+                                    </p>
+                                </div> 
                             </div>
                         </div>
 
@@ -702,12 +703,12 @@
                         <div class="container-fluid">
                             <div class="d-flex justify-content-end">
                                 <a href="${pageContext.request.contextPath}/admin/course/reject/${course.courseID}"
-                                   class="btn btn-danger me-2">
-                                    <i class="fas fa-times me-2"></i> Reject Course
+                                   class="btn btn-md btn-danger me-2">
+                                    <i class="fas fa-times me-2"></i> Reject
                                 </a>
                                 <a href="${pageContext.request.contextPath}/admin/course/approve/${course.courseID}"
-                                   class="btn btn-success">
-                                    <i class="fas fa-check me-2"></i> Approve Course
+                                   class="btn btn-md btn-success">
+                                    <i class="fas fa-check me-2"></i> Approve
                                 </a>
                             </div>
                         </div>

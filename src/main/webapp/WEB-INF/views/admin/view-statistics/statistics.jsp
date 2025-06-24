@@ -16,8 +16,10 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <style>
+            .btn-outline-primary {
+                background: #fff !important;
+            }
             .statistics-card {
-                border-radius: 10px;
                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
                 margin-bottom: 30px;
                 transition: transform 0.3s;
@@ -30,8 +32,7 @@
             .statistics-card-header {
                 background: linear-gradient(135deg, #3a8ffe 0%, #9658fe 100%);
                 color: white;
-                padding: 15px;
-                border-radius: 10px 10px 0 0;
+                padding: 20px;
                 font-weight: 600;
                 display: flex;
                 justify-content: space-between;
@@ -77,18 +78,20 @@
                 border-right: 1px solid #dee2e6;
             }
 
-            .tab-control button:last-child {
-                border-right: none;
+            .tab-control button{
+                border-radius: 0 !important;
+                border: none !important;
             }
 
             .tab-control button.active {
-                background-color: var(--primary-dark);
-                color: white;
+                background-color: var(--primary-dark) !important;
+                color: white !important;
             }
 
             .year-selector {
                 width: auto;
                 min-width: 120px;
+                min-height: 40px;
             }
 
             @media (max-width: 768px) {
@@ -142,8 +145,8 @@
                                 <i class="fas fa-shopping-cart me-2"></i>Course Purchase Statistics
                             </h5>
                             <div class="tab-control" id="purchaseViewControl">
-                                <button class="active" data-view="yearly">Yearly</button>
-                                <button data-view="monthly">Monthly</button>
+                                <button class="active btn btn-md btn-outline-primary" data-view="yearly">Yearly</button>
+                                <button class="btn btn-md btn-outline-primary" data-view="monthly">Monthly</button>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -160,8 +163,8 @@
                                 <i class="fas fa-star me-2"></i>Course Rating Statistics
                             </h5>
                             <div class="tab-control" id="ratingViewControl">
-                                <button class="active" data-view="yearly">Yearly</button>
-                                <button data-view="monthly">Monthly</button>
+                                <button class="active btn btn-md btn-outline-primary" data-view="yearly">Yearly</button>
+                                <button class="btn btn-md btn-outline-primary" data-view="monthly">Monthly</button>
                             </div>
                         </div>
                         <div class="chart-container">

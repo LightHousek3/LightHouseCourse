@@ -16,22 +16,22 @@ import java.util.List;
 public class Order {
 
     private int orderID;
-    private int userID;
+    private int customerID;
     private Timestamp orderDate;
     private double totalAmount;
     private String status; // 'pending', 'completed', 'refunded'
 
     // Additional information
     private List<OrderDetail> orderDetails = new ArrayList<>();
-    private User user;
+    private Customer customer;
 
     // Constructors
     public Order() {
         this.orderDetails = new ArrayList<>();
     }
 
-    public Order(int userID, double totalAmount) {
-        this.userID = userID;
+    public Order(int customerID, double totalAmount) {
+        this.customerID = customerID;
         this.totalAmount = totalAmount;
         this.orderDate = new Timestamp(System.currentTimeMillis());
         this.status = "pending";
@@ -47,12 +47,21 @@ public class Order {
         this.orderID = orderID;
     }
 
+    public int getCustomerID() {
+        return customerID;
+    }
+
+    public void setCustomerID(int customerID) {
+        this.customerID = customerID;
+    }
+
+    // For backward compatibility
     public int getUserID() {
-        return userID;
+        return customerID;
     }
 
     public void setUserID(int userID) {
-        this.userID = userID;
+        this.customerID = userID;
     }
 
     public Timestamp getOrderDate() {
@@ -94,12 +103,12 @@ public class Order {
         this.orderDetails.add(orderDetail);
     }
 
-    public User getUser() {
-        return user;
+    public Customer getCustomer() {
+        return customer;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 
     // Helper methods
@@ -121,8 +130,9 @@ public class Order {
 
     @Override
     public String toString() {
-        return "Order{" + "orderID=" + orderID + ", userID=" + userID + ", orderDate=" + orderDate + ", totalAmount="
-                + totalAmount + ", status=" + status + ", orderDetails=" + orderDetails + ", user=" + user + '}';
+        return "Order{" + "orderID=" + orderID + ", customerID=" + customerID + ", orderDate=" + orderDate
+                + ", totalAmount="
+                + totalAmount + ", status=" + status + ", orderDetails=" + orderDetails + ", customer=" + customer
+                + '}';
     }
-
 }

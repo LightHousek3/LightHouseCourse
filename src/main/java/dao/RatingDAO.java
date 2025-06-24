@@ -103,9 +103,9 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
-                    + "JOIN Users u ON r.UserID = u.UserID "
-                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+            String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                    + "JOIN Courses co ON r.CourseID = co.CourseID "
                     + "WHERE r.CourseID = ? "
                     + "ORDER BY r.CreatedAt DESC";
 
@@ -137,7 +137,17 @@ public class RatingDAO extends DBContext {
         Rating rating = new Rating();
         rating.setRatingID(rs.getInt("RatingID"));
         rating.setCourseID(rs.getInt("CourseID"));
-        rating.setUserID(rs.getInt("UserID"));
+
+        try {
+            rating.setCustomerID(rs.getInt("CustomerID"));
+        } catch (SQLException e) {
+            try {
+                rating.setUserID(rs.getInt("UserID"));
+            } catch (SQLException ex) {
+                // Ignore if neither column exists
+            }
+        }
+
         rating.setStars(rs.getInt("Stars"));
         rating.setComment(rs.getString("Comment"));
         rating.setCreatedAt(rs.getTimestamp("CreatedAt"));
@@ -171,9 +181,9 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
-                    + "JOIN Users u ON r.UserID = u.UserID "
-                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+            String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                    + "JOIN Courses co ON r.CourseID = co.CourseID "
                     + "ORDER BY r.CreatedAt DESC";
 
             ps = conn.prepareStatement(sql);
@@ -206,9 +216,9 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
-                    + "JOIN Users u ON r.UserID = u.UserID "
-                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+            String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                    + "JOIN Courses co ON r.CourseID = co.CourseID "
                     + "WHERE r.Stars = ? "
                     + "ORDER BY r.CreatedAt DESC";
 
@@ -265,9 +275,9 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
-                    + "JOIN Users u ON r.UserID = u.UserID "
-                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+            String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                    + "JOIN Courses co ON r.CourseID = co.CourseID "
                     + "WHERE r.CourseID = ? AND r.Stars = ? "
                     + "ORDER BY r.CreatedAt DESC";
 
@@ -417,5 +427,86 @@ public class RatingDAO extends DBContext {
         }
 
         return years;
+    }
+
+    /**
+     * Gets the total number of ratings for all courses taught by an instructor
+     * 
+     * @param instructorId The instructor ID
+     * @return The total number of ratings
+     */
+    public int getTotalRatingsByInstructorId(int instructorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT COUNT(r.RatingID) AS total "
+                    + "FROM Ratings r "
+                    + "JOIN CourseInstructors ci ON r.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting ratings by instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return count;
+    }
+
+    /**
+     * Gets the average rating for all courses taught by an instructor
+     * 
+     * @param instructorId The instructor ID
+     * @return The average rating (1-5), or 0 if no ratings
+     */
+    public double getAverageRatingByInstructorId(int instructorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        double average = 0.0;
+
+        try {
+            conn = getConnection();
+            // Get all ratings for instructor's courses
+            String sql = "SELECT r.Stars "
+                    + "FROM Ratings r "
+                    + "JOIN CourseInstructors ci ON r.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+
+            // Calculate average manually for more precision
+            int sum = 0;
+            int count = 0;
+            
+            while (rs.next()) {
+                sum += rs.getInt("Stars");
+                count++;
+            }
+            
+            if (count > 0) {
+                // Calculate average with exactly one decimal place
+                double rawAverage = (double) sum / count;
+                // Format to exactly one decimal place
+                average = Math.round(rawAverage * 10.0) / 10.0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error calculating average rating by instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return average;
     }
 }
