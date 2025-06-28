@@ -9,10 +9,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import model.Instructor;
 import model.SuperUser;
 
@@ -101,7 +101,7 @@ public class InstructorDAO extends DBContext {
      * 
      * @return List of instructors
      */
-    public List<Instructor> getAll() {
+    public List<Instructor> getAllInstructors() {
         List<Instructor> instructors = new ArrayList<>();
         try {
             String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
@@ -136,10 +136,10 @@ public class InstructorDAO extends DBContext {
     /**
      * Update instructor information in the database
      * 
-     * @param instructor The instructor to update
+     * @param instructor The instructor to updateInstructor
      * @return True if successful, false otherwise
      */
-    public boolean update(Instructor instructor) {
+    public boolean updateInstructor(Instructor instructor) {
         try {
             String query = "UPDATE Instructors "
                     + "SET Biography = ?, Specialization = ? "
@@ -217,5 +217,64 @@ public class InstructorDAO extends DBContext {
             System.out.println("Error counting students for instructor: " + ex.getMessage());
         }
         return count;
+    }
+
+    /**
+     * Insert a new instructor into the database
+     * 
+     * @param instructor The instructor to insert
+     * @return The inserted instructor with ID or null if failed
+     */
+    public Instructor insertInstructor(Instructor instructor) {
+        try {
+            String query = "INSERT INTO Instructors (SuperUserID, Biography, Specialization, ApprovalDate) "
+                    + "VALUES (?, ?, ?, ?)";
+
+            conn = getConnection();
+            ps = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, instructor.getSuperUserID());
+            ps.setString(2, instructor.getBiography());
+            ps.setString(3, instructor.getSpecialization());
+            ps.setTimestamp(4, new Timestamp(new Date().getTime()));
+
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows > 0) {
+                rs = ps.getGeneratedKeys();
+                if (rs.next()) {
+                    instructor.setInstructorID(rs.getInt(1));
+                    return instructor;
+                }
+            }
+            return null;
+        } catch (SQLException ex) {
+            System.out.println("Error inserting instructor: " + ex.getMessage());
+            return null;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+    
+    /**
+     * Delete an instructor from the database by Super User ID
+     * 
+     * @param superUserId The ID of the super user who is an instructor
+     * @return True if successful, false otherwise
+     */
+    public boolean deleteInstructorBySuperUserId(int superUserId) {
+        try {
+            String query = "DELETE FROM Instructors WHERE SuperUserID = ?";
+
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, superUserId);
+
+            int affectedRows = ps.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException ex) {
+            System.out.println("Error deleting instructor: " + ex.getMessage());
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
     }
 }

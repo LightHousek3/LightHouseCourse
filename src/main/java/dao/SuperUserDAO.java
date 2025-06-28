@@ -16,14 +16,14 @@ import model.SuperUser;
 
 /**
  * Data Access Object for SuperUser entity.
- * 
+ *
  * @author DangPH - CE180896
  */
 public class SuperUserDAO extends DBContext {
 
     /**
      * Insert a new superuser into the database.
-     * 
+     *
      * @param superUser The superuser to insert
      * @return The ID of the inserted superuser, or -1 if insertion failed
      */
@@ -67,7 +67,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Delete a superuser from the database.
-     * 
+     *
      * @param superUserId The ID of the superuser to delete
      * @return true if deletion successful, false otherwise
      */
@@ -95,7 +95,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Get a superuser by ID.
-     * 
+     *
      * @param superUserId The ID of the superuser
      * @return The superuser, or null if not found
      */
@@ -127,7 +127,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Get a superuser by username.
-     * 
+     *
      * @param username The username of the superuser
      * @return The superuser, or null if not found
      */
@@ -159,7 +159,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Get a superuser by email.
-     * 
+     *
      * @param email The email of the superuser
      * @return The superuser, or null if not found
      */
@@ -191,7 +191,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Update superuser information in the database.
-     * 
+     *
      * @param superUser The superuser to update
      * @return true if update successful, false otherwise
      */
@@ -202,19 +202,20 @@ public class SuperUserDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "UPDATE SuperUsers SET Username = ?, Email = ?, Role = ?, IsActive = ?, "
+            String sql = "UPDATE SuperUsers SET Username = ?, Password = ?, Email = ?, Role = ?, IsActive = ?, "
                     + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE SuperUserID = ? ";
 
             ps = conn.prepareStatement(sql);
             ps.setString(1, superUser.getUsername());
-            ps.setString(2, superUser.getEmail());
-            ps.setString(3, superUser.getRole());
-            ps.setBoolean(4, superUser.isActive());
-            ps.setString(5, superUser.getFullName());
-            ps.setString(6, superUser.getPhone());
-            ps.setString(7, superUser.getAddress());
-            ps.setString(8, superUser.getAvatar());
-            ps.setInt(9, superUser.getSuperUserID());
+            ps.setString(2, superUser.getPassword());
+            ps.setString(3, superUser.getEmail());
+            ps.setString(4, superUser.getRole());
+            ps.setBoolean(5, superUser.isActive());
+            ps.setString(6, superUser.getFullName());
+            ps.setString(7, superUser.getPhone());
+            ps.setString(8, superUser.getAddress());
+            ps.setString(9, superUser.getAvatar());
+            ps.setInt(10, superUser.getSuperUserID());
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected == 1;
@@ -228,7 +229,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Update superuser password in the database.
-     * 
+     *
      * @param superUserId The ID of the superuser
      * @param newPassword The new password (already encrypted)
      * @return true if update successful, false otherwise
@@ -258,7 +259,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Get all superusers based on the role.
-     * 
+     *
      * @param role Can be admin or instructor
      * @return The number of superusers with specific role
      */
@@ -289,7 +290,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Get superusers by role.
-     * 
+     *
      * @param role The role to filter by (e.g., "admin", "instructor")
      * @return List of superusers with the specified role
      */
@@ -322,7 +323,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Get all superusers.
-     * 
+     *
      * @return List of all superusers
      */
     public List<SuperUser> getAllSuperUsers() {
@@ -353,7 +354,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Check if username already exists in SuperUsers.
-     * 
+     *
      * @param username The username to check
      * @return true if exists, false otherwise
      */
@@ -384,7 +385,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Check if email already exists in SuperUsers.
-     * 
+     *
      * @param email The email to check
      * @return true if exists, false otherwise
      */
@@ -434,7 +435,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Get all active instructors.
-     * 
+     *
      * @return List of active instructors
      */
     public List<SuperUser> getActiveInstructors() {
@@ -465,7 +466,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Get all active admins.
-     * 
+     *
      * @return List of active admins
      */
     public List<SuperUser> getActiveAdmins() {
@@ -496,7 +497,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Get recent instructors (limited by count).
-     * 
+     *
      * @param limit Number of instructors to retrieve
      * @return List of recent instructors
      */
@@ -530,9 +531,9 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Search SuperUsers by username, email, or full name.
-     * 
+     *
      * @param keyword The search keyword
-     * @param role    Optional role filter (can be null for all roles)
+     * @param role Optional role filter (can be null for all roles)
      * @return List of matching SuperUsers
      */
     public List<SuperUser> searchSuperUsers(String keyword, String role) {
@@ -579,7 +580,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Check if a SuperUser with specific ID is an admin.
-     * 
+     *
      * @param superUserId The SuperUser ID to check
      * @return true if the user is an admin, false otherwise
      */
@@ -610,7 +611,7 @@ public class SuperUserDAO extends DBContext {
 
     /**
      * Check if a SuperUser with specific ID is an instructor.
-     * 
+     *
      * @param superUserId The SuperUser ID to check
      * @return true if the user is an instructor, false otherwise
      */

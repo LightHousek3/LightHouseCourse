@@ -82,7 +82,7 @@
                                             <button class="btn btn-lg btn-outline-secondary dropdown-toggle gap-1"
                                                 type="button" id="userDropdown" data-bs-toggle="dropdown"
                                                 aria-expanded="false">
-                                                <img src="${pageContext.request.contextPath}${avatar}" style="width: 30px; border-radius: 50%" alt="Avatar"/> ${instructor.name}
+                                                <img src="${pageContext.request.contextPath}${avatar}" style="width: 30px; height: 30px; border-radius: 50%" alt="Avatar"/> ${instructor.name}
                                             </button>
                                         </div>
                                     </div>

@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -253,6 +254,14 @@
                 margin-top: 10px;
                 font-style: italic;
             }
+
+            .password-field-wrapper {
+                position: relative;
+            }
+
+            .password-toggle-icon {
+                position: absolute;
+            }
         </style>
     </head>
 
@@ -364,9 +373,14 @@
                                             <div class="col-md-6">
                                                 <label for="password" class="form-label">Password<span
                                                         class="required"></span></label>
-                                                <input type="password"
-                                                       class="form-control ${not empty passwordError ? 'is-invalid' : ''}"
-                                                       id="password" name="password" value="${selectedCustomer.password}">
+                                                <div class="password-field-wrapper">
+                                                    <input type="password"
+                                                           class="form-control ${not empty passwordError ? 'is-invalid' : ''}"
+                                                           id="password" name="password" value="${selectedCustomer.password}">
+                                                    <span class="password-toggle-icon" id="togglePassword">
+                                                        <i class="fas fa-eye"></i>
+                                                    </span>
+                                                </div>
                                                 <c:if test="${not empty passwordError}">
                                                     <div class="invalid-feedback">
                                                         ${passwordError}
@@ -434,9 +448,18 @@
                                                 <div class="avatar-section">
                                                     <c:choose>
                                                         <c:when test="${not empty selectedCustomer.avatar}">
-                                                            <img src="${pageContext.request.contextPath}${selectedCustomer.avatar}"
-                                                                 alt="Customer Avatar" class="avatar-preview"
-                                                                 id="avatarPreview">
+                                                            <c:choose>
+                                                                <c:when test="${fn:startsWith(selectedCustomer.avatar, 'data:image')}">
+                                                                    <img src="${selectedCustomer.avatar}"
+                                                                         alt="Customer Avatar" class="avatar-preview"
+                                                                         id="avatarPreview">
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <img src="${pageContext.request.contextPath}${selectedCustomer.avatar}"
+                                                                         alt="Customer Avatar" class="avatar-preview"
+                                                                         id="avatarPreview">
+                                                                </c:otherwise>
+                                                            </c:choose>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <div class="avatar-placeholder"
@@ -484,6 +507,17 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', () => {
+                // Toggle password visibility
+                document.getElementById('togglePassword').addEventListener('click', function () {
+                    const passwordInput = document.getElementById('password');
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+
+                    // Toggle icon
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('fa-eye');
+                    icon.classList.toggle('fa-eye-slash');
+                });
                 // Image preview
                 document.getElementById('avatarInput').addEventListener('change', function (e) {
                     const file = e.target.files[0];

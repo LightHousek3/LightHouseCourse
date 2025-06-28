@@ -208,7 +208,7 @@ public class CustomerDAO extends DBContext {
 
             ps = conn.prepareStatement(sql);
             ps.setString(1, customer.getUsername());
-            ps.setString(2, customer.getUsername());
+            ps.setString(2, customer.getPassword());
             ps.setString(3, customer.getEmail());
             ps.setBoolean(4, customer.isActive());
             ps.setString(5, customer.getFullName());
