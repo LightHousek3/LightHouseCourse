@@ -300,7 +300,7 @@ public class RatingDAO extends DBContext {
 
     /**
      * Get average ratings for all courses by year
-     * 
+     *
      * @param year The year to filter by (or 0 for all years)
      * @return Map of course names to average ratings
      * @throws SQLException If a database error occurs
@@ -321,8 +321,8 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT c.Name, AVG(r.Stars) as AvgRating FROM Ratings r " +
-                    "JOIN Courses c ON r.CourseID = c.CourseID ";
+            String sql = "SELECT c.Name, AVG(r.Stars) as AvgRating FROM Ratings r "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID ";
 
             if (year > 0) {
                 sql += "WHERE YEAR(r.CreatedAt) = ? ";
@@ -351,10 +351,10 @@ public class RatingDAO extends DBContext {
 
     /**
      * Get average ratings for all courses by month for a specific year
-     * 
+     *
      * @param year The year to filter by
-     * @return Map where key is course name and value is array of 12 monthly average
-     *         ratings
+     * @return Map where key is course name and value is array of 12 monthly
+     * average ratings
      * @throws SQLException If a database error occurs
      */
     public Map<String, double[]> getAverageRatingsByMonth(int year) throws SQLException {
@@ -372,12 +372,12 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT c.Name, MONTH(r.CreatedAt) as RatingMonth, AVG(r.Stars) as AvgRating " +
-                    "FROM Ratings r " +
-                    "JOIN Courses c ON r.CourseID = c.CourseID " +
-                    "WHERE YEAR(r.CreatedAt) = ? " +
-                    "GROUP BY c.CourseID, c.Name, MONTH(r.CreatedAt) " +
-                    "ORDER BY c.Name, MONTH(r.CreatedAt)";
+            String sql = "SELECT c.Name, MONTH(r.CreatedAt) as RatingMonth, AVG(r.Stars) as AvgRating "
+                    + "FROM Ratings r "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "WHERE YEAR(r.CreatedAt) = ? "
+                    + "GROUP BY c.CourseID, c.Name, MONTH(r.CreatedAt) "
+                    + "ORDER BY c.Name, MONTH(r.CreatedAt)";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, year);
@@ -402,7 +402,7 @@ public class RatingDAO extends DBContext {
 
     /**
      * Get list of distinct years that have ratings
-     * 
+     *
      * @return List of years
      * @throws SQLException If a database error occurs
      */
@@ -431,7 +431,7 @@ public class RatingDAO extends DBContext {
 
     /**
      * Gets the total number of ratings for all courses taught by an instructor
-     * 
+     *
      * @param instructorId The instructor ID
      * @return The total number of ratings
      */
@@ -465,7 +465,7 @@ public class RatingDAO extends DBContext {
 
     /**
      * Gets the average rating for all courses taught by an instructor
-     * 
+     *
      * @param instructorId The instructor ID
      * @return The average rating (1-5), or 0 if no ratings
      */
@@ -489,12 +489,12 @@ public class RatingDAO extends DBContext {
             // Calculate average manually for more precision
             int sum = 0;
             int count = 0;
-            
+
             while (rs.next()) {
                 sum += rs.getInt("Stars");
                 count++;
             }
-            
+
             if (count > 0) {
                 // Calculate average with exactly one decimal place
                 double rawAverage = (double) sum / count;
@@ -509,4 +509,125 @@ public class RatingDAO extends DBContext {
 
         return average;
     }
+
+    public List<Integer> getRatingYearsByInstructor(int instructorId) throws SQLException {
+        List<Integer> years = new ArrayList<>();
+        String sql = "SELECT DISTINCT YEAR(r.CreatedAt) AS Year "
+                + "FROM Ratings r "
+                + "JOIN Courses c ON r.CourseID = c.CourseID "
+                + "JOIN CourseInstructors ci ON c.CourseID = ci.CourseID "
+                + "WHERE ci.InstructorID = ? "
+                + "ORDER BY Year DESC";
+
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, instructorId);
+            try ( ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    years.add(rs.getInt("Year"));
+                }
+            }
+        }
+        return years;
+    }
+
+    /**
+     * Get average course ratings by year for a specific instructor.
+     *
+     * @param year The year to filter by (0 for all years)
+     * @param instructorId The instructor ID to filter courses
+     * @return Map of course names to average ratings
+     * @throws SQLException If a database error occurs
+     */
+    public Map<String, Double> getAverageRatingsByYearForInstructor(int year, int instructorId) throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Map<String, Double> averageRatings = new HashMap<>();
+
+        CourseDAO courseDAO = new CourseDAO();
+        List<Course> courses = courseDAO.getCoursesByInstructorId(instructorId); // chỉ lấy course thuộc instructor
+
+        // Khởi tạo trước với 0.0 để có đầy đủ labels cho biểu đồ
+        for (Course course : courses) {
+            averageRatings.put(course.getName(), 0.0);
+        }
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.Name, AVG(r.Stars) as AvgRating "
+                    + "FROM Ratings r "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "JOIN CourseInstructors ci ON c.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ? ";
+
+            if (year > 0) {
+                sql += "AND YEAR(r.CreatedAt) = ? ";
+            }
+
+            sql += "GROUP BY c.CourseID, c.Name ORDER BY c.Name";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+
+            if (year > 0) {
+                ps.setInt(2, year);
+            }
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String courseName = rs.getString("Name");
+                double avgRating = rs.getDouble("AvgRating");
+                averageRatings.put(courseName, avgRating);
+            }
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return averageRatings;
+    }
+
+    public Map<String, double[]> getAverageRatingsByMonthByInstructor(int instructorId, int year) throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Map<String, double[]> ratingsByMonth = new HashMap<>();
+
+        // Get all courses of this instructor
+        CourseDAO courseDAO = new CourseDAO();
+        List<Course> courses = courseDAO.getCoursesByInstructorId(instructorId);
+        for (Course course : courses) {
+            ratingsByMonth.put(course.getName(), new double[12]); // months 0-11
+        }
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.Name, MONTH(r.CreatedAt) as RatingMonth, AVG(r.Stars) as AvgRating "
+                    + "FROM Ratings r "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "JOIN CourseInstructors ci ON c.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ? AND YEAR(r.CreatedAt) = ? "
+                    + "GROUP BY c.CourseID, c.Name, MONTH(r.CreatedAt) "
+                    + "ORDER BY c.Name, MONTH(r.CreatedAt)";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            ps.setInt(2, year);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String courseName = rs.getString("Name");
+                int month = rs.getInt("RatingMonth") - 1;
+                double avgRating = rs.getDouble("AvgRating");
+
+                if (ratingsByMonth.containsKey(courseName)) {
+                    ratingsByMonth.get(courseName)[month] = avgRating;
+                }
+            }
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return ratingsByMonth;
+    }
+
 }
