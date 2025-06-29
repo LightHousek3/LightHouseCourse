@@ -11,14 +11,14 @@ import model.Material;
 import db.DBContext;
 
 /**
- * Data Access Object for Material entity.
- * Handles database operations related to Material entities.
+ * Data Access Object for Material entity. Handles database operations related
+ * to Material entities.
  */
 public class MaterialDAO extends DBContext {
 
     /**
      * Get a material by ID.
-     * 
+     *
      * @param materialId The material ID
      * @return The material object, or null if not found
      */
@@ -43,12 +43,15 @@ public class MaterialDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -59,7 +62,7 @@ public class MaterialDAO extends DBContext {
 
     /**
      * Get materials for a specific lesson.
-     * 
+     *
      * @param lessonId The lesson ID
      * @return List of materials for the lesson
      */
@@ -85,12 +88,15 @@ public class MaterialDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -101,7 +107,7 @@ public class MaterialDAO extends DBContext {
 
     /**
      * Save a material (insertMaterial new or updateMaterial existing).
-     * 
+     *
      * @param material The material to saveMaterial
      * @return true if successful, false otherwise
      */
@@ -115,7 +121,7 @@ public class MaterialDAO extends DBContext {
 
     /**
      * Insert a new material.
-     * 
+     *
      * @param material The material to insertMaterial
      * @return The new material ID, or -1 if failed
      */
@@ -149,12 +155,15 @@ public class MaterialDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -165,7 +174,7 @@ public class MaterialDAO extends DBContext {
 
     /**
      * Update an existing material.
-     * 
+     *
      * @param material The material to updateMaterial
      * @return true if successful, false otherwise
      */
@@ -194,10 +203,12 @@ public class MaterialDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (ps != null)
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -208,7 +219,7 @@ public class MaterialDAO extends DBContext {
 
     /**
      * Delete a material by ID.
-     * 
+     *
      * @param materialId The material ID to deleteMaterial
      * @return true if successful, false otherwise
      */
@@ -230,10 +241,12 @@ public class MaterialDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (ps != null)
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -244,8 +257,8 @@ public class MaterialDAO extends DBContext {
 
     /**
      * Check if a material has been viewed by a user.
-     * 
-     * @param userId     The user ID
+     *
+     * @param userId The user ID
      * @param materialId The material ID
      * @return true if the material has been viewed, false otherwise
      */
@@ -284,12 +297,15 @@ public class MaterialDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -298,9 +314,32 @@ public class MaterialDAO extends DBContext {
         return viewed;
     }
 
+    public void insertWithConnection(Connection conn, Material material) throws SQLException {
+        String sql = "INSERT INTO Materials (LessonID, Title, Description, Content, FileUrl) VALUES (?, ?, ?, ?, ?)";
+
+        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            // Set values for the material
+            ps.setInt(1, material.getLessonID());
+            ps.setString(2, material.getTitle());
+            ps.setString(3, material.getDescription());
+            ps.setString(4, material.getContent());
+            ps.setString(5, material.getFileUrl());
+
+            // Execute the insert for the material
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 1) {
+                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        material.setMaterialID(rs.getInt(1)); // Set the generated material ID
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Map a ResultSet row to a Material object.
-     * 
+     *
      * @param rs The ResultSet to map
      * @return A Material object
      * @throws SQLException If a database error occurs

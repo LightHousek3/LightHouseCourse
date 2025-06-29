@@ -22,7 +22,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Get a quiz by ID
-     * 
+     *
      * @param quizId The quiz ID
      * @return The quiz object, or null if not found
      */
@@ -68,7 +68,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Get quizzes for a specific lesson
-     * 
+     *
      * @param lessonId The lesson ID
      * @return List of quizzes for the lesson
      */
@@ -118,7 +118,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Save a quiz (insert new or update existing)
-     * 
+     *
      * @param quiz The quiz to save
      * @return true if successful, false otherwise
      */
@@ -132,7 +132,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Insert a new quiz
-     * 
+     *
      * @param quiz The quiz to insert
      * @return The new quiz ID, or -1 if failed
      */
@@ -213,7 +213,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Update an existing quiz
-     * 
+     *
      * @param quiz The quiz to update
      * @return true if successful, false otherwise
      */
@@ -285,7 +285,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Delete a quiz by ID
-     * 
+     *
      * @param quizId The quiz ID to delete
      * @return true if successful, false otherwise
      */
@@ -340,7 +340,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Check if a user has completed a quiz
-     * 
+     *
      * @param userId The user ID
      * @param quizId The quiz ID
      * @return true if the user has completed the quiz, false otherwise
@@ -387,7 +387,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Map a ResultSet row to a Quiz object
-     * 
+     *
      * @param rs The ResultSet to map
      * @return A Quiz object
      * @throws SQLException If a database error occurs
@@ -442,7 +442,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Load questions for a quiz
-     * 
+     *
      * @param quiz The quiz to load questions for
      */
     private void loadQuestionsForQuiz(Quiz quiz) {
@@ -491,7 +491,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Map a ResultSet row to a Question object
-     * 
+     *
      * @param rs The ResultSet to map
      * @return A Question object
      * @throws SQLException If a database error occurs
@@ -509,7 +509,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Load answers for a question
-     * 
+     *
      * @param question The question to load answers for
      */
     private void loadAnswersForQuestion(Question question) {
@@ -553,7 +553,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Map a ResultSet row to an Answer object
-     * 
+     *
      * @param rs The ResultSet to map
      * @return An Answer object
      * @throws SQLException If a database error occurs
@@ -570,7 +570,7 @@ public class QuizDAO extends DBContext {
 
     /**
      * Get a lesson by quiz ID
-     * 
+     *
      * @param quizId The quiz ID
      * @return The lesson ID, or -1 if not found
      */
@@ -832,4 +832,82 @@ public class QuizDAO extends DBContext {
 
         return quiz;
     }
+
+    public void insertWithConnection(Connection conn, Quiz quiz) throws SQLException {
+        String sql = "INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore) VALUES (?, ?, ?, ?, ?)";
+
+        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            // Set values for the quiz
+            ps.setInt(1, quiz.getLessonID());
+            ps.setString(2, quiz.getTitle());
+            ps.setString(3, quiz.getDescription());
+            ps.setInt(4, quiz.getTimeLimit());
+            ps.setInt(5, quiz.getPassingScore());
+
+            // Execute the insert for the quiz
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 1) {
+                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        quiz.setQuizID(rs.getInt(1)); // Set the generated quiz ID
+                    }
+                }
+
+            } else {
+                throw new SQLException("Quiz insert failed!");
+
+            }
+        }
+        // Insert questions (với QuizID vừa lấy được)
+        if (quiz.getQuestions() != null) {
+            for (Question q : quiz.getQuestions()) {
+                insertQuestionWithConnection(conn, quiz.getQuizID(), q);
+            }
+
+        }
+    }
+
+    private void insertQuestionWithConnection(Connection conn, int quizId, Question question) throws SQLException {
+        String sql = "INSERT INTO Questions (QuizID, Content, Type, Points, OrderIndex) VALUES (?, ?, ?, ?, ?)";
+        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, quizId);
+            ps.setString(2, question.getContent());
+            ps.setString(3, "multiple_choice");
+            ps.setInt(4, question.getPoints());
+            ps.setInt(5, question.getOrderIndex());
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 1) {
+                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int questionId = rs.getInt(1);
+                        question.setQuestionID(questionId);
+                    }
+                }
+            } else {
+                throw new SQLException("Question insert failed!");
+            }
+        }
+
+        // Insert answers
+        if (question.getAnswers() != null) {
+            for (Answer a : question.getAnswers()) {
+                insertAnswerWithConnection(conn, question.getQuestionID(), a);
+            }
+        }
+    }
+
+    private void insertAnswerWithConnection(Connection conn, int questionId, Answer answer) throws SQLException {
+        String sql = "INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex) VALUES (?, ?, ?, ?)";
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, questionId);
+            ps.setString(2, answer.getContent());
+            ps.setBoolean(3, answer.isCorrect());
+            ps.setInt(3, answer.getOrderIndex());
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected != 1) {
+                throw new SQLException("Answer insert failed!");
+            }
+        }
+    }
+
 }

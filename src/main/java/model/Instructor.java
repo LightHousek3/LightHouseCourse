@@ -8,10 +8,11 @@ import java.util.Date;
 
 /**
  * Model class for Instructor based on database schema
- * 
+ *
  * @author DangPH - CE180896
  */
 public class Instructor {
+
     private int instructorID;
     private int superUserID;
     private String biography;
@@ -30,6 +31,11 @@ public class Instructor {
     private String email;
 
     public Instructor() {
+    }
+
+    public Instructor(int instructorID, String name) {
+        this.instructorID = instructorID;
+        this.name = name;
     }
 
     public Instructor(int instructorID, int superUserID, String biography, String specialization, Date approvalDate) {
@@ -132,9 +138,9 @@ public class Instructor {
 
     @Override
     public String toString() {
-        return "Instructor{" + "instructorID=" + instructorID + ", superUserID=" + superUserID +
-                ", biography=" + biography + ", specialization=" + specialization +
-                ", approvalDate=" + approvalDate + ", totalCourses=" + totalCourses +
-                ", totalStudents=" + totalStudents + '}';
+        return "Instructor{" + "instructorID=" + instructorID + ", superUserID=" + superUserID
+                + ", biography=" + biography + ", specialization=" + specialization
+                + ", approvalDate=" + approvalDate + ", totalCourses=" + totalCourses
+                + ", totalStudents=" + totalStudents + '}';
     }
 }

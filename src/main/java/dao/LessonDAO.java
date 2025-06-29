@@ -13,6 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 import model.Lesson;
 import db.DBContext;
+import java.sql.Timestamp;
+import model.Material;
+import model.Quiz;
+import model.Video;
 
 /**
  * Data Access Object for Lesson entity.
@@ -20,6 +24,16 @@ import db.DBContext;
  * @author DangPH - CE180896
  */
 public class LessonDAO extends DBContext {
+
+    private MaterialDAO materialDAO;
+    private QuizDAO quizDAO;
+    private VideoDAO videoDAO;
+
+    public LessonDAO() {
+        this.materialDAO = new MaterialDAO();
+        this.quizDAO = new QuizDAO();
+        this.videoDAO = new VideoDAO();
+    }
 
     /**
      * Get all lessons for a specific course.
@@ -104,6 +118,60 @@ public class LessonDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public void insertFullLesson(Connection conn, Lesson lesson) throws SQLException {
+        // Insert the lesson itself
+        String sql = "INSERT INTO Lessons (CourseID, Title, OrderIndex, CreatedAt) VALUES (?, ?, ?, ?)";
+
+        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            // Set the lesson values
+            ps.setInt(1, lesson.getCourseID());
+            ps.setString(2, lesson.getTitle());
+            ps.setInt(3, lesson.getOrderIndex());
+            ps.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+
+            // Execute the insert for the lesson
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 1) {
+                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        lesson.setLessonID(rs.getInt(1)); // Assign the generated Lesson ID
+                    }
+                }
+
+                // Now, insert the associated quizzes, materials, and videos
+                // 1. Insert Quizzes
+                if (lesson.getQuizs()!= null && !lesson.getQuizs().isEmpty()) {
+                    for (Quiz quiz : lesson.getQuizs()) {
+                        quiz.setLessonID(lesson.getLessonID());
+                        quizDAO.insertWithConnection(conn, quiz); // Assuming insertWithConnection handles quiz insertion
+                    }
+                }
+
+                // 2. Insert Materials
+                if (lesson.getMaterials() != null && !lesson.getMaterials().isEmpty()) {
+                    for (Material material : lesson.getMaterials()) {
+                        material.setLessonID(lesson.getLessonID());
+                        materialDAO.insertWithConnection(conn, material); // Assuming insertWithConnection handles material insertion
+                    }
+                }
+
+                // 3. Insert Videos
+                if (lesson.getVideos() != null && !lesson.getVideos().isEmpty()) {
+                    for (Video video : lesson.getVideos()) {
+                        video.setLessonID(lesson.getLessonID());
+                        videoDAO.insertWithConnection(conn, video); // Use the same insert method for videos
+                    }
+                    
+               // 4. Insert LessonItem
+               
+                    
+                }
+            }else{
+                throw new SQLException("Insert Lesson Failed!");
+            }
         }
     }
 

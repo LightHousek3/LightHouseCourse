@@ -11,8 +11,8 @@ import model.Video;
 import db.DBContext;
 
 /**
- * Data Access Object for Video entity.
- * Handles database operations related to Video entities.
+ * Data Access Object for Video entity. Handles database operations related to
+ * Video entities.
  */
 public class VideoDAO extends DBContext {
 
@@ -47,12 +47,15 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -128,12 +131,15 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -173,10 +179,12 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (ps != null)
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -209,10 +217,12 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (ps != null)
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -249,12 +259,15 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -274,6 +287,29 @@ public class VideoDAO extends DBContext {
             return update(video);
         } else {
             return insert(video) > 0;
+        }
+    }
+
+    public void insertWithConnection(Connection conn, Video video) throws SQLException {
+        String sql = "INSERT INTO Videos (LessonID, Title, Description, VideoUrl, Duration) VALUES (?, ?, ?, ?, ?)";
+
+        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            // Setting the values for the prepared statement
+            ps.setInt(1, video.getLessonID());
+            ps.setString(2, video.getTitle());
+            ps.setString(3, video.getDescription());
+            ps.setString(4, video.getVideoUrl());
+            ps.setInt(5, video.getDuration()); // Assuming duration is stored in seconds
+
+            // Executing the update and getting the generated keys (i.e., the Video ID)
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 1) {
+                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        video.setVideoID(rs.getInt(1)); // Assign the generated Video ID
+                    }
+                }
+            }
         }
     }
 
