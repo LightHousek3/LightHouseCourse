@@ -1161,6 +1161,8 @@ public class CourseDAO extends DBContext {
 
         try {
             conn = getConnection();
+            conn.setAutoCommit(false); // Thiết lập autoCommit=false ở đầu để giao dịch hoạt động đúng
+            
             // Insert Course
             String sql = "INSERT INTO Courses (Name, Description, Price, ImageUrl, Duration, Level, ApprovalStatus, SubmissionDate) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -1208,11 +1210,13 @@ public class CourseDAO extends DBContext {
                     conn.commit();
                 }
             } else {
-                conn.rollback();
+                if (!conn.getAutoCommit()) {  // Kiểm tra trước khi rollback
+                    conn.rollback();
+                }
             }
         } catch (SQLException e) {
             try {
-                if (conn != null) {
+                if (conn != null && !conn.getAutoCommit()) {  // Kiểm tra trước khi rollback
                     conn.rollback();
                 }
             } catch (SQLException ex) {
@@ -1221,10 +1225,16 @@ public class CourseDAO extends DBContext {
             e.printStackTrace();
             courseId = -1;
         } finally {
+            try {
+                if (conn != null) {
+                    conn.setAutoCommit(true); // Đặt lại autoCommit về true
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             closeResources(rs, ps, conn);
         }
         return courseId;
-
     }
 
 }

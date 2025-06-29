@@ -314,8 +314,9 @@ public class MaterialDAO extends DBContext {
         return viewed;
     }
 
-    public void insertWithConnection(Connection conn, Material material) throws SQLException {
+    public int insertWithConnection(Connection conn, Material material) throws SQLException {
         String sql = "INSERT INTO Materials (LessonID, Title, Description, Content, FileUrl) VALUES (?, ?, ?, ?, ?)";
+        int materialId = -1;
 
         try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             // Set values for the material
@@ -330,11 +331,16 @@ public class MaterialDAO extends DBContext {
             if (rowsAffected == 1) {
                 try ( ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
-                        material.setMaterialID(rs.getInt(1)); // Set the generated material ID
+                        materialId = rs.getInt(1); // Get the generated material ID
+                        material.setMaterialID(materialId); // Set the generated material ID
                     }
                 }
+            } else {
+                throw new SQLException("Material insert failed!");
             }
         }
+        
+        return materialId;
     }
 
     /**

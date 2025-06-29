@@ -17,6 +17,7 @@ import java.sql.Timestamp;
 import model.Material;
 import model.Quiz;
 import model.Video;
+import model.LessonItem;
 
 /**
  * Data Access Object for Lesson entity.
@@ -141,12 +142,24 @@ public class LessonDAO extends DBContext {
                     }
                 }
 
+                // Create a list to track items by order
+                List<LessonItem> lessonItems = new ArrayList<>();
+                int orderIndex = 0;
+
                 // Now, insert the associated quizzes, materials, and videos
                 // 1. Insert Quizzes
-                if (lesson.getQuizs()!= null && !lesson.getQuizs().isEmpty()) {
+                if (lesson.getQuizs() != null && !lesson.getQuizs().isEmpty()) {
                     for (Quiz quiz : lesson.getQuizs()) {
                         quiz.setLessonID(lesson.getLessonID());
-                        quizDAO.insertWithConnection(conn, quiz); // Assuming insertWithConnection handles quiz insertion
+                        int quizId = quizDAO.insertWithConnection(conn, quiz); // Assuming insertWithConnection returns the quizId
+                        
+                        // Create a LessonItem for this quiz
+                        LessonItem lessonItem = new LessonItem();
+                        lessonItem.setLessonID(lesson.getLessonID());
+                        lessonItem.setItemType("quiz");
+                        lessonItem.setItemID(quizId);
+                        lessonItem.setOrderIndex(orderIndex++); // Increment the order index
+                        lessonItems.add(lessonItem);
                     }
                 }
 
@@ -154,7 +167,15 @@ public class LessonDAO extends DBContext {
                 if (lesson.getMaterials() != null && !lesson.getMaterials().isEmpty()) {
                     for (Material material : lesson.getMaterials()) {
                         material.setLessonID(lesson.getLessonID());
-                        materialDAO.insertWithConnection(conn, material); // Assuming insertWithConnection handles material insertion
+                        int materialId = materialDAO.insertWithConnection(conn, material); // Assuming insertWithConnection returns the materialId
+                        
+                        // Create a LessonItem for this material
+                        LessonItem lessonItem = new LessonItem();
+                        lessonItem.setLessonID(lesson.getLessonID());
+                        lessonItem.setItemType("material");
+                        lessonItem.setItemID(materialId);
+                        lessonItem.setOrderIndex(orderIndex++); // Increment the order index
+                        lessonItems.add(lessonItem);
                     }
                 }
 
@@ -162,16 +183,48 @@ public class LessonDAO extends DBContext {
                 if (lesson.getVideos() != null && !lesson.getVideos().isEmpty()) {
                     for (Video video : lesson.getVideos()) {
                         video.setLessonID(lesson.getLessonID());
-                        videoDAO.insertWithConnection(conn, video); // Use the same insert method for videos
+                        int videoId = videoDAO.insertWithConnection(conn, video); // Assuming insertWithConnection returns the videoId
+                        
+                        // Create a LessonItem for this video
+                        LessonItem lessonItem = new LessonItem();
+                        lessonItem.setLessonID(lesson.getLessonID());
+                        lessonItem.setItemType("video");
+                        lessonItem.setItemID(videoId);
+                        lessonItem.setOrderIndex(orderIndex++); // Increment the order index
+                        lessonItems.add(lessonItem);
                     }
-                    
-               // 4. Insert LessonItem
-               
-                    
                 }
+
+                // 4. Insert all LessonItems
+                insertLessonItems(conn, lessonItems);
             }else{
                 throw new SQLException("Insert Lesson Failed!");
             }
+        }
+    }
+    
+    /**
+     * Insert multiple LessonItems in a batch operation
+     * 
+     * @param conn The database connection
+     * @param lessonItems List of LessonItems to insert
+     * @throws SQLException if a database error occurs
+     */
+    private void insertLessonItems(Connection conn, List<LessonItem> lessonItems) throws SQLException {
+        if (lessonItems == null || lessonItems.isEmpty()) {
+            return;
+        }
+        
+        String sql = "INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (LessonItem item : lessonItems) {
+                ps.setInt(1, item.getLessonID());
+                ps.setInt(2, item.getOrderIndex());
+                ps.setString(3, item.getItemType());
+                ps.setInt(4, item.getItemID());
+                ps.addBatch();
+            }
+            ps.executeBatch();
         }
     }
 
@@ -190,5 +243,112 @@ public class LessonDAO extends DBContext {
         lesson.setOrderIndex(rs.getInt("OrderIndex"));
 
         return lesson;
+    }
+
+    /**
+     * Update the order index of a lesson
+     * 
+     * @param lessonId The lesson ID to update
+     * @param newOrderIndex The new order index value
+     * @return true if successful, false otherwise
+     */
+    public boolean updateLessonOrder(int lessonId, int newOrderIndex) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = false;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Lessons SET OrderIndex = ? WHERE LessonID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, newOrderIndex);
+            ps.setInt(2, lessonId);
+
+            int affectedRows = ps.executeUpdate();
+            success = (affectedRows > 0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (ps != null)
+                    ps.close();
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return success;
+    }
+    
+    /**
+     * Updates the order indices of all lessons in a course based on provided list of IDs
+     * 
+     * @param courseId The course ID
+     * @param lessonIds List of lesson IDs in desired order
+     * @return true if successful, false otherwise
+     */
+    public boolean reorderLessons(int courseId, List<Integer> lessonIds) {
+        if (lessonIds == null || lessonIds.isEmpty()) {
+            return false;
+        }
+        
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = true;
+        
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            String sql = "UPDATE Lessons SET OrderIndex = ? WHERE LessonID = ? AND CourseID = ?";
+            
+            ps = conn.prepareStatement(sql);
+            
+            for (int i = 0; i < lessonIds.size(); i++) {
+                ps.setInt(1, i); // OrderIndex starts from 0
+                ps.setInt(2, lessonIds.get(i));
+                ps.setInt(3, courseId);
+                ps.addBatch();
+            }
+            
+            int[] results = ps.executeBatch();
+            for (int result : results) {
+                if (result <= 0) {
+                    success = false;
+                    break;
+                }
+            }
+            
+            if (success) {
+                conn.commit();
+            } else {
+                conn.rollback();
+            }
+        } catch (SQLException e) {
+            success = false;
+            e.printStackTrace();
+            try {
+                if (conn != null && !conn.getAutoCommit()) {
+                    conn.rollback();
+                }
+            } catch (SQLException rollbackEx) {
+                rollbackEx.printStackTrace();
+            }
+        } finally {
+            try {
+                if (ps != null)
+                    ps.close();
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        return success;
     }
 }

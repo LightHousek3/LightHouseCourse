@@ -290,8 +290,9 @@ public class VideoDAO extends DBContext {
         }
     }
 
-    public void insertWithConnection(Connection conn, Video video) throws SQLException {
+    public int insertWithConnection(Connection conn, Video video) throws SQLException {
         String sql = "INSERT INTO Videos (LessonID, Title, Description, VideoUrl, Duration) VALUES (?, ?, ?, ?, ?)";
+        int videoId = -1;
 
         try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             // Setting the values for the prepared statement
@@ -306,11 +307,16 @@ public class VideoDAO extends DBContext {
             if (rowsAffected == 1) {
                 try ( ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
-                        video.setVideoID(rs.getInt(1)); // Assign the generated Video ID
+                        videoId = rs.getInt(1); // Get the generated Video ID
+                        video.setVideoID(videoId); // Assign the generated Video ID
                     }
                 }
+            } else {
+                throw new SQLException("Video insert failed!");
             }
         }
+        
+        return videoId;
     }
 
     /**

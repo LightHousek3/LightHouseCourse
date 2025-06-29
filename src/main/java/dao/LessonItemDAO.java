@@ -281,6 +281,113 @@ public class LessonItemDAO extends DBContext {
     }
 
     /**
+     * Update the order index of a lesson item
+     * 
+     * @param lessonItemId The lesson item ID to update
+     * @param newOrderIndex The new order index value
+     * @return true if successful, false otherwise
+     */
+    public boolean updateLessonItemOrder(int lessonItemId, int newOrderIndex) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = false;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE LessonItems SET OrderIndex = ? WHERE LessonItemID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, newOrderIndex);
+            ps.setInt(2, lessonItemId);
+
+            int affectedRows = ps.executeUpdate();
+            success = (affectedRows > 0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (ps != null)
+                    ps.close();
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return success;
+    }
+    
+    /**
+     * Updates the order indices of all items in a lesson based on provided list of IDs
+     * 
+     * @param lessonId The lesson ID
+     * @param lessonItemIds List of lesson item IDs in desired order
+     * @return true if successful, false otherwise
+     */
+    public boolean reorderLessonItems(int lessonId, List<Integer> lessonItemIds) {
+        if (lessonItemIds == null || lessonItemIds.isEmpty()) {
+            return false;
+        }
+        
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = true;
+        
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            String sql = "UPDATE LessonItems SET OrderIndex = ? WHERE LessonItemID = ? AND LessonID = ?";
+            
+            ps = conn.prepareStatement(sql);
+            
+            for (int i = 0; i < lessonItemIds.size(); i++) {
+                ps.setInt(1, i); // OrderIndex starts from 0
+                ps.setInt(2, lessonItemIds.get(i));
+                ps.setInt(3, lessonId);
+                ps.addBatch();
+            }
+            
+            int[] results = ps.executeBatch();
+            for (int result : results) {
+                if (result <= 0) {
+                    success = false;
+                    break;
+                }
+            }
+            
+            if (success) {
+                conn.commit();
+            } else {
+                conn.rollback();
+            }
+        } catch (SQLException e) {
+            success = false;
+            e.printStackTrace();
+            try {
+                if (conn != null && !conn.getAutoCommit()) {
+                    conn.rollback();
+                }
+            } catch (SQLException rollbackEx) {
+                rollbackEx.printStackTrace();
+            }
+        } finally {
+            try {
+                if (ps != null)
+                    ps.close();
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        return success;
+    }
+
+    /**
      * Map a ResultSet row to a LessonItem object
      * 
      * @param rs The ResultSet to map

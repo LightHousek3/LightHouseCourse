@@ -833,8 +833,9 @@ public class QuizDAO extends DBContext {
         return quiz;
     }
 
-    public void insertWithConnection(Connection conn, Quiz quiz) throws SQLException {
+    public int insertWithConnection(Connection conn, Quiz quiz) throws SQLException {
         String sql = "INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore) VALUES (?, ?, ?, ?, ?)";
+        int quizId = -1;
 
         try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             // Set values for the quiz
@@ -849,7 +850,8 @@ public class QuizDAO extends DBContext {
             if (rowsAffected == 1) {
                 try ( ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
-                        quiz.setQuizID(rs.getInt(1)); // Set the generated quiz ID
+                        quizId = rs.getInt(1); // Get the generated quiz ID
+                        quiz.setQuizID(quizId); // Set the generated quiz ID
                     }
                 }
 
@@ -865,6 +867,8 @@ public class QuizDAO extends DBContext {
             }
 
         }
+        
+        return quizId;
     }
 
     private void insertQuestionWithConnection(Connection conn, int quizId, Question question) throws SQLException {
@@ -902,7 +906,7 @@ public class QuizDAO extends DBContext {
             ps.setInt(1, questionId);
             ps.setString(2, answer.getContent());
             ps.setBoolean(3, answer.isCorrect());
-            ps.setInt(3, answer.getOrderIndex());
+            ps.setInt(4, answer.getOrderIndex());
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected != 1) {
                 throw new SQLException("Answer insert failed!");

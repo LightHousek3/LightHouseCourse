@@ -484,10 +484,10 @@
         <script>
             let lessonIndex = 0;
             function addLesson() {
-            const list = document.getElementById('lesson-list');
-            const div = document.createElement('div');
-            div.className = "lesson-block card border-primary border-2 rounded-4 mb-4";
-            div.innerHTML = `
+                const list = document.getElementById('lesson-list');
+                const div = document.createElement('div');
+                div.className = "lesson-block card border-primary border-2 rounded-4 mb-4";
+                div.innerHTML = `
     <div class="lesson-header card-header d-flex justify-content-between align-items-center bg-primary text-white rounded-top-4">
         <span class="fw-semibold">Lesson <span class="lesson-num"></span></span>
         <button type="button" class="btn btn-danger btn-lg" onclick="this.closest('.lesson-block').remove(); reindexLessonTempId(); updateLessonNum();">
@@ -520,20 +520,20 @@
         <div class="video-list"></div>
     </div>
     `;
-            list.appendChild(div);
-            lessonIndex++;
-            reindexLessonTempId();
-            updateLessonNum();
+                list.appendChild(div);
+                lessonIndex++;
+                reindexLessonTempId();
+                updateLessonNum();
             }
 
             function addQuiz(btn) {
-            const lessonBlock = btn.closest('.lesson-block');
-            const lessonTempId = lessonBlock.querySelector('input[name="lessonTempId[]"]').value;
-            const quizList = lessonBlock.querySelector('.quiz-list');
-            const quizIndex = quizList.querySelectorAll('.quiz-block').length;
-            const div = document.createElement('div');
-            div.className = "quiz-block card border border-info border-2 rounded-4 shadow-sm mb-4";
-            div.innerHTML = `
+                const lessonBlock = btn.closest('.lesson-block');
+                const lessonTempId = lessonBlock.querySelector('input[name="lessonTempId[]"]').value;
+                const quizList = lessonBlock.querySelector('.quiz-list');
+                const quizIndex = quizList.querySelectorAll('.quiz-block').length;
+                const div = document.createElement('div');
+                div.className = "quiz-block card border border-info border-2 rounded-4 shadow-sm mb-4";
+                div.innerHTML = `
     <div class="card-header bg-info text-white rounded-top-4 d-flex justify-content-between align-items-center">
         <span class="fw-bold">Quiz</span>
         <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.quiz-block').remove(); reindexLessonTempId();">
@@ -572,19 +572,19 @@
         </div>
     </div>
     `;
-            quizList.appendChild(div);
-            reindexLessonTempId();
+                quizList.appendChild(div);
+                reindexLessonTempId();
             }
 
             function addQuestion(btn) {
-            const quizBlock = btn.closest('.quiz-block');
-            const lessonTempId = quizBlock.querySelector('input[name="quizLessonId[]"]').value;
-            const quizIndex = quizBlock.querySelector('input[name="quizIndex[]"]').value;
-            const questionList = quizBlock.querySelector('.question-list');
-            const questionIndex = questionList.querySelectorAll('.question-block').length;
-            const div = document.createElement('div');
-            div.className = "question-block border border-primary border-2 rounded-3 shadow-sm mb-3 bg-white p-3";
-            div.innerHTML = `
+                const quizBlock = btn.closest('.quiz-block');
+                const lessonTempId = quizBlock.querySelector('input[name="quizLessonId[]"]').value;
+                const quizIndex = quizBlock.querySelector('input[name="quizIndex[]"]').value;
+                const questionList = quizBlock.querySelector('.question-list');
+                const questionIndex = questionList.querySelectorAll('.question-block').length;
+                const div = document.createElement('div');
+                div.className = "question-block border border-primary border-2 rounded-3 shadow-sm mb-3 bg-white p-3";
+                div.innerHTML = `
     <div class="d-flex justify-content-between align-items-center mb-2">
         <span class="fw-semibold">Question</span>
         <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.question-block').remove(); reindexLessonTempId();">
@@ -610,21 +610,21 @@
         </button>
     </div>
     `;
-            questionList.appendChild(div);
-            reindexLessonTempId();
+                questionList.appendChild(div);
+                reindexLessonTempId();
             }
 
             function addAnswer(btn) {
-            const questionBlock = btn.closest('.question-block');
-            const lessonTempId = questionBlock.querySelector('input[name="questionQuizLessonId[]"]').value;
-            const quizIndex = questionBlock.querySelector('input[name="questionQuizIndex[]"]').value;
-            const questionIndex = questionBlock.querySelector('input[name="questionIndex[]"]').value;
-            const answerList = questionBlock.querySelector('.answer-list');
-            const answerIndex = answerList.querySelectorAll('.answer-block').length;
-            const radioName = "answerIsCorrect_" + lessonTempId + "_" + quizIndex + "_" + questionIndex;
-            const div = document.createElement('div');
-            div.className = "answer-block d-flex align-items-center mb-2";
-            div.innerHTML = `
+                const questionBlock = btn.closest('.question-block');
+                const lessonTempId = questionBlock.querySelector('input[name="questionQuizLessonId[]"]').value;
+                const quizIndex = questionBlock.querySelector('input[name="questionQuizIndex[]"]').value;
+                const questionIndex = questionBlock.querySelector('input[name="questionIndex[]"]').value;
+                const answerList = questionBlock.querySelector('.answer-list');
+                const answerIndex = answerList.querySelectorAll('.answer-block').length;
+                const radioName = "answerIsCorrect_" + lessonTempId + "_" + quizIndex + "_" + questionIndex;
+                const div = document.createElement('div');
+                div.className = "answer-block d-flex align-items-center mb-2";
+                div.innerHTML = `
     <input type="hidden" name="answerQuizLessonId[]" value="` + lessonTempId + `"/>
     <input type="hidden" name="answerQuizIndex[]" value="` + quizIndex + `"/>
     <input type="hidden" name="answerQuestionIndex[]" value="` + questionIndex + `"/>
@@ -638,23 +638,23 @@
         <i class="bi bi-x-lg"></i>
     </button>
     `;
-            answerList.appendChild(div);
-            reindexLessonTempId();
+                answerList.appendChild(div);
+                reindexLessonTempId();
             }
 
             function addMaterial(btn) {
-            const lessonBlock = btn.closest('.lesson-block');
-            const lessonTempId = lessonBlock.querySelector('input[name="lessonTempId[]"]').value;
-            const matList = lessonBlock.querySelector('.material-list');
-            const matCount = matList.querySelectorAll('.card').length;
-            const unique = lessonTempId + "_" + matCount + "_" + Date.now();
-            const idTitle = `materialTitle_` + unique;
-            const idDesc = `materialDesc_` + unique;
-            const idContent = `materialContent_` + unique;
-            const idFile = `materialFile_` + unique;
-            const div = document.createElement('div');
-            div.className = "card border border-warning border-2 rounded-4 shadow-sm mb-3";
-            div.innerHTML = `
+                const lessonBlock = btn.closest('.lesson-block');
+                const lessonTempId = lessonBlock.querySelector('input[name="lessonTempId[]"]').value;
+                const matList = lessonBlock.querySelector('.material-list');
+                const matCount = matList.querySelectorAll('.card').length;
+                const unique = lessonTempId + "_" + matCount + "_" + Date.now();
+                const idTitle = `materialTitle_` + unique;
+                const idDesc = `materialDesc_` + unique;
+                const idContent = `materialContent_` + unique;
+                const idFile = `materialFile_` + unique;
+                const div = document.createElement('div');
+                div.className = "card border border-warning border-2 rounded-4 shadow-sm mb-3";
+                div.innerHTML = `
     <div class="card-header bg-warning text-dark rounded-top-4 d-flex justify-content-between align-items-center">
         <span class="fw-bold">Material</span>
         <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.card').remove(); reindexLessonTempId();">
@@ -681,23 +681,23 @@
         </div>
     </div>
     `;
-            matList.appendChild(div);
-            reindexLessonTempId();
+                matList.appendChild(div);
+                reindexLessonTempId();
             }
 
             function addVideo(btn) {
-            const lessonBlock = btn.closest('.lesson-block');
-            const lessonTempId = lessonBlock.querySelector('input[name="lessonTempId[]"]').value;
-            const vList = lessonBlock.querySelector('.video-list');
-            const videoCount = vList.querySelectorAll('.card').length;
-            const unique = lessonTempId + "_" + videoCount + "_" + Date.now();
-            const idTitle = `videoTitle_` + unique;
-            const idDesc = `videoDesc_` + unique;
-            const idFile = `videoFile_` + unique;
-            const idDuration = `videoDuration_` + unique;
-            const div = document.createElement('div');
-            div.className = "card border border-secondary border-2 rounded-4 shadow-sm mb-3";
-            div.innerHTML = `
+                const lessonBlock = btn.closest('.lesson-block');
+                const lessonTempId = lessonBlock.querySelector('input[name="lessonTempId[]"]').value;
+                const vList = lessonBlock.querySelector('.video-list');
+                const videoCount = vList.querySelectorAll('.card').length;
+                const unique = lessonTempId + "_" + videoCount + "_" + Date.now();
+                const idTitle = `videoTitle_` + unique;
+                const idDesc = `videoDesc_` + unique;
+                const idFile = `videoFile_` + unique;
+                const idDuration = `videoDuration_` + unique;
+                const div = document.createElement('div');
+                div.className = "card border border-secondary border-2 rounded-4 shadow-sm mb-3";
+                div.innerHTML = `
     <div class="card-header bg-secondary text-white rounded-top-4 d-flex justify-content-between align-items-center">
         <span class="fw-bold">Video</span>
         <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.card').remove(); reindexLessonTempId();">
@@ -724,32 +724,32 @@
         </div>
     </div>
     `;
-            vList.appendChild(div);
-            reindexLessonTempId();
+                vList.appendChild(div);
+                reindexLessonTempId();
             }
 
             // ----- UPDATE INDEXES -----
             function reindexLessonTempId() {
-            const lessonBlocks = document.querySelectorAll('.lesson-block');
-            lessonBlocks.forEach((block, idx) => {
-            // Update lessonTempId
-            let input = block.querySelector('input[name="lessonTempId[]"]');
-            if (input)
-                    input.value = idx;
-            // Update children input value
-            block.querySelectorAll('input[name="quizLessonId[]"]').forEach(q => q.value = idx);
-            block.querySelectorAll('input[name="materialLessonId[]"]').forEach(q => q.value = idx);
-            block.querySelectorAll('input[name="videoLessonId[]"]').forEach(q => q.value = idx);
-            block.querySelectorAll('input[name="questionQuizLessonId[]"]').forEach(q => q.value = idx);
-            block.querySelectorAll('input[name="answerQuizLessonId[]"]').forEach(q => q.value = idx);
-            // Update name for radio answerIsCorrect
-            block.querySelectorAll('input[type="radio"][name^="answerIsCorrect_"]').forEach(radio => {
-            let oldName = radio.getAttribute('name');
-            let parts = oldName.split('_');
-            if (parts.length === 4) {
-            let quizIndex = parts[2];
-            let questionIndex = parts[3];
-            let newName = `answerIsCorrect_` + idx + "_" + quizIndex + "_" + questionIndex;
+                const lessonBlocks = document.querySelectorAll('.lesson-block');
+                lessonBlocks.forEach((block, idx) => {
+                    // Update lessonTempId
+                    let input = block.querySelector('input[name="lessonTempId[]"]');
+                    if (input)
+                        input.value = idx;
+                    // Update children input value
+                    block.querySelectorAll('input[name="quizLessonId[]"]').forEach(q => q.value = idx);
+                    block.querySelectorAll('input[name="materialLessonId[]"]').forEach(q => q.value = idx);
+                    block.querySelectorAll('input[name="videoLessonId[]"]').forEach(q => q.value = idx);
+                    block.querySelectorAll('input[name="questionQuizLessonId[]"]').forEach(q => q.value = idx);
+                    block.querySelectorAll('input[name="answerQuizLessonId[]"]').forEach(q => q.value = idx);
+                    // Update name for radio answerIsCorrect
+                    block.querySelectorAll('input[type="radio"][name^="answerIsCorrect_"]').forEach(radio => {
+                        let oldName = radio.getAttribute('name');
+                        let parts = oldName.split('_');
+                        if (parts.length === 4) {
+                            let quizIndex = parts[2];
+                            let questionIndex = parts[3];
+                            let newName = `answerIsCorrect_` + idx + "_" + quizIndex + "_" + questionIndex;
                             radio.setAttribute('name', newName);
                         }
                     });
