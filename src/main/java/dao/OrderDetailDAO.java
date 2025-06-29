@@ -21,6 +21,7 @@ import model.OrderDetail;
  * @author DangPH - CE180896
  */
 public class OrderDetailDAO extends DBContext {
+
     private CourseDAO courseDAO;
 
     public OrderDetailDAO() {
@@ -29,7 +30,7 @@ public class OrderDetailDAO extends DBContext {
 
     /**
      * Get the number of times a course has been purchased
-     * 
+     *
      * @param courseID The ID of the course
      * @return The number of purchases
      * @throws SQLException If a database error occurs
@@ -42,9 +43,9 @@ public class OrderDetailDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT COUNT(*) FROM OrderDetails od " +
-                    "JOIN Orders o ON od.OrderID = o.OrderID " +
-                    "WHERE od.CourseID = ? AND o.Status = 'completed'";
+            String sql = "SELECT COUNT(*) FROM OrderDetails od "
+                    + "JOIN Orders o ON od.OrderID = o.OrderID "
+                    + "WHERE od.CourseID = ? AND o.Status = 'completed'";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, courseID);
@@ -62,7 +63,7 @@ public class OrderDetailDAO extends DBContext {
 
     /**
      * Get purchase counts for all courses by year
-     * 
+     *
      * @param year The year to filter by (or 0 for all years)
      * @return Map of course names to purchase counts
      * @throws SQLException If a database error occurs
@@ -75,10 +76,10 @@ public class OrderDetailDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT c.Name, COUNT(*) as PurchaseCount FROM OrderDetails od " +
-                    "JOIN Orders o ON od.OrderID = o.OrderID " +
-                    "JOIN Courses c ON od.CourseID = c.CourseID " +
-                    "WHERE o.Status = 'completed' ";
+            String sql = "SELECT c.Name, COUNT(*) as PurchaseCount FROM OrderDetails od "
+                    + "JOIN Orders o ON od.OrderID = o.OrderID "
+                    + "JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "WHERE o.Status = 'completed' ";
 
             if (year > 0) {
                 sql += "AND YEAR(o.OrderDate) = ? ";
@@ -105,9 +106,10 @@ public class OrderDetailDAO extends DBContext {
 
     /**
      * Get purchase counts for all courses by month for a specific year
-     * 
+     *
      * @param year The year to filter by
-     * @return Map where key is course name and value is array of 12 monthly counts
+     * @return Map where key is course name and value is array of 12 monthly
+     * counts
      * @throws SQLException If a database error occurs
      */
     public Map<String, int[]> getCoursePurchaseCountsByMonth(int year) throws SQLException {
@@ -124,13 +126,13 @@ public class OrderDetailDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT c.Name, MONTH(o.OrderDate) as PurchaseMonth, COUNT(*) as PurchaseCount " +
-                    "FROM OrderDetails od " +
-                    "JOIN Orders o ON od.OrderID = o.OrderID " +
-                    "JOIN Courses c ON od.CourseID = c.CourseID " +
-                    "WHERE o.Status = 'completed' AND YEAR(o.OrderDate) = ? " +
-                    "GROUP BY c.CourseID, c.Name, MONTH(o.OrderDate) " +
-                    "ORDER BY c.Name, MONTH(o.OrderDate)";
+            String sql = "SELECT c.Name, MONTH(o.OrderDate) as PurchaseMonth, COUNT(*) as PurchaseCount "
+                    + "FROM OrderDetails od "
+                    + "JOIN Orders o ON od.OrderID = o.OrderID "
+                    + "JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "WHERE o.Status = 'completed' AND YEAR(o.OrderDate) = ? "
+                    + "GROUP BY c.CourseID, c.Name, MONTH(o.OrderDate) "
+                    + "ORDER BY c.Name, MONTH(o.OrderDate)";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, year);
@@ -155,7 +157,7 @@ public class OrderDetailDAO extends DBContext {
 
     /**
      * Get list of distinct years that have orders
-     * 
+     *
      * @return List of years
      * @throws SQLException If a database error occurs
      */
@@ -184,7 +186,7 @@ public class OrderDetailDAO extends DBContext {
 
     /**
      * Get all order details for a specific order
-     * 
+     *
      * @param orderID The ID of the order
      * @return List of order details
      * @throws SQLException If a database error occurs
@@ -221,7 +223,7 @@ public class OrderDetailDAO extends DBContext {
 
     /**
      * Map a ResultSet row to an OrderDetail object
-     * 
+     *
      * @param rs The ResultSet
      * @return The mapped OrderDetail
      * @throws SQLException If a database error occurs
@@ -234,4 +236,131 @@ public class OrderDetailDAO extends DBContext {
         detail.setPrice(rs.getDouble("Price"));
         return detail;
     }
+
+    public List<Integer> getOrderYearsByInstructor(int instructorId) throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Integer> years = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT DISTINCT YEAR(o.OrderDate) AS Year "
+                    + "FROM Orders o "
+                    + "JOIN OrderDetails od ON o.OrderID = od.OrderID "
+                    + "JOIN CourseInstructors ci ON od.CourseID = ci.CourseID "
+                    + "WHERE o.Status = 'completed' AND ci.InstructorID = ? "
+                    + "ORDER BY Year DESC";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                years.add(rs.getInt("Year"));
+            }
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return years;
+    }
+
+    /**
+     * Get purchase counts for all courses by year for a specific instructor
+     *
+     * @param year The year to filter by (or 0 for all years)
+     * @param instructorId The instructor's ID
+     * @return Map of course names to purchase counts
+     * @throws SQLException If a database error occurs
+     */
+    public Map<String, Integer> getCoursePurchaseCountsByYearForInstructor(int year, int instructorId) throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Map<String, Integer> purchaseCounts = new HashMap<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.Name, COUNT(*) as PurchaseCount FROM OrderDetails od "
+                    + "JOIN Orders o ON od.OrderID = o.OrderID "
+                    + "JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "JOIN CourseInstructors ci ON c.CourseID = ci.CourseID "
+                    + "WHERE o.Status = 'completed' AND ci.InstructorID = ? ";
+
+            if (year > 0) {
+                sql += "AND YEAR(o.OrderDate) = ? ";
+            }
+
+            sql += "GROUP BY c.Name ORDER BY c.Name";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            if (year > 0) {
+                ps.setInt(2, year);
+            }
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                purchaseCounts.put(rs.getString("Name"), rs.getInt("PurchaseCount"));
+            }
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return purchaseCounts;
+    }
+
+    /**
+     * Get monthly purchase counts for courses taught by a specific instructor
+     *
+     * @param year The year to filter (e.g., 2024)
+     * @param instructorId The ID of the instructor
+     * @return Map of course names to an array of 12 integers (purchase count
+     * per month)
+     * @throws SQLException If a database error occurs
+     */
+    public Map<String, int[]> getCoursePurchaseCountsByMonthForInstructor(int year, int instructorId) throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Map<String, int[]> purchaseCountsByMonth = new HashMap<>();
+
+        // Get courses taught by this instructor
+        List<Course> instructorCourses = courseDAO.getCoursesByInstructorId(instructorId);
+        for (Course course : instructorCourses) {
+            purchaseCountsByMonth.put(course.getName(), new int[12]); // 12 months
+        }
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.Name, MONTH(o.OrderDate) as PurchaseMonth, COUNT(*) as PurchaseCount "
+                    + "FROM OrderDetails od "
+                    + "JOIN Orders o ON od.OrderID = o.OrderID "
+                    + "JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "JOIN CourseInstructors ci ON c.CourseID = ci.CourseID "
+                    + "WHERE o.Status = 'completed' AND YEAR(o.OrderDate) = ? AND ci.InstructorID = ? "
+                    + "GROUP BY c.Name, MONTH(o.OrderDate) "
+                    + "ORDER BY c.Name, MONTH(o.OrderDate)";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, year);
+            ps.setInt(2, instructorId);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String courseName = rs.getString("Name");
+                int month = rs.getInt("PurchaseMonth") - 1; // Convert 1-12 → 0-11
+                int count = rs.getInt("PurchaseCount");
+
+                if (purchaseCountsByMonth.containsKey(courseName)) {
+                    purchaseCountsByMonth.get(courseName)[month] = count;
+                }
+            }
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return purchaseCountsByMonth;
+    }
+
 }

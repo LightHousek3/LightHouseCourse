@@ -592,7 +592,7 @@
                                 <div class="mb-3">
                                     <strong>Price:</strong>
                                     <span class="fs-4 fw-bold text-primary">
-                                        <fmt:formatNumber value="${course.price}" type="currency" />
+                                        <fmt:formatNumber value="${course.price}" type="number" />đ
                                     </span>
                                 </div>
 

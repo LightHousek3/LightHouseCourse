@@ -21,9 +21,11 @@ import util.Validator;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.UUID;
 import javax.servlet.annotation.MultipartConfig;
+import java.util.Arrays;
 
 /**
  * Admin servlet for managing Customer accounts.
@@ -562,9 +564,6 @@ public class AdminCustomerServlet extends HttpServlet {
             // Decode the base64 data
             byte[] imageBytes = Base64.getDecoder().decode(parts[1]);
 
-            // Create a unique filename
-            String fileName = prefix + "-" + UUID.randomUUID().toString() + "." + extension;
-
             // Get real path of the web application
             String applicationPath = getServletContext().getRealPath("");
             String avatarDirPath = applicationPath + File.separator + "assets"
@@ -576,8 +575,25 @@ public class AdminCustomerServlet extends HttpServlet {
                 avatarDir.mkdirs();
             }
 
-            // Save the file
+            // Check if an identical image already exists
+            File[] existingFiles = avatarDir.listFiles();
+            if (existingFiles != null) {
+                for (File file : existingFiles) {
+                    if (file.isFile()) {
+                        byte[] existingImageBytes = Files.readAllBytes(file.toPath());
+                        if (Arrays.equals(imageBytes, existingImageBytes)) {
+                            // Return the name of the existing file
+                            return file.getName();
+                        }
+                    }
+                }
+            }
+
+            // Create a unique filename if no identical image was found
+            String fileName = prefix + "-" + UUID.randomUUID().toString() + "." + extension;
             String filePath = avatarDirPath + File.separator + fileName;
+            
+            // Save the file
             Files.write(Paths.get(filePath), imageBytes);
 
             return fileName;

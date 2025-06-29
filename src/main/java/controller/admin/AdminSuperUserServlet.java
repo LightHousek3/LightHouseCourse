@@ -5,6 +5,7 @@
 package controller.admin;
 
 import dao.CustomerDAO;
+import dao.InstructorDAO;
 import dao.SuperUserDAO;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -19,36 +20,37 @@ import util.PasswordEncrypt;
 import util.Validator;
 import model.Instructor;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.UUID;
 import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.http.Part;
+import java.util.Arrays;
 
 /**
  * Admin servlet for managing SuperUsers (admins and instructors).
  *
  * @author DangPH - CE180896
  */
-@WebServlet(name = "AdminSuperUserServlet", urlPatterns = { "/admin/superusers", "/admin/superusers/*" })
+@WebServlet(name = "AdminSuperUserServlet", urlPatterns = {"/admin/superusers", "/admin/superusers/*"})
 @MultipartConfig(
-    fileSizeThreshold = 1024 * 1024, // 1 MB
-    maxFileSize = 5 * 1024 * 1024,   // 5 MB
-    maxRequestSize = 10 * 1024 * 1024 // 10 MB
+        fileSizeThreshold = 1024 * 1024, // 1 MB
+        maxFileSize = 5 * 1024 * 1024, // 5 MB
+        maxRequestSize = 10 * 1024 * 1024 // 10 MB
 )
 public class AdminSuperUserServlet extends HttpServlet {
 
     private CustomerDAO customerDAO;
     private SuperUserDAO superUserDAO;
+    private InstructorDAO instructorDAO;
 
     @Override
     public void init() throws ServletException {
         super.init();
         customerDAO = new CustomerDAO();
         superUserDAO = new SuperUserDAO();
+        instructorDAO = new InstructorDAO();
+
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the
@@ -56,10 +58,10 @@ public class AdminSuperUserServlet extends HttpServlet {
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -93,18 +95,9 @@ public class AdminSuperUserServlet extends HttpServlet {
 
                 // If role is instructor, get instructor details
                 if (selectedUser != null && "instructor".equals(selectedUser.getRole())) {
-                    // Here you would get instructor details
-                    // Instructor instructor = instructorDAO.getInstructorBySuperUserId(userId);
-                    // request.setAttribute("instructor", instructor);
-
-                    // For demonstration, create a sample instructor object
-                    Instructor instructor = new Instructor();
-                    instructor.setInstructorID(1);
-                    instructor.setSuperUserID(userId);
-                    instructor.setBiography(
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed commodo lobortis mauris, non efficitur eros pharetra eget.");
-                    instructor.setSpecialization("Web Development, Java Programming");
-                    request.setAttribute("instructor", instructor);
+                    Instructor instructor = instructorDAO.getInstructorBySuperUserId(userId);
+                    request.setAttribute("specialization", instructor.getSpecialization());
+                    request.setAttribute("biography", instructor.getBiography());
                 }
 
                 request.getRequestDispatcher("/WEB-INF/views/admin/manage-superusers/superuser-detail.jsp").forward(
@@ -146,15 +139,9 @@ public class AdminSuperUserServlet extends HttpServlet {
 
                 // If role is instructor, get instructor details
                 if ("instructor".equals(selectedUser.getRole())) {
-                    // Here you would get instructor details
-                    // Instructor instructor = instructorDAO.getInstructorBySuperUserId(userId);
-                    // request.setAttribute("biography", instructor.getBiography());
-                    // request.setAttribute("specialization", instructor.getSpecialization());
-
-                    // For demonstration, set sample instructor data
-                    request.setAttribute("biography",
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed commodo lobortis mauris, non efficitur eros pharetra eget.");
-                    request.setAttribute("specialization", "Web Development, Java Programming");
+                    Instructor instructor = instructorDAO.getInstructorBySuperUserId(userId);
+                    request.setAttribute("biography", instructor.getBiography());
+                    request.setAttribute("specialization", instructor.getSpecialization());
                 }
 
                 request.getRequestDispatcher("/WEB-INF/views/admin/manage-superusers/superuser-update.jsp").forward(
@@ -174,10 +161,10 @@ public class AdminSuperUserServlet extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -329,29 +316,31 @@ public class AdminSuperUserServlet extends HttpServlet {
                 avatarUrl = "/assets/imgs/avatars/" + fileName;
             } else {
                 // Set default avatar based on role if upload fails
-                avatarUrl = role.equals("admin") ? "/assets/imgs/avatars/default-admin.png" 
-                                                : "/assets/imgs/avatars/default-instructor.png";
+                avatarUrl = role.equals("admin") ? "/assets/imgs/avatars/default-admin.png"
+                        : "/assets/imgs/avatars/default-instructor.png";
             }
         } else {
             // Set default avatar based on role
-            avatarUrl = role.equals("admin") ? "/assets/imgs/avatars/default-admin.png" 
-                                            : "/assets/imgs/avatars/default-instructor.png";
+            avatarUrl = role.equals("admin") ? "/assets/imgs/avatars/default-admin.png"
+                    : "/assets/imgs/avatars/default-instructor.png";
         }
         newSuperUser.setAvatar(avatarUrl);
 
         // Insert SuperUser
         userId = superUserDAO.insertSuperUser(newSuperUser);
 
-        // If user is an instructor, create the instructor record
-        if (userId > 0 && role.equals("instructor")) {
+        // Insert the instructor information if role is instructor
+        if (role.equals("instructor") && userId > 0) {
+            // Create instructor
             Instructor instructor = new Instructor();
             instructor.setSuperUserID(userId);
             instructor.setBiography(biography);
             instructor.setSpecialization(specialization);
-            instructor.setApprovalDate(new java.util.Date()); // Set current date as approval date
-
-            // Here you would call a DAO method to insert the instructor
-            // instructorDAO.insertInstructor(instructor);
+            // Insert the instructor record
+            Instructor insertedInstructor = instructorDAO.insertInstructor(instructor);
+            if (insertedInstructor == null) {
+                response.sendRedirect(request.getContextPath() + "/admin/superusers/add?error=insert_failed");
+            }
         }
 
         if (userId > 0) {
@@ -465,20 +454,21 @@ public class AdminSuperUserServlet extends HttpServlet {
 
         // If validation failed, return to form with input preserved
         if (hasError) {
-            // For form re-display, set the input values as attributes
-            request.setAttribute("selectedUser", existingSuperUser); // Original data
-
             // Override with form inputs for re-display
             existingSuperUser.setUsername(username);
+            existingSuperUser.setPassword(password);
             existingSuperUser.setEmail(email);
             existingSuperUser.setRole(role);
             existingSuperUser.setFullName(fullName);
             existingSuperUser.setPhone(phone);
             existingSuperUser.setAddress(address);
+            existingSuperUser.setAvatar(avatarUrl);
 
             // Instructor data
             request.setAttribute("biography", biography);
             request.setAttribute("specialization", specialization);
+            // For form re-display, set the input values as attributes
+            request.setAttribute("selectedUser", existingSuperUser);
 
             request.getRequestDispatcher("/WEB-INF/views/admin/manage-superusers/superuser-update.jsp").forward(request,
                     response);
@@ -497,16 +487,6 @@ public class AdminSuperUserServlet extends HttpServlet {
             superUser.setPhone(phone);
             superUser.setAddress(address);
 
-            // Update avatar if role has changed
-            if (!superUser.getRole().equals(role)) {
-                String currentAvatar = superUser.getAvatar();
-                if (currentAvatar == null || currentAvatar.contains("default-")) {
-                    String defaultAvatar = role.equals("admin") ? "/assets/imgs/avatars/default-admin.png"
-                            : "/assets/imgs/avatars/default-instructor.png";
-                    superUser.setAvatar(defaultAvatar);
-                }
-            }
-
             // Check if avatarUrl is a base64 image
             if (avatarUrl != null && avatarUrl.startsWith("data:image")) {
                 String fileName = saveAvatarImage(avatarUrl, "superuser");
@@ -516,37 +496,54 @@ public class AdminSuperUserServlet extends HttpServlet {
                 }
             }
 
-            updated = superUserDAO.updateSuperUser(superUser);
-
-            // Update password if provided
-            if (updated && password != null && !password.trim().isEmpty()) {
-                String hashedPassword = PasswordEncrypt.encryptSHA256(password);
-                superUserDAO.changePassword(superUserId, hashedPassword);
+            // Check whether customer has change password
+            if (!existingSuperUser.getPassword().equals(password)) {
+                // Encrypt password
+                String encyptedPassword = PasswordEncrypt.encryptSHA256(password);
+                superUser.setPassword(encyptedPassword);
             }
 
-            // Handle instructor information
-            if (updated && role.equals("instructor")) {
-                // Check if instructor record exists
-                // Here you would call a method like
-                // instructorDAO.getInstructorBySuperUserId(superUserId)
-                // Instructor existingInstructor =
-                // instructorDAO.getInstructorBySuperUserId(superUserId);
+            // Store the original role before updating the user
+            String originalRole = existingSuperUser.getRole();
 
-                // If exists, update it
-                // if (existingInstructor != null) {
-                // existingInstructor.setBiography(biography);
-                // existingInstructor.setSpecialization(specialization);
-                // instructorDAO.updateInstructor(existingInstructor);
-                // } else {
-                // // Create new instructor record
-                // Instructor newInstructor = new Instructor();
-                // newInstructor.setSuperUserID(superUserId);
-                // newInstructor.setBiography(biography);
-                // newInstructor.setSpecialization(specialization);
-                // newInstructor.setApprovalDate(new java.util.Date()); // Set current date as
-                // approval date
-                // instructorDAO.insertInstructor(newInstructor);
-                // }
+            updated = superUserDAO.updateSuperUser(superUser);
+
+            // Handle role changes and instructor information
+            if (updated) {
+                // If role changed from instructor to admin, delete the instructor record
+                if (originalRole.equals("instructor") && role.equals("admin")) {
+                    instructorDAO.deleteInstructorBySuperUserId(superUserId);
+                } // If role changed from admin to instructor or remained as instructor, handle instructor data
+                else if (role.equals("instructor")) {
+                    Instructor instructor = instructorDAO.getInstructorBySuperUserId(superUserId);
+
+                    if (instructor == null) {
+                        // Create new instructor if changing from admin to instructor
+                        instructor = new Instructor();
+                        instructor.setSuperUserID(superUserId);
+                        instructor.setBiography(biography);
+                        instructor.setSpecialization(specialization);
+                        instructor = instructorDAO.insertInstructor(instructor);
+
+                        if (instructor == null) {
+                            response.sendRedirect(
+                                    request.getContextPath() + "/admin/superusers/edit/" + superUserId + "?error=instructor_create_failed");
+                            return;
+                        }
+                    } else {
+                        // Update existing instructor
+                        System.out.println("specialization: " + specialization);
+                        instructor.setSpecialization(specialization);
+                        instructor.setBiography(biography);
+                        boolean updatedInstructor = instructorDAO.updateInstructor(instructor);
+
+                        if (!updatedInstructor) {
+                            response.sendRedirect(
+                                    request.getContextPath() + "/admin/superusers/edit/" + superUserId + "?error=instructor_update_failed");
+                            return;
+                        }
+                    }
+                }
             }
 
             if (updated) {
@@ -676,7 +673,7 @@ public class AdminSuperUserServlet extends HttpServlet {
     /**
      * Format plain text message as HTML email
      *
-     * @param message    Plain text message
+     * @param message Plain text message
      * @param senderName Name of the sender
      * @return HTML formatted message
      */
@@ -704,6 +701,7 @@ public class AdminSuperUserServlet extends HttpServlet {
 
     /**
      * Save a base64 encoded image to the avatar directory
+     *
      * @param base64Image The base64 encoded image data
      * @param prefix Prefix for the filename
      * @return The saved filename or null if there was an error
@@ -715,7 +713,7 @@ public class AdminSuperUserServlet extends HttpServlet {
             if (parts.length < 2) {
                 return null;
             }
-            
+
             // Get image format
             String imageType = parts[0];
             String extension = "png";
@@ -724,28 +722,42 @@ public class AdminSuperUserServlet extends HttpServlet {
             } else if (imageType.contains("gif")) {
                 extension = "gif";
             }
-            
+
             // Decode the base64 data
             byte[] imageBytes = Base64.getDecoder().decode(parts[1]);
-            
-            // Create a unique filename
-            String fileName = prefix + "-" + UUID.randomUUID().toString() + "." + extension;
-            
+
             // Get real path of the web application
             String applicationPath = getServletContext().getRealPath("");
-            String avatarDirPath = applicationPath + File.separator + "assets" + 
-                                   File.separator + "imgs" + File.separator + "avatars";
-            
+            String avatarDirPath = applicationPath + File.separator + "assets"
+                    + File.separator + "imgs" + File.separator + "avatars";
+
             // Ensure directory exists
             File avatarDir = new File(avatarDirPath);
             if (!avatarDir.exists()) {
                 avatarDir.mkdirs();
             }
-            
-            // Save the file
+
+            // Check if an identical image already exists
+            File[] existingFiles = avatarDir.listFiles();
+            if (existingFiles != null) {
+                for (File file : existingFiles) {
+                    if (file.isFile()) {
+                        byte[] existingImageBytes = Files.readAllBytes(file.toPath());
+                        if (Arrays.equals(imageBytes, existingImageBytes)) {
+                            // Return the name of the existing file
+                            return file.getName();
+                        }
+                    }
+                }
+            }
+
+            // Create a unique filename if no identical image was found
+            String fileName = prefix + "-" + UUID.randomUUID().toString() + "." + extension;
             String filePath = avatarDirPath + File.separator + fileName;
+
+            // Save the file
             Files.write(Paths.get(filePath), imageBytes);
-            
+
             return fileName;
         } catch (Exception e) {
             e.printStackTrace();
