@@ -23,35 +23,25 @@ public class MaterialDAO extends DBContext {
      * @return The material object, or null if not found
      */
     public Material getMaterialById(int materialId) {
-        Material material = null;
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
+        Material material = null;
 
         try {
             conn = getConnection();
             String sql = "SELECT * FROM Materials WHERE MaterialID = ?";
-
             ps = conn.prepareStatement(sql);
             ps.setInt(1, materialId);
             rs = ps.executeQuery();
 
             if (rs.next()) {
-                material = mapRow(rs);
+                material = mapMaterial(rs);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error getting material by ID: " + e.getMessage());
         } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-                if (ps != null)
-                    ps.close();
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return material;
@@ -64,36 +54,25 @@ public class MaterialDAO extends DBContext {
      * @return List of materials for the lesson
      */
     public List<Material> getMaterialsByLessonId(int lessonId) {
-        List<Material> materials = new ArrayList<>();
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
+        List<Material> materials = new ArrayList<>();
 
         try {
             conn = getConnection();
-            String sql = "SELECT * FROM Materials WHERE LessonID = ? ORDER BY OrderIndex";
-
+            String sql = "SELECT * FROM Materials WHERE LessonID = ?";
             ps = conn.prepareStatement(sql);
             ps.setInt(1, lessonId);
             rs = ps.executeQuery();
 
             while (rs.next()) {
-                Material material = mapRow(rs);
-                materials.add(material);
+                materials.add(mapMaterial(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error getting materials by lesson ID: " + e.getMessage());
         } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-                if (ps != null)
-                    ps.close();
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return materials;
@@ -305,7 +284,7 @@ public class MaterialDAO extends DBContext {
      * @return A Material object
      * @throws SQLException If a database error occurs
      */
-    private Material mapRow(ResultSet rs) throws SQLException {
+    private Material mapMaterial(ResultSet rs) throws SQLException {
         Material material = new Material();
         material.setMaterialID(rs.getInt("MaterialID"));
         material.setLessonID(rs.getInt("LessonID"));

@@ -2,6 +2,7 @@ package dao;
 
 import db.DBContext;
 import model.LessonItem;
+import model.LessonItemProgress;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -295,5 +296,44 @@ public class LessonItemDAO extends DBContext {
         lessonItem.setItemType(rs.getString("ItemType"));
         lessonItem.setItemID(rs.getInt("ItemID"));
         return lessonItem;
+    }
+
+    /**
+     * Get lesson item progress for a specific student and lesson item
+     *
+     * @param studentId the customer/student ID
+     * @param lessonItemId the lesson item ID
+     * @return LessonItemProgress object or null if not found
+     */
+    public LessonItemProgress getLessonItemProgress(int studentId, int lessonItemId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        LessonItemProgress progress = null;
+        
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM LessonItemProgress WHERE CustomerID = ? AND LessonItemID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, studentId);
+            ps.setInt(2, lessonItemId);
+            rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                progress = new LessonItemProgress();
+                progress.setProgressID(rs.getInt("ProgressID"));
+                progress.setCustomerID(rs.getInt("CustomerID"));
+                progress.setLessonItemID(rs.getInt("LessonItemID"));
+                progress.setIsCompleted(rs.getBoolean("IsCompleted"));
+                progress.setCompletionDate(rs.getTimestamp("CompletionDate"));
+                progress.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving lesson item progress: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        
+        return progress;
     }
 }

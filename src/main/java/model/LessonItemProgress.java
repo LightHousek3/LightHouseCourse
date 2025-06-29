@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 public class LessonItemProgress {
 
     private int progressID;
-    private int userID;
+    private int customerID;
     private int lessonItemID;
     private boolean isCompleted;
     private Timestamp completionDate;
@@ -24,7 +24,7 @@ public class LessonItemProgress {
     }
 
     public LessonItemProgress(int userID, int lessonItemID) {
-        this.userID = userID;
+        this.customerID = userID;
         this.lessonItemID = lessonItemID;
         this.isCompleted = false;
         this.lastAccessDate = new Timestamp(System.currentTimeMillis());
@@ -33,7 +33,7 @@ public class LessonItemProgress {
     public LessonItemProgress(int progressID, int userID, int lessonItemID, boolean isCompleted,
             Timestamp completionDate, Timestamp lastAccessDate) {
         this.progressID = progressID;
-        this.userID = userID;
+        this.customerID = userID;
         this.lessonItemID = lessonItemID;
         this.isCompleted = isCompleted;
         this.completionDate = completionDate;
@@ -55,17 +55,17 @@ public class LessonItemProgress {
     }
 
     /**
-     * @return the userID
+     * @return the customerID
      */
-    public int getUserID() {
-        return userID;
+    public int getCustomerID() {
+        return customerID;
     }
 
     /**
-     * @param userID the userID to set
+     * @param customerID the customerID to set
      */
-    public void setUserID(int userID) {
-        this.userID = userID;
+    public void setCustomerID(int customerID) {
+        this.customerID = customerID;
     }
 
     /**
@@ -134,7 +134,7 @@ public class LessonItemProgress {
 
     @Override
     public String toString() {
-        return "LessonItemProgress{" + "progressID=" + progressID + ", userID=" + userID + ", lessonItemID=" + lessonItemID + ", isCompleted=" + isCompleted + ", completionDate=" + completionDate + ", lastAccessDate=" + lastAccessDate + '}';
+        return "LessonItemProgress{" + "progressID=" + progressID + ", userID=" + customerID + ", lessonItemID=" + lessonItemID + ", isCompleted=" + isCompleted + ", completionDate=" + completionDate + ", lastAccessDate=" + lastAccessDate + '}';
     }
     
 }

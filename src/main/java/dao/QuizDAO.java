@@ -27,40 +27,25 @@ public class QuizDAO extends DBContext {
      * @return The quiz object, or null if not found
      */
     public Quiz getQuizById(int quizId) {
-        Quiz quiz = null;
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
+        Quiz quiz = null;
 
         try {
             conn = getConnection();
             String sql = "SELECT * FROM Quizzes WHERE QuizID = ?";
-
             ps = conn.prepareStatement(sql);
             ps.setInt(1, quizId);
             rs = ps.executeQuery();
 
             if (rs.next()) {
-                quiz = mapRow(rs);
-                // Load questions for the quiz
-                loadQuestionsForQuiz(quiz);
+                quiz = mapQuiz(rs);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error getting quiz by ID: " + e.getMessage());
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return quiz;
@@ -73,44 +58,25 @@ public class QuizDAO extends DBContext {
      * @return List of quizzes for the lesson
      */
     public List<Quiz> getQuizzesByLessonId(int lessonId) {
-        List<Quiz> quizzes = new ArrayList<>();
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
+        List<Quiz> quizzes = new ArrayList<>();
 
         try {
             conn = getConnection();
-            String sql = "SELECT * FROM Quizzes WHERE LessonID = ? ORDER BY QuizID";
-
+            String sql = "SELECT * FROM Quizzes WHERE LessonID = ?";
             ps = conn.prepareStatement(sql);
             ps.setInt(1, lessonId);
             rs = ps.executeQuery();
 
             while (rs.next()) {
-                Quiz quiz = mapRow(rs);
-                quizzes.add(quiz);
-            }
-
-            // Load questions for each quiz
-            for (Quiz quiz : quizzes) {
-                loadQuestionsForQuiz(quiz);
+                quizzes.add(mapQuiz(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error getting quizzes by lesson ID: " + e.getMessage());
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return quizzes;
@@ -392,19 +358,22 @@ public class QuizDAO extends DBContext {
      * @return A Quiz object
      * @throws SQLException If a database error occurs
      */
-    private Quiz mapRow(ResultSet rs) throws SQLException {
+    private Quiz mapQuiz(ResultSet rs) throws SQLException {
         Quiz quiz = new Quiz();
         quiz.setQuizID(rs.getInt("QuizID"));
         quiz.setLessonID(rs.getInt("LessonID"));
         quiz.setTitle(rs.getString("Title"));
         quiz.setDescription(rs.getString("Description"));
-
-        int timeLimit = rs.getInt("TimeLimit");
-        if (!rs.wasNull()) {
-            quiz.setTimeLimit(timeLimit);
-        }
-
+        quiz.setTimeLimit(rs.getObject("TimeLimit", Integer.class));
         quiz.setPassingScore(rs.getInt("PassingScore"));
+        
+        // Check if the IsActive column exists in the ResultSet
+        try {
+            quiz.setIsActive(rs.getBoolean("IsActive"));
+        } catch (SQLException e) {
+            // If the column doesn't exist, default to true
+            quiz.setIsActive(true);
+        }
 
         // Calculate total questions
         Connection conn = null;

@@ -10,9 +10,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import model.Category;
 import model.Course;
+import model.CourseCategory;
+import model.CourseProgress;
+import model.Customer;
 import model.Instructor;
 import model.Lesson;
 import db.DBContext;
@@ -1141,6 +1146,316 @@ public class CourseDAO extends DBContext {
         }
 
         return courses;
+    }
+
+    /**
+     * Checks if an instructor is assigned to a specific course
+     *
+     * @param instructorId The instructor ID
+     * @param courseId The course ID
+     * @return true if the instructor is assigned to the course, false otherwise
+     */
+    public boolean isInstructorForCourse(int instructorId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        boolean isInstructor = false;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT 1 FROM CourseInstructors WHERE InstructorID = ? AND CourseID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                isInstructor = true;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking if instructor teaches course: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return isInstructor;
+    }
+    
+    /**
+     * Get students enrolled in courses taught by an instructor with filtering and pagination
+     *
+     * @param instructorId   the instructor ID
+     * @param page           the current page number (1-based)
+     * @param pageSize       number of items per page
+     * @param searchTerm     optional search term for name/email
+     * @param courseFilter   optional course ID filter
+     * @param progressFilter optional progress filter (completed, in-progress, not-started)
+     * @return List of maps containing student data, course data, and progress data
+     */
+    public List<Map<String, Object>> getStudentsForInstructor(
+            int instructorId, int page, int pageSize, String searchTerm, String courseFilter, String progressFilter) {
+        
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Map<String, Object>> studentDataList = new ArrayList<>();
+        
+        try {
+            conn = getConnection();
+            
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT ");
+            // Select specific columns instead of wildcards to avoid duplicate column names
+            sql.append("c.CourseID, c.Name, c.Description, c.Price, c.ImageUrl, ");
+            sql.append("cu.CustomerID, cu.Username, cu.Email, cu.IsActive, cu.FullName, cu.Phone, cu.Address, cu.Avatar, ");
+            sql.append("cp.ProgressID, cp.CompletionPercentage, cp.LastAccessDate, cp.IsCompleted, ");
+            sql.append("ROW_NUMBER() OVER (ORDER BY cu.FullName) as RowNum ");
+            sql.append("FROM Customers cu ");
+            sql.append("JOIN CourseProgress cp ON cu.CustomerID = cp.CustomerID ");
+            sql.append("JOIN Courses c ON cp.CourseID = c.CourseID ");
+            sql.append("JOIN CourseInstructors ci ON c.CourseID = ci.CourseID ");
+            sql.append("WHERE ci.InstructorID = ? ");
+            
+            List<Object> params = new ArrayList<>();
+            params.add(instructorId);
+            
+            // Add search filter if provided
+            if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                sql.append("AND (cu.FullName LIKE ? OR cu.Email LIKE ?) ");
+                params.add("%" + searchTerm + "%");
+                params.add("%" + searchTerm + "%");
+            }
+            
+            // Add course filter if provided
+            if (courseFilter != null && !courseFilter.trim().isEmpty()) {
+                try {
+                    int courseId = Integer.parseInt(courseFilter);
+                    sql.append("AND c.CourseID = ? ");
+                    params.add(courseId);
+                } catch (NumberFormatException e) {
+                    // Invalid course ID, ignore filter
+                }
+            }
+            
+            // Add progress filter if provided
+            if (progressFilter != null && !progressFilter.trim().isEmpty()) {
+                switch (progressFilter.toLowerCase()) {
+                    case "completed":
+                        sql.append("AND cp.IsCompleted = 1 ");
+                        break;
+                    case "in-progress":
+                        sql.append("AND cp.IsCompleted = 0 AND cp.CompletionPercentage > 0 ");
+                        break;
+                    case "not-started":
+                        sql.append("AND cp.CompletionPercentage = 0 ");
+                        break;
+                    default:
+                        // Invalid progress filter, ignore
+                        break;
+                }
+            }
+            
+            // Calculate the offset for pagination
+            int offset = (page - 1) * pageSize;
+            
+            // Add pagination with subquery
+            String paginatedSql = "SELECT * FROM (" + sql.toString() + ") AS StudentData " +
+                                  "WHERE RowNum BETWEEN ? AND ?";
+            
+            ps = conn.prepareStatement(paginatedSql);
+            
+            // Set parameters
+            int paramIndex = 1;
+            for (Object param : params) {
+                ps.setObject(paramIndex++, param);
+            }
+            
+            ps.setInt(paramIndex++, offset + 1);
+            ps.setInt(paramIndex, offset + pageSize);
+            
+            rs = ps.executeQuery();
+            
+            while (rs.next()) {
+                Map<String, Object> studentData = new HashMap<>();
+                
+                // Map customer data
+                Customer student = new Customer();
+                student.setCustomerID(rs.getInt("CustomerID"));
+                student.setUsername(rs.getString("Username"));
+                student.setEmail(rs.getString("Email"));
+                student.setFullName(rs.getString("FullName"));
+                student.setPhone(rs.getString("Phone"));
+                student.setAddress(rs.getString("Address"));
+                student.setAvatar(rs.getString("Avatar"));
+                student.setActive(rs.getBoolean("IsActive"));
+                
+                // Map course data
+                Course course = new Course();
+                course.setCourseID(rs.getInt("CourseID"));
+                course.setName(rs.getString("Name"));
+                course.setDescription(rs.getString("Description"));
+                course.setPrice(rs.getDouble("Price"));
+                course.setImageUrl(rs.getString("ImageUrl"));
+                
+                // Map progress data
+                CourseProgress progress = new CourseProgress();
+                progress.setProgressID(rs.getInt("ProgressID"));
+                progress.setCustomerID(rs.getInt("CustomerID"));
+                progress.setCourseID(rs.getInt("CourseID"));
+                progress.setCompletionPercentage(rs.getBigDecimal("CompletionPercentage"));
+                progress.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+                progress.setCompleted(rs.getBoolean("IsCompleted"));
+                
+                studentData.put("student", student);
+                studentData.put("course", course);
+                studentData.put("progress", progress);
+                
+                studentDataList.add(studentData);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving students for instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        
+        return studentDataList;
+    }
+    
+    /**
+     * Count students enrolled in courses taught by an instructor with filtering
+     *
+     * @param instructorId   the instructor ID
+     * @param searchTerm     optional search term for name/email
+     * @param courseFilter   optional course ID filter
+     * @param progressFilter optional progress filter (completed, in-progress, not-started)
+     * @return Total count of students matching the criteria
+     */
+    public int countStudentsForInstructor(
+            int instructorId, String searchTerm, String courseFilter, String progressFilter) {
+        
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int count = 0;
+        
+        try {
+            conn = getConnection();
+            
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT COUNT(*) as total FROM (");
+            sql.append("SELECT DISTINCT cu.CustomerID ");
+            sql.append("FROM Customers cu ");
+            sql.append("JOIN CourseProgress cp ON cu.CustomerID = cp.CustomerID ");
+            sql.append("JOIN Courses c ON cp.CourseID = c.CourseID ");
+            sql.append("JOIN CourseInstructors ci ON c.CourseID = ci.CourseID ");
+            sql.append("WHERE ci.InstructorID = ? ");
+            
+            List<Object> params = new ArrayList<>();
+            params.add(instructorId);
+            
+            // Add search filter if provided
+            if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                sql.append("AND (cu.FullName LIKE ? OR cu.Email LIKE ?) ");
+                params.add("%" + searchTerm + "%");
+                params.add("%" + searchTerm + "%");
+            }
+            
+            // Add course filter if provided
+            if (courseFilter != null && !courseFilter.trim().isEmpty()) {
+                try {
+                    int courseId = Integer.parseInt(courseFilter);
+                    sql.append("AND c.CourseID = ? ");
+                    params.add(courseId);
+                } catch (NumberFormatException e) {
+                    // Invalid course ID, ignore filter
+                }
+            }
+            
+            // Add progress filter if provided
+            if (progressFilter != null && !progressFilter.trim().isEmpty()) {
+                switch (progressFilter.toLowerCase()) {
+                    case "completed":
+                        sql.append("AND cp.IsCompleted = 1 ");
+                        break;
+                    case "in-progress":
+                        sql.append("AND cp.IsCompleted = 0 AND cp.CompletionPercentage > 0 ");
+                        break;
+                    case "not-started":
+                        sql.append("AND cp.CompletionPercentage = 0 ");
+                        break;
+                    default:
+                        // Invalid progress filter, ignore
+                        break;
+                }
+            }
+            
+            sql.append(") AS StudentCount");
+            
+            ps = conn.prepareStatement(sql.toString());
+            
+            // Set parameters
+            int paramIndex = 1;
+            for (Object param : params) {
+                ps.setObject(paramIndex++, param);
+            }
+            
+            rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                count = rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting students for instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        
+        return count;
+    }
+    
+    /**
+     * Get course progress for a specific student in a specific course
+     *
+     * @param studentId the customer/student ID
+     * @param courseId  the course ID
+     * @return CourseProgress object or null if not found
+     */
+    public CourseProgress getStudentCourseProgress(int studentId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        CourseProgress progress = null;
+        
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM CourseProgress WHERE CustomerID = ? AND CourseID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, studentId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                progress = new CourseProgress();
+                progress.setProgressID(rs.getInt("ProgressID"));
+                progress.setCustomerID(rs.getInt("CustomerID"));
+                progress.setCourseID(rs.getInt("CourseID"));
+                progress.setCompletionPercentage(rs.getBigDecimal("CompletionPercentage"));
+                progress.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+                progress.setCompleted(rs.getBoolean("IsCompleted"));
+                
+                // Get course and user names for display
+                Course course = getCourseById(courseId);
+                if (course != null) {
+                    progress.setCourseName(course.getName());
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving student course progress: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        
+        return progress;
     }
 
 }

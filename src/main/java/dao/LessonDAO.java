@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import model.Lesson;
 import db.DBContext;
+import model.LessonProgress;
 
 /**
  * Data Access Object for Lesson entity.
@@ -122,5 +123,44 @@ public class LessonDAO extends DBContext {
         lesson.setOrderIndex(rs.getInt("OrderIndex"));
 
         return lesson;
+    }
+
+    /**
+     * Get lesson progress for a specific student and lesson
+     *
+     * @param studentId the customer/student ID
+     * @param lessonId the lesson ID
+     * @return LessonProgress object or null if not found
+     */
+    public LessonProgress getLessonProgress(int studentId, int lessonId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        LessonProgress progress = null;
+        
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM LessonProgress WHERE CustomerID = ? AND LessonID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, studentId);
+            ps.setInt(2, lessonId);
+            rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                progress = new LessonProgress();
+                progress.setProgressID(rs.getInt("ProgressID"));
+                progress.setCustomerID(rs.getInt("CustomerID"));
+                progress.setLessonID(rs.getInt("LessonID"));
+                progress.setIsCompleted(rs.getBoolean("IsCompleted"));
+                progress.setCompletionDate(rs.getTimestamp("CompletionDate"));
+                progress.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving lesson progress: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        
+        return progress;
     }
 }
