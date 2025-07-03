@@ -639,4 +639,24 @@ public class SuperUserDAO extends DBContext {
 
         return false;
     }
+
+    public boolean updatePassword(SuperUser dbUser) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            String sql = "UPDATE SuperUsers SET Password = ? WHERE SuperUserID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, dbUser.getPassword());
+            ps.setInt(2, dbUser.getSuperUserID());
+            int rows = ps.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(null, ps, conn);
+        }
+    }
 }
+
