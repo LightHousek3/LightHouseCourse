@@ -342,7 +342,18 @@ public class InstructorDAO extends DBContext {
     }
 
     public boolean emailExists(String email) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        // Implementation would go here
+        return false;
+    }
+
+    /**
+     * Find an instructor by their user ID (alias for getInstructorBySuperUserId)
+     *
+     * @param superUserId The ID of the super user who is an instructor
+     * @return Instructor object or null if not found
+     */
+    public Instructor findByUserId(int superUserId) {
+        return getInstructorBySuperUserId(superUserId);
     }
 
 }

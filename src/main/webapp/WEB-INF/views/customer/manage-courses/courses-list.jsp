@@ -7,7 +7,7 @@
     <head>
         <title>Courses - LightHouse</title>
         <!-- Include common header resources -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/head.jsp" />
+        <jsp:include page="/WEB-INF/views/customer/common/head.jsp" />
         <style>
             /* Đặt chiều cao cố định cho phần categories */
             .categories-container {
@@ -234,7 +234,7 @@
     </head>
     <body>
         <!-- Include navigation -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/navigation.jsp" />
+        <jsp:include page="/WEB-INF/views/customer/common/navigation.jsp" />
 
         <!-- Page Header -->
         <header class="page-header">
@@ -433,10 +433,10 @@
         </div>
 
         <!-- Include footer -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/footer.jsp" />
+        <jsp:include page="/WEB-INF/views/customer/common/footer.jsp" />
 
         <!-- Script for add to cart functionality -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/scripts.jsp" />
+        <jsp:include page="/WEB-INF/views/customer/common/scripts.jsp" />
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 // Initialize animations for elements

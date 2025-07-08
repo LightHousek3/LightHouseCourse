@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
 <!-- Navigation Bar -->
 <style>
@@ -51,6 +52,12 @@
         transform: translateX(5px);
     }
 
+    .avatar-customer {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%
+    }
+
     /* Responsive design */
     @media (max-width: 768px) {
         .dropdown-menu.scrollable-dropdown {
@@ -63,15 +70,15 @@
             max-height: 200px;
         }
     }
-    
+
     @media (max-width: 768px) {
-    .navbar-collapse .navbar-nav {
-        margin-bottom: 0;
+        .navbar-collapse .navbar-nav {
+            margin-bottom: 0;
+        }
+        .navbar-collapse.has-category .navbar-nav {
+            margin-bottom: 10px;
+        }
     }
-    .navbar-collapse.has-category .navbar-nav {
-        margin-bottom: 10px;
-    }
-}
 </style>
 <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 sticky-top">
     <div class="container">
@@ -97,9 +104,6 @@
                 <li class="nav-item">
                     <a class="nav-link ${pageContext.request.servletPath eq '/index.jsp' ? 'active' : ''}" href="${pageContext.request.contextPath}/">Home</a>
                 </li>
-                <!--                <li class="nav-item">
-                                    <a class="nav-link ${pageContext.request.servletPath eq '/WEB-INF/views/course/course-list.jsp' ? 'active' : ''}" href="${pageContext.request.contextPath}/courses">Home</a>
-                                </li>-->
                 <c:if test="${not empty categories}">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
@@ -155,29 +159,41 @@
                     <c:otherwise>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle me-1"></i> ${sessionScope.user.username}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <c:if test="${sessionScope.user.admin}">
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard">Admin Dashboard</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    </c:if>
-                                    <c:if test="${sessionScope.user.instructor}">
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/instructor/dashboard">Instructor Dashboard</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    </c:if>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">My Profile</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/my-courses">My Courses</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/wallet"><i class="fas fa-wallet me-1"></i>My Wallet</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order/history">My Orders</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/refund/history">My Refund Requests</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a></li>
-                            </ul>
-                        </li>
-                    </c:otherwise>
-                </c:choose>
-            </ul>
-        </div>
-    </div>
-</nav> 
+                                <c:choose>
+                                    <c:when test="${not empty sessionScope.user.avatar}">
+                                        <c:choose>
+                                            <c:when test="${fn:startsWith(sessionScope.user.avatar, 'https')}">
+                                                <img src="${sessionScope.user.avatar}"
+                                                     alt="Customer Avatar" class="avatar-customer"
+                                                     id="avatarCustomer">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <img src="${pageContext.request.contextPath}${sessionScope.user.avatar}"
+                                                         alt="Customer Avatar" class="avatar-customer"
+                                                         id="avatarCustomer">
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="avatar-placeholder"
+                                                     id="avatarPlaceholder">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                        ${sessionScope.user.username}
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">My Profile</a></li>
+                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/my-courses">My Courses</a></li>
+                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order/history">My Orders</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a></li>
+                                        </ul>
+                                        </li>
+                                    </c:otherwise>
+                                </c:choose>
+                                </ul>
+                                </div>
+                                </div>
+                                </nav> 

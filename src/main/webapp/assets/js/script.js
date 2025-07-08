@@ -489,42 +489,42 @@ function addToCart(courseId) {
                         }, 100);
                     }
                 })
-                        .catch(error => {
-                            showNotification('Error adding to cart', 'error');
-                            console.error('Error:', error);
-                        });
-            }
-        }
+                .catch(error => {
+                    showNotification('Error adding to cart', 'error');
+                    console.error('Error:', error);
+                });
+    }
+}
 
-        /**
-         * Show notification
-         * @param {string} message - The message to display
-         * @param {string} type - The type of notification (success, error, info)
-         */
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.classList.add('custom-notification', `notification-${type}`);
-            notification.innerHTML = `
+/**
+ * Show notification
+ * @param {string} message - The message to display
+ * @param {string} type - The type of notification (success, error, info)
+ */
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.classList.add('custom-notification', `notification-${type}`);
+    notification.innerHTML = `
         <div class="notification-icon">
             ${type === 'success' ? '<i class="fas fa-check-circle"></i>' :
-                    type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' :
-                    '<i class="fas fa-info-circle"></i>'}
+            type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' :
+            '<i class="fas fa-info-circle"></i>'}
         </div>
         <div class="notification-message">${message}</div>
     `;
 
-            document.body.appendChild(notification);
+    document.body.appendChild(notification);
 
-            // Animate in
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 10);
+    // Animate in
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
 
-            // Automatically remove after delay
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 3000);
-        } 
+    // Automatically remove after delay
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+} 

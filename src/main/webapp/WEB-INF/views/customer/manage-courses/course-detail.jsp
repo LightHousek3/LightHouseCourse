@@ -9,7 +9,7 @@
     <head>
         <title>${course.name} - LightHouse</title>
         <!-- Include common head with styles -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/head.jsp" />
+        <jsp:include page="/WEB-INF/views/customer/common/head.jsp" />
         <style>
             .course-header {
                 background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
@@ -231,7 +231,7 @@
 
     <body>
         <!-- Include navigation -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/navigation.jsp" />
+        <jsp:include page="/WEB-INF/views/customer/common/navigation.jsp" />
 
         <!-- Course Header -->
         <header class="course-header">
@@ -452,10 +452,10 @@
         </section>
 
         <!-- Include footer -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/footer.jsp"/>
+        <jsp:include page="/WEB-INF/views/customer/common/footer.jsp"/>
 
         <!-- Bootstrap & jQuery JS -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/scripts.jsp"/>
+        <jsp:include page="/WEB-INF/views/customer/common/scripts.jsp"/>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

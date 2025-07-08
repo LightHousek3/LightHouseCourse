@@ -6,7 +6,7 @@
 <html lang="en">
     <head>
         <title>LightHouse - Illuminate Your Learning Path</title>
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/head.jsp" />
+        <jsp:include page="/WEB-INF/views/customer/common/head.jsp" />
         <style>
             /* Đặt chiều cao cố định cho phần categories */
             .categories-container {
@@ -210,7 +210,7 @@
     </head>
     <body>
         <!-- Navigation Bar -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/navigation.jsp" />
+        <jsp:include page="/WEB-INF/views/customer/common/navigation.jsp" />
 
         <!-- Hero Section with Slideshow -->
         <div class="hero-slideshow">
@@ -405,11 +405,11 @@
 
         <!-- Footer -->
         <footer class="py-5">
-            <jsp:include page="/WEB-INF/views/customer/manage-courses/common/footer.jsp" />
+            <jsp:include page="/WEB-INF/views/customer/common/footer.jsp" />
         </footer>
 
         <!-- Include common scripts -->
-        <jsp:include page="/WEB-INF/views/customer/manage-courses/common/scripts.jsp" />
+        <jsp:include page="/WEB-INF/views/customer/common/scripts.jsp" />
 
         <!-- Add extra script for the add to cart buttons -->
         <script>

@@ -449,15 +449,15 @@
                                                     <c:choose>
                                                         <c:when test="${not empty selectedCustomer.avatar}">
                                                             <c:choose>
-                                                                <c:when test="${fn:startsWith(selectedCustomer.avatar, 'data:image')}">
-                                                                    <img src="${selectedCustomer.avatar}"
-                                                                         alt="Customer Avatar" class="avatar-preview"
-                                                                         id="avatarPreview">
-                                                                </c:when>
-                                                                <c:otherwise>
+                                                                <c:when test="${fn:startsWith(selectedCustomer.avatar, '/assets')}">
                                                                     <img src="${pageContext.request.contextPath}${selectedCustomer.avatar}"
                                                                          alt="Customer Avatar" class="avatar-preview"
-                                                                         id="avatarPreview">
+                                                                         id="avatarPreview" referrerpolicy="no-referrer">
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <img src="${selectedCustomer.avatar}"
+                                                                         alt="Customer Avatar" class="avatar-preview"
+                                                                         id="avatarPreview" referrerpolicy="no-referrer">
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </c:when>
