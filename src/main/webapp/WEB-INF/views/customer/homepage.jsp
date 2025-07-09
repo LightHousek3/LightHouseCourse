@@ -131,6 +131,15 @@
             }
 
             /* Enhanced hero section styles */
+            .hero-slideshow{
+                position: relative;
+                min-height: 600px; /* hoặc 100vh nếu muốn full màn hình */
+                overflow: hidden;
+                padding: 60px 0;
+                display: flex;
+                align-items: center;
+            }
+
             .hero-slideshow .slide-content {
                 background-color: rgba(255, 255, 255, 0.15);
                 backdrop-filter: blur(8px);
@@ -173,7 +182,7 @@
             }
 
             .floating-element:nth-child(3) {
-                top: 25%;
+                top: -8%;
                 right: 10%;
                 font-size: 4rem;
             }
@@ -185,7 +194,7 @@
             }
 
             .floating-element:nth-child(5) {
-                top: 40%;
+                top: 87%;
                 right: 23%;
                 font-size: 3.5rem;
             }
@@ -262,7 +271,7 @@
                         <a href="${pageContext.request.contextPath}/courses" class="btn btn-primary btn-lg px-4 me-3">
                             <i class="fas fa-play-circle me-2"></i> Start Now
                         </a>
-                        <a href="${pageContext.request.contextPath}/register" class="btn btn-outline-primary btn-lg px-4">
+                        <a href="${pageContext.request.contextPath}/register" class="btn btn-outline-pink btn-lg px-4">
                             <i class="fas fa-user-plus me-2"></i> Create Account
                         </a>
                     </div>
