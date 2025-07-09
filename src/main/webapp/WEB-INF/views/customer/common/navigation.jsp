@@ -1,82 +1,117 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
 <!-- Navigation Bar -->
 <style>
-    .dropdown-menu.scrollable-dropdown {
-        max-height: 300px; /* Chiều cao tối đa */
-        overflow-y: auto; /* Thanh cuộn dọc khi cần */
-        overflow-x: hidden; /* Ẩn thanh cuộn ngang */
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 1050; /* Bootstrap mặc định */
     }
 
-    /* Tùy chỉnh thanh cuộn webkit */
-    .dropdown-menu.scrollable-dropdown::-webkit-scrollbar {
-        width: 6px;
+    .category-nav {
+        background-color: #282A35;
+        white-space: nowrap;
+        position: sticky;
+        top: 92px;
+        z-index: 1040;
     }
 
-    .dropdown-menu.scrollable-dropdown::-webkit-scrollbar-track {
-        background: #f8f9fa;
-        border-radius: 3px;
+    .category-container {
+        overflow: visible !important;
     }
 
-    .dropdown-menu.scrollable-dropdown::-webkit-scrollbar-thumb {
-        background: #dee2e6;
-        border-radius: 3px;
-        transition: background 0.3s ease;
+
+    .category-nav .category-list {
+        display: flex;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        overflow-x: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE 10+ */
     }
 
-    .dropdown-menu.scrollable-dropdown::-webkit-scrollbar-thumb:hover {
-        background: #adb5bd;
+    .category-nav .category-list::-webkit-scrollbar {
+        display: none; /* Chrome, Safari */
     }
 
-    /* Tùy chỉnh thanh cuộn Firefox */
-    .dropdown-menu.scrollable-dropdown {
-        scrollbar-width: thin;
-        scrollbar-color: #dee2e6 #f8f9fa;
+    .category-nav .category-item {
+        flex-shrink: 0;
     }
 
-    /* Hiệu ứng hover cho dropdown items */
-    .dropdown-menu.scrollable-dropdown .dropdown-item {
-        transition: all 0.3s ease;
-        border-radius: 4px;
-        margin: 2px 8px;
-        padding: 8px 12px;
-    }
-
-    .dropdown-menu.scrollable-dropdown .dropdown-item:hover {
-        background: linear-gradient(135deg, #e83e8c, #ffb6c1);
+    .category-nav .category-link {
+        display: inline-block;
+        padding: 10px 16px;
         color: white;
-        transform: translateX(5px);
+        text-decoration: none;
+        font-size: 14px;
     }
 
-    .avatar-customer {
+    .category-nav .category-link:hover,
+    .category-nav .category-link.active {
+        background-color: #e83e8c;
+        color: white;
+    }
+
+    .scroll-button {
+        background-color: #222; /* nền đen đậm */
+        color: #fff;           /* chữ trắng */
+        border: none;
         width: 30px;
-        height: 30px;
-        border-radius: 50%
+        height: 100%;
+        cursor: pointer;
+        font-size: 20px;
+        opacity: 0.7;
+        transition: opacity 0.3s;
+        z-index: 10;
     }
 
-    /* Responsive design */
+    .scroll-button:hover {
+        opacity: 1;
+    }
+
+    .scroll-button.left {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    .scroll-button.right {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    /* Fade edges */
+    .category-nav::before,
+    .category-nav::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        width: 50px;
+        height: 100%;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .category-nav::before {
+        left: 0;
+
+    }
+
+    .category-nav::after {
+        right: 0;
+
+    }
+
+    /* Mobile responsive */
     @media (max-width: 768px) {
-        .dropdown-menu.scrollable-dropdown {
-            max-height: 250px;
-        }
-    }
 
-    @media (max-width: 576px) {
-        .dropdown-menu.scrollable-dropdown {
-            max-height: 200px;
-        }
-    }
 
-    @media (max-width: 768px) {
-        .navbar-collapse .navbar-nav {
-            margin-bottom: 0;
-        }
-        .navbar-collapse.has-category .navbar-nav {
-            margin-bottom: 10px;
+        .category-nav .category-link {
+            width: 100%;
+            border-top: 1px solid #444;
         }
     }
 </style>
@@ -104,30 +139,6 @@
                 <li class="nav-item">
                     <a class="nav-link ${pageContext.request.servletPath eq '/index.jsp' ? 'active' : ''}" href="${pageContext.request.contextPath}/">Home</a>
                 </li>
-                <c:if test="${not empty categories}">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            Categories
-                        </a>
-                        <ul class="dropdown-menu scrollable-dropdown">
-                            <!-- Thêm header cho dropdown -->
-                            <li><h6 class="dropdown-header">Browse Categories</h6></li>
-                            <li><hr class="dropdown-divider"></li>
-
-                            <!-- All categories link -->
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/courses">
-                                    <i class="fas fa-th-large me-2"></i>All Categories
-                                </a></li>
-
-                            <!-- Individual categories -->
-                            <c:forEach var="category" items="${categories}">
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/courses?category=${category.categoryID}">
-                                        <i class="fas fa-folder me-2"></i>${category.name}
-                                    </a></li>
-                                </c:forEach>
-                        </ul>
-                    </li>
-                </c:if>
             </ul>
 
             <!-- Search Form -->
@@ -159,41 +170,93 @@
                     <c:otherwise>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <c:choose>
-                                    <c:when test="${not empty sessionScope.user.avatar}">
-                                        <c:choose>
-                                            <c:when test="${fn:startsWith(sessionScope.user.avatar, 'https')}">
-                                                <img src="${sessionScope.user.avatar}"
-                                                     alt="Customer Avatar" class="avatar-customer"
-                                                     id="avatarCustomer">
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <img src="${pageContext.request.contextPath}${sessionScope.user.avatar}"
-                                                         alt="Customer Avatar" class="avatar-customer"
-                                                         id="avatarCustomer">
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <div class="avatar-placeholder"
-                                                     id="avatarPlaceholder">
-                                                    <i class="fas fa-user"></i>
-                                                </div>
-                                            </c:otherwise>
-                                        </c:choose>
-                                        ${sessionScope.user.username}
-                                        </a>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">My Profile</a></li>
-                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/my-courses">My Courses</a></li>
-                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order/history">My Orders</a></li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a></li>
-                                        </ul>
-                                        </li>
-                                    </c:otherwise>
-                                </c:choose>
-                                </ul>
-                                </div>
-                                </div>
-                                </nav> 
+                                <i class="fas fa-user-circle me-1"></i> ${sessionScope.user.username}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <c:if test="${sessionScope.user.admin}">
+                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard">Admin Dashboard</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    </c:if>
+                                    <c:if test="${sessionScope.user.instructor}">
+                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/instructor/dashboard">Instructor Dashboard</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    </c:if>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">My Profile</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/my-courses">My Courses</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/wallet"><i class="fas fa-wallet me-1"></i>My Wallet</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order/history">My Orders</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/refund/history">My Refund Requests</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a></li>
+                            </ul>
+                        </li>
+                    </c:otherwise>
+                </c:choose>
+            </ul>
+        </div>
+    </div>
+</nav> 
+<c:if test="${not empty categories}">
+    <div class="category-nav">
+        <div class="container-fluid">
+            <div class="category-container position-relative">
+                <button class="scroll-button left" onclick="scrollCategories('left')" id="scrollLeft">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <ul class="category-list" id="categoryList">
+                    <li class="category-item">
+                        <a class="category-link ${empty param.category ? 'active' : ''}" href="${pageContext.request.contextPath}/courses">
+                            <i class="fas fa-th-large me-2"></i>All Categories
+                        </a>
+                    </li>
+                    <c:forEach var="category" items="${categories}">
+                        <li class="category-item">
+                            <a class="category-link ${param.category eq category.categoryID ? 'active' : ''}" 
+                               href="${pageContext.request.contextPath}/courses?category=${category.categoryID}">
+                                <i class="fas fa-folder me-2"></i>${category.name}
+                            </a>
+                        </li>
+                    </c:forEach>
+                </ul>
+                <button class="scroll-button right" onclick="scrollCategories('right')" id="scrollRight">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</c:if>
+<script>
+    function scrollCategories(direction) {
+        const list = document.getElementById('categoryList');
+        const scrollAmount = 150;
+
+        if (direction === 'left') {
+            list.scrollBy({left: -scrollAmount, behavior: 'smooth'});
+        } else if (direction === 'right') {
+            list.scrollBy({left: scrollAmount, behavior: 'smooth'});
+        }
+        setTimeout(checkScrollButtons, 300);
+    }
+    function checkScrollButtons() {
+        const list = document.getElementById('categoryList');
+        const scrollLeft = list.scrollLeft;
+        const maxScrollLeft = list.scrollWidth - list.clientWidth;
+
+        const scrollLeftButton = document.getElementById('scrollLeft');
+        const scrollRightButton = document.getElementById('scrollRight');
+
+        if (scrollLeft <= 0) {
+            scrollLeftButton.style.display = 'none';
+        } else {
+            scrollLeftButton.style.display = 'block';
+        }
+
+        if (scrollLeft >= maxScrollLeft) {
+            scrollRightButton.style.display = 'none';
+        } else {
+            scrollRightButton.style.display = 'block';
+        }
+    }
+    window.addEventListener('load', checkScrollButtons);
+    window.addEventListener('resize', checkScrollButtons);
+</script>
