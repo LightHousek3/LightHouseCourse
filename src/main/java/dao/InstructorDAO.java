@@ -71,8 +71,9 @@ public class InstructorDAO extends DBContext {
             ps = conn.prepareStatement(query);
             ps.setInt(1, superUserId);
             rs = ps.executeQuery();
-
+            
             if (rs.next()) {
+                
                 Instructor instructor = new Instructor();
                 instructor.setInstructorID(rs.getInt("InstructorID"));
                 instructor.setSuperUserID(rs.getInt("SuperUserID"));
