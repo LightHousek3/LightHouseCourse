@@ -18,17 +18,18 @@ import model.SuperUser;
 
 /**
  * Data access object for Instructor model
- * 
+ *
  * @author DangPH - CE180896
  */
 public class InstructorDAO extends DBContext {
+
     private Connection conn = null;
     private PreparedStatement ps = null;
     private ResultSet rs = null;
 
     /**
      * Get list of course IDs taught by an instructor
-     * 
+     *
      * @param instructorId The ID of the instructor
      * @return List of course IDs
      */
@@ -55,7 +56,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Find an instructor by their user ID
-     * 
+     *
      * @param superUserId The ID of the super user who is an instructor
      * @return Instructor object or null if not found
      */
@@ -98,7 +99,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Get all instructors from the database
-     * 
+     *
      * @return List of instructors
      */
     public List<Instructor> getAllInstructors() {
@@ -135,7 +136,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Update instructor information in the database
-     * 
+     *
      * @param instructor The instructor to updateInstructor
      * @return True if successful, false otherwise
      */
@@ -163,7 +164,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Count courses for an instructor
-     * 
+     *
      * @param instructorId The instructor ID
      * @return Number of courses
      */
@@ -189,7 +190,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Count students enrolled in an instructor's courses
-     * 
+     *
      * @param instructorId The instructor ID
      * @return Number of students
      */
@@ -221,7 +222,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Insert a new instructor into the database
-     * 
+     *
      * @param instructor The instructor to insert
      * @return The inserted instructor with ID or null if failed
      */
@@ -253,10 +254,10 @@ public class InstructorDAO extends DBContext {
             closeResources(rs, ps, conn);
         }
     }
-    
+
     /**
      * Delete an instructor from the database by Super User ID
-     * 
+     *
      * @param superUserId The ID of the super user who is an instructor
      * @return True if successful, false otherwise
      */
@@ -277,4 +278,34 @@ public class InstructorDAO extends DBContext {
             closeResources(rs, ps, conn);
         }
     }
+    
+    public List<Instructor> getAllInstructorsExcept(int exceptInstructorId) {
+        List<Instructor> instructors = new ArrayList<>();
+        String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
+                + "i.ApprovalDate, su.FullName, su.Email "
+                + "FROM Instructors i "
+                + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
+                + "WHERE i.InstructorID <> ?";
+
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, exceptInstructorId);
+            try ( ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Instructor instructor = new Instructor();
+                    instructor.setInstructorID(rs.getInt("InstructorID"));
+                    instructor.setSuperUserID(rs.getInt("SuperUserID"));
+                    instructor.setBiography(rs.getString("Biography"));
+                    instructor.setSpecialization(rs.getString("Specialization"));
+                    instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
+                    instructor.setName(rs.getString("FullName"));
+                    instructor.setEmail(rs.getString("Email"));
+                    instructors.add(instructor);
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error getting instructors except id " + exceptInstructorId + ": " + ex.getMessage());
+        }
+        return instructors;
+    }
+
 }

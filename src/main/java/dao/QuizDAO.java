@@ -11,8 +11,11 @@ import java.util.List;
 import model.Quiz;
 import model.Question;
 import db.DBContext;
+import java.sql.Types;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import model.Answer;
 
 /**
@@ -867,7 +870,7 @@ public class QuizDAO extends DBContext {
             }
 
         }
-        
+
         return quizId;
     }
 
@@ -911,6 +914,284 @@ public class QuizDAO extends DBContext {
             if (rowsAffected != 1) {
                 throw new SQLException("Answer insert failed!");
             }
+        }
+    }
+
+    public boolean updateQuizItem(int quizID, Quiz quiz) {
+        String sql = "UPDATE Quizzes SET Title = ?, Description = ?, TimeLimit = ?, PassingScore = ? WHERE QuizID = ?";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, quiz.getTitle());
+            ps.setString(2, quiz.getDescription());
+            // TimeLimit có thể null
+            if (quiz.getTimeLimit() == null) {
+                ps.setNull(3, Types.INTEGER);
+            } else {
+                ps.setInt(3, quiz.getTimeLimit());
+            }
+            ps.setInt(4, quiz.getPassingScore());
+            ps.setInt(5, quizID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            System.err.println("Update quiz failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteQuizItem(int quizID) {
+        String sqlDeleteLessonItem = "DELETE FROM LessonItems WHERE ItemType = 'quiz' AND ItemID = ?";
+        String sqlDeleteQuiz = "DELETE FROM Quizzes WHERE QuizID = ?";
+        try ( Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try ( PreparedStatement ps1 = conn.prepareStatement(sqlDeleteLessonItem);  PreparedStatement ps2 = conn.prepareStatement(sqlDeleteQuiz)) {
+                ps1.setInt(1, quizID);
+                ps1.executeUpdate();
+                ps2.setInt(1, quizID);
+                int affected = ps2.executeUpdate();
+                conn.commit();
+                return affected > 0;
+            } catch (SQLException ex) {
+                conn.rollback();
+                System.err.println("Delete quiz failed: " + ex.getMessage());
+                return false;
+            }
+        } catch (SQLException ex) {
+            System.err.println("Delete quiz failed: " + ex.getMessage());
+            return false;
+        }
+    }
+    
+    public List<Question> getQuestionsByQuizId(int quizId) {
+        List<Question> questions = new ArrayList<>();
+        String sql = "SELECT q.QuestionID, q.Content AS QuestionContent, q.Type, q.Points, q.OrderIndex, "
+                + "a.AnswerID, a.Content AS AnswerContent, a.IsCorrect, a.OrderIndex AS AnswerOrder "
+                + "FROM Questions q LEFT JOIN Answers a ON q.QuestionID = a.QuestionID "
+                + "WHERE q.QuizID = ? ORDER BY q.OrderIndex, a.OrderIndex";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, quizId);
+            try ( ResultSet rs = ps.executeQuery()) {
+                Map<Integer, Question> questionMap = new LinkedHashMap<>();
+                while (rs.next()) {
+                    int questionId = rs.getInt("QuestionID");
+                    Question question = questionMap.getOrDefault(questionId, new Question());
+                    if (!questionMap.containsKey(questionId)) {
+                        question.setQuestionID(questionId);
+                        question.setContent(rs.getString("QuestionContent"));
+                        question.setType(rs.getString("Type"));
+                        question.setPoints(rs.getInt("Points"));
+                        question.setOrderIndex(rs.getInt("OrderIndex"));
+                        question.setAnswers(new ArrayList<Answer>());
+                        questionMap.put(questionId, question);
+                    }
+                    int answerId = rs.getInt("AnswerID");
+                    if (answerId > 0) {
+                        Answer answer = new Answer();
+                        answer.setAnswerID(answerId);
+                        answer.setContent(rs.getString("AnswerContent"));
+                        answer.setCorrect(rs.getBoolean("IsCorrect"));
+                        answer.setOrderIndex(rs.getInt("AnswerOrder"));
+                        question.getAnswers().add(answer);
+                    }
+                }
+                questions.addAll(questionMap.values());
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return questions;
+    }
+    
+    public boolean isDuplicateQuestionOrderIndex(int quizId, int orderIndex) {
+        String sql = "SELECT 1 FROM Questions WHERE QuizID = ? AND OrderIndex = ?";
+        try (
+                 Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, quizId);
+            ps.setInt(2, orderIndex);
+            try ( ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // Nếu có bản ghi => trùng
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Có thể throw ex hoặc log lỗi tùy yêu cầu hệ thống
+        }
+        return false;
+    }
+    
+    public List<Integer> getQuestionOrderIndexes(int quizId, int exceptQuestionId) {
+        List<Integer> orderIndexes = new ArrayList<>();
+        String sql = "SELECT OrderIndex FROM Questions WHERE QuizID = ?"
+                + (exceptQuestionId > 0 ? " AND QuestionID <> ?" : "");
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, quizId);
+            if (exceptQuestionId > 0) {
+                ps.setInt(2, exceptQuestionId);
+            }
+            try ( ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    orderIndexes.add(rs.getInt("OrderIndex"));
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Tuỳ ý: throw hoặc log
+        }
+        return orderIndexes;
+    }
+
+    public int insertQuestionWithAnswers(Question question, int quizId, List<Answer> answers) {
+        int questionId = -1;
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false); // Start transaction
+
+            // Insert Question
+            String sqlQ = "INSERT INTO Questions (QuizID, Content, Type, Points, OrderIndex) VALUES (?, ?, ?, ?, ?)";
+            try ( PreparedStatement psQ = conn.prepareStatement(sqlQ, Statement.RETURN_GENERATED_KEYS)) {
+                psQ.setInt(1, quizId);
+                psQ.setString(2, question.getContent());
+                psQ.setString(3, question.getType());
+                psQ.setInt(4, question.getPoints());
+                psQ.setInt(5, question.getOrderIndex());
+                if (psQ.executeUpdate() > 0) {
+                    try ( ResultSet rs = psQ.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            questionId = rs.getInt(1);
+                        }
+                    }
+                }
+            }
+
+            // Insert Answers
+            String sqlA = "INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex) VALUES (?, ?, ?, ?)";
+            try ( PreparedStatement psA = conn.prepareStatement(sqlA)) {
+                for (Answer answer : answers) {
+                    psA.setInt(1, questionId);
+                    psA.setString(2, answer.getContent());
+                    psA.setBoolean(3, answer.isCorrect());
+                    psA.setInt(4, answer.getOrderIndex());
+                    psA.addBatch();
+                }
+                psA.executeBatch();
+            }
+
+            conn.commit();
+        } catch (SQLException ex) {
+            if (conn != null) try {
+                conn.rollback();
+            } catch (SQLException e2) {
+            }
+            ex.printStackTrace();
+            questionId = -1;
+        } finally {
+            if (conn != null) try {
+                conn.setAutoCommit(true);
+                conn.close();
+            } catch (SQLException ex) {
+            }
+        }
+        return questionId;
+    }
+
+    public Question getQuestionAndAnswersById(int questionId) {
+        Question question = null;
+        String sql = "SELECT q.QuestionID, q.QuizID, q.Content, q.Type, q.Points, q.OrderIndex, "
+                + "a.AnswerID, a.Content AS AnswerContent, a.IsCorrect, a.OrderIndex AS AnswerOrder "
+                + "FROM Questions q "
+                + "LEFT JOIN Answers a ON q.QuestionID = a.QuestionID "
+                + "WHERE q.QuestionID = ? "
+                + "ORDER BY a.OrderIndex ASC";
+
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, questionId);
+            try ( ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (question == null) {
+                        question = new Question();
+                        question.setQuestionID(rs.getInt("QuestionID"));
+                        question.setQuizID(rs.getInt("QuizID"));
+                        question.setContent(rs.getString("Content"));
+                        question.setType(rs.getString("Type"));
+                        question.setPoints(rs.getInt("Points"));
+                        question.setOrderIndex(rs.getInt("OrderIndex"));
+                        question.setAnswers(new ArrayList<Answer>());
+                    }
+                    // Nếu có answer thì thêm vào list
+                    int answerId = rs.getInt("AnswerID");
+                    if (!rs.wasNull()) {
+                        Answer ans = new Answer();
+                        ans.setAnswerID(answerId);
+                        ans.setContent(rs.getString("AnswerContent"));
+                        ans.setCorrect(rs.getBoolean("IsCorrect"));
+                        ans.setOrderIndex(rs.getInt("AnswerOrder"));
+                        ans.setQuestionID(questionId);
+                        question.getAnswers().add(ans);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return question;
+    }
+
+    public boolean updateQuestionWithAnswers(Question question, List<Answer> answers) {
+        String updateQuestionSql = "UPDATE Questions SET Content=?, Type=?, Points=?, OrderIndex=? WHERE QuestionID=?";
+        String updateAnswerSql = "UPDATE Answers SET Content=?, IsCorrect=?, OrderIndex=? WHERE AnswerID=?";
+
+        try ( Connection conn = getConnection()) {
+            conn.setAutoCommit(false); // Start transaction
+
+            // 1. Update Question
+            try ( PreparedStatement psQuestion = conn.prepareStatement(updateQuestionSql)) {
+                psQuestion.setString(1, question.getContent());
+                psQuestion.setString(2, question.getType());
+                psQuestion.setInt(3, question.getPoints());
+                psQuestion.setInt(4, question.getOrderIndex());
+                psQuestion.setInt(5, question.getQuestionID());
+                if (psQuestion.executeUpdate() == 0) {
+                    conn.rollback();
+                    return false; // Không update được question
+                }
+            }
+
+            // 2. Update Answers
+            try ( PreparedStatement psAnswer = conn.prepareStatement(updateAnswerSql)) {
+                for (Answer answer : answers) {
+                    psAnswer.setString(1, answer.getContent());
+                    psAnswer.setBoolean(2, answer.isCorrect());
+                    psAnswer.setInt(3, answer.getOrderIndex());
+                    psAnswer.setInt(4, answer.getAnswerID());
+                    if (psAnswer.executeUpdate() == 0) {
+                        conn.rollback();
+                        return false; // Có answer không update được
+                    }
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // rollback nếu có lỗi
+            try {
+                // Nếu chưa commit thì rollback
+                if (!getConnection().isClosed() && !getConnection().getAutoCommit()) {
+                    getConnection().rollback();
+                }
+            } catch (SQLException ignore) {
+            }
+            return false;
+        }
+    }
+
+    public boolean deleteQuestion(int questionId) {
+        String sql = "DELETE FROM Questions WHERE QuestionID = ?";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, questionId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
         }
     }
 

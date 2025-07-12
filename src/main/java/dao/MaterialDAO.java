@@ -339,7 +339,7 @@ public class MaterialDAO extends DBContext {
                 throw new SQLException("Material insert failed!");
             }
         }
-        
+
         return materialId;
     }
 
@@ -360,4 +360,53 @@ public class MaterialDAO extends DBContext {
         material.setFileUrl(rs.getString("FileUrl"));
         return material;
     }
+
+    public boolean updateMaterialItem(int materialID, Material material) {
+        boolean hasNewFile = material.getFileUrl() != null && !material.getFileUrl().trim().isEmpty();
+        String sql;
+        if (hasNewFile) {
+            sql = "UPDATE Materials SET Title = ?, Description = ?, Content = ?, FileUrl = ? WHERE MaterialID = ?";
+        } else {
+            sql = "UPDATE Materials SET Title = ?, Description = ?, Content = ? WHERE MaterialID = ?";
+        }
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, material.getTitle());
+            ps.setString(2, material.getDescription());
+            ps.setString(3, material.getContent());
+            if (hasNewFile) {
+                ps.setString(4, material.getFileUrl());
+                ps.setInt(5, materialID);
+            } else {
+                ps.setInt(4, materialID);
+            }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            System.err.println("Update material failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteMaterialItem(int materialID) {
+        String sqlDeleteLessonItem = "DELETE FROM LessonItems WHERE ItemType = 'material' AND ItemID = ?";
+        String sqlDeleteMaterial = "DELETE FROM Materials WHERE MaterialID = ?";
+        try ( Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try ( PreparedStatement ps1 = conn.prepareStatement(sqlDeleteLessonItem);  PreparedStatement ps2 = conn.prepareStatement(sqlDeleteMaterial)) {
+                ps1.setInt(1, materialID);
+                ps1.executeUpdate();
+                ps2.setInt(1, materialID);
+                int affected = ps2.executeUpdate();
+                conn.commit();
+                return affected > 0;
+            } catch (SQLException ex) {
+                conn.rollback();
+                System.err.println("Delete material failed: " + ex.getMessage());
+                return false;
+            }
+        } catch (SQLException ex) {
+            System.err.println("Delete material failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
 }

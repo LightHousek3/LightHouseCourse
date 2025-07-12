@@ -8,6 +8,10 @@ import dao.CategoryDAO;
 import dao.CourseDAO;
 import dao.InstructorDAO;
 import dao.LessonDAO;
+import dao.LessonItemDAO;
+import dao.MaterialDAO;
+import dao.QuizDAO;
+import dao.VideoDAO;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -17,9 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
-import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,25 +30,60 @@ import model.Category;
 import model.Course;
 import model.Instructor;
 import model.Lesson;
+import model.LessonItem;
 import model.Material;
 import model.Question;
 import model.Quiz;
 import model.SuperUser;
 import model.Video;
 import util.FileUploadUtil;
+import util.Validator;
 
 /**
  *
  * @author Pham Quoc Tu - CE181513
  */
-@WebServlet(name = "InstructorCourseServlet", urlPatterns = {"/instructor/courses", "/instructor/courses/create"})
-@MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 20 * 1024 * 1024, maxRequestSize = 60 * 1024 * 1024)
+@WebServlet(name = "InstructorCourseServlet", urlPatterns = {
+    "/instructor/courses",
+    "/instructor/courses/create",
+    "/instructor/courses/delete",
+    "/instructor/courses/submit",
+    "/instructor/courses/change",
+    "/instructor/courses/edit/*",
+    "/instructor/courses/view/*",
+    "/instructor/courses/lessons/create",
+    "/instructor/courses/lessons/delete",
+    "/instructor/courses/lessons/edit/*",
+    "/instructor/courses/lessons/view/*",
+    "/instructor/lessons/quizzes/create",
+    "/instructor/lessons/materials/create",
+    "/instructor/lessons/videos/create",
+    "/instructor/lessons/materials/edit",
+    "/instructor/lessons/videos/edit",
+    "/instructor/lessons/quizzes/edit",
+    "/instructor/lessons/materials/delete",
+    "/instructor/lessons/videos/delete",
+    "/instructor/lessons/quizzes/delete",
+    "/instructor/lessons/quizzes/view/*",
+    "/instructor/lessons/quizzes/questions/create",
+    "/instructor/lessons/quizzes/questions/edit/*",
+    "/instructor/lessons/quizzes/questions/delete"
+})
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024, // 1MB
+        maxFileSize = 250 * 1024 * 1024, // 250MB
+        maxRequestSize = 500 * 1024 * 1024 // 500MB
+)
 public class InstructorCourseServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
     private LessonDAO lessonDAO;
     private InstructorDAO instructorDAO;
     private CategoryDAO categoryDAO;
+    private QuizDAO quizDAO;
+    private VideoDAO videoDAO;
+    private MaterialDAO materialDAO;
+    private LessonItemDAO lessonItemDAO;
 
     @Override
     public void init() throws ServletException {
@@ -55,6 +92,10 @@ public class InstructorCourseServlet extends HttpServlet {
         lessonDAO = new LessonDAO();
         instructorDAO = new InstructorDAO();
         categoryDAO = new CategoryDAO();
+        quizDAO = new QuizDAO();
+        videoDAO = new VideoDAO();
+        materialDAO = new MaterialDAO();
+        lessonItemDAO = new LessonItemDAO();
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -72,7 +113,6 @@ public class InstructorCourseServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-
         String path = request.getServletPath();
         String pathInfo = request.getPathInfo();
 
@@ -85,7 +125,6 @@ public class InstructorCourseServlet extends HttpServlet {
         session.setAttribute("user", superUser);
         // End test
         SuperUser user = (SuperUser) session.getAttribute("user");
-
         // Get instructor information using getInstructorBySuperUserId
         Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
         // Add instructor to request attributes
@@ -96,17 +135,22 @@ public class InstructorCourseServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        // Handle different URL patterns
         if (path.equals("/instructor/courses") && pathInfo == null) {
-            // Show instructor courses list
             listCourses(request, response, instructor);
         } else if (path.equals("/instructor/courses/create") && pathInfo == null) {
-            // Show form instructor create
             showFormCreateCourse(request, response, instructor);
+        } else if (path.equals("/instructor/courses/edit") && pathInfo != null) {
+            showFormEditCourse(request, response, instructor);
+        } else if (path.equals("/instructor/courses/lessons/view") && pathInfo != null) {
+            listLessonItems(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/quizzes/view") && pathInfo != null) {
+            listQuestion(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/quizzes/questions/edit") && pathInfo != null) {
+            showFormEditQuestion(request, response, instructor);
+        } else if (path.equals("/instructor/courses/view") && pathInfo != null) {
+            viewDetailCourse(request, response, instructor);
         }
-        // Test success message
-        // request.setAttribute("message", "Success");
-        // request.setAttribute("error", "Error");
+
     }
 
     /**
@@ -125,18 +169,74 @@ public class InstructorCourseServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         String path = request.getServletPath();
         String pathInfo = request.getPathInfo();
-
-        if (path.equals("/instructor/courses/create")) {
-            createCourse(request, response);
+        // Check if user is logged in
+        HttpSession session = request.getSession();
+        // Test account exist
+        SuperUser superUser = new SuperUser();
+        superUser.setSuperUserID(4);
+        superUser.setAvatar("/assets/imgs/avatars/instructor1.png");
+        session.setAttribute("user", superUser);
+        // End test
+        SuperUser user = (SuperUser) session.getAttribute("user");
+        // Get instructor information using getInstructorBySuperUserId
+        Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
+        // Add instructor to request attributes
+        request.setAttribute("avatar", user.getAvatar());
+        request.setAttribute("instructor", instructor);
+        if (instructor == null) {
+            // If no instructor record exists, redirect to 404 page
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
         }
+        if (path.equals("/instructor/courses/create")) {
+            createCourse(request, response, instructor);
+        } else if (path.equals("/instructor/courses/lessons/create")) {
+            createLesson(request, response, instructor);
+        } else if (path.equals("/instructor/courses/lessons/edit")) {
+            editLesson(request, response, instructor);
+        } else if (path.equals("/instructor/courses/edit")) {
+            editCourse(request, response, instructor);
+        } else if (path.equals("/instructor/courses/delete")) {
+            deleteCourse(request, response, instructor);
+        } else if (path.equals("/instructor/courses/lessons/delete")) {
+            deleteLesson(request, response, instructor);
+        } else if (path.equals("/instructor/courses/submit")) {
+            submitCourse(request, response, instructor);
+        } else if (path.equals("/instructor/courses/change")) {
+            cancelSubmitCourse(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/quizzes/create")) {
+            createQuiz(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/materials/create")) {
+            createMaterial(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/videos/create")) {
+            createVideo(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/quizzes/edit")) {
+            editQuiz(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/videos/edit")) {
+            editVideo(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/materials/edit")) {
+            editMaterial(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/quizzes/delete")) {
+            deleteQuiz(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/videos/delete")) {
+            deleteVideo(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/materials/delete")) {
+            deleteMaterial(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/quizzes/questions/create")) {
+            createQuestion(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/quizzes/questions/edit")) {
+            editQuestion(request, response, instructor);
+        } else if (path.equals("/instructor/lessons/quizzes/questions/delete")) {
+            deleteQuestion(request, response, instructor);
+        }
+
     }
 
     private void listCourses(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
             throws ServletException, IOException {
-        // Get courses by instructor ID
+
         List<Course> courses = courseDAO.getCoursesByInstructorId(instructor.getInstructorID());
         request.setAttribute("courses", courses);
-        // Forward to dashboard page
         request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/courses.jsp").forward(request, response);
     }
 
@@ -144,95 +244,88 @@ public class InstructorCourseServlet extends HttpServlet {
             throws ServletException, IOException {
 
         List<Category> categories = categoryDAO.getAllCategories();
-        System.out.println("debug: " + categories);
-        List<Instructor> instructors = instructorDAO.getAll();
-        Instructor inst = null;
-        for (Instructor instructor1 : instructors) {
-            if (instructor1.getInstructorID() == instructor.getInstructorID()) {
-                inst = instructor1;
-            }
-        }
-        instructors.remove(inst);
-        System.out.println("debug: " + instructors);
+        List<Instructor> instructors = instructorDAO.getAllInstructorsExcept(instructor.getInstructorID());
         request.setAttribute("categories", categories);
         request.setAttribute("instructorList", instructors);
-        // Forward to dashboard page
         request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/create-course.jsp").forward(request, response);
     }
 
-    private void createCourse(HttpServletRequest request, HttpServletResponse response)
+    private void createCourse(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
             throws ServletException, IOException {
 
         Map<String, String> errors = new HashMap<>();
 
+        // All attributes of course from request
         String name = request.getParameter("name");
-        if (name == null || name.trim().isEmpty()) {
-            errors.put("name", "Course name is required.");
-        }
-        System.out.println("debug: name: " + name);
-
         String description = request.getParameter("description");
-        if (description == null || description.trim().isEmpty()) {
-            errors.put("description", "Description is required.");
-        }
-        System.out.println("debug: description: " + description);
-
         String priceStr = request.getParameter("price");
-        if (priceStr == null || priceStr.trim().isEmpty()) {
-            errors.put("price", "Price is required.");
-        } else {
-            try {
-                BigDecimal price = new BigDecimal(priceStr.trim());
-                if (price.compareTo(BigDecimal.ZERO) < 0) {
-                    errors.put("price", "Price must be greater or equal to 0.");
-                }
-            } catch (NumberFormatException ex) {
-                errors.put("price", "Price must be a valid number.");
-            }
-        }
-        System.out.println("debug: price: " + priceStr);
-
         String durationStr = request.getParameter("duration");
-        if (durationStr == null || durationStr.trim().isEmpty()) {
-            errors.put("duration", "Duration is required.");
-        } else {
-            try {
-                int duration = Integer.parseInt(durationStr.trim());
-                if (duration < 1) {
-                    errors.put("duration", "Duration must be at least 1 hour.");
-                }
-            } catch (NumberFormatException ex) {
-                errors.put("duration", "Duration must be a number.");
-            }
-        }
-        System.out.println("debug: duration: " + durationStr);
-
         String level = request.getParameter("level");
-        if (level == null || level.trim().isEmpty()) {
+        String instructorIdsStr = request.getParameter("instructorIds");
+        String categoryIdsStr = request.getParameter("categoryIds");
+        String action = request.getParameter("action"); // only is "draft" not check, if devtool fix action ignore
+        // Validate for action  clean
+        if (!("draft".equals(action))) {
+            action = "draft";
+        }
+        // Validate for name not null, not empty, not exceed 50 characters
+        if (Validator.isNullOrEmpty(name)) {
+            errors.put("name", "Course name is required.");
+        } else if (!Validator.isValidText(name, 50)) {
+            errors.put("name", "Maximum length is 50 characters.");
+        }
+
+        if (Validator.isNullOrEmpty(description)) {
+            errors.put("description", "Description is required.");
+        } else if (!Validator.isValidText(description, 50)) {
+            errors.put("description", "Maximum length is 50 characters.");
+        }
+        double price = 0.0;
+        if (Validator.isNullOrEmpty(priceStr)) {
+            errors.put("price", "Price is required.");
+        } else if (!Validator.isValidDouble(priceStr, 0.0, 10000000.0)) {
+            errors.put("price", "Price must be a valid number from 0 to 10000000.");
+        } else {
+            price = Validator.parseDoubleOrDefault(priceStr, 0.0);
+        }
+
+        if (Validator.isNullOrEmpty(level)) {
             errors.put("level", "Level is required.");
         }
-        System.out.println("debug: level: " + level);
+        int duration = 1;
+        if (Validator.isNullOrEmpty(durationStr)) {
+            errors.put("duration", "Duration is required.");
+        } else if (!Validator.isValidInteger(durationStr, 1, 50)) {
+            errors.put("duration", "Duration must be a valid number from 1 to 50.");
+        } else {
+            duration = Validator.parseIntOrDefault(durationStr, 1);
+        }
 
-        String action = request.getParameter("action"); // "draft" or "pending"
-        System.out.println("debug: action: " + action);
-
-        // 2. Đọc instructor và category từ input hidden (chuỗi id, phân tách dấu phẩy)
-        String instructorIdsStr = request.getParameter("instructorIds");
-        if (instructorIdsStr == null || instructorIdsStr.trim().isEmpty()) {
+        if (Validator.isNullOrEmpty(instructorIdsStr)) {
             errors.put("instructorIds", "Please select at least one instructor.");
         }
-        System.out.println("debug: instructorIds: " + instructorIdsStr);
 
-        String categoryIdsStr = request.getParameter("categoryIds");
-        if (categoryIdsStr == null || categoryIdsStr.trim().isEmpty()) {
+        if (Validator.isNullOrEmpty(categoryIdsStr)) {
             errors.put("categoryIds", "Please select at least one category.");
         }
-        System.out.println("debug: categoryIds: " + categoryIdsStr);
+        String imgUrl = "";
+        if (errors.isEmpty()) {
+            imgUrl = FileUploadUtil.handleUpload(
+                    request.getPart("imageFile"),
+                    request.getServletContext().getRealPath("/assets/imgs/courses"),
+                    "/assets/imgs/courses",
+                    5L * 1024 * 1024,
+                    new String[]{".jpg", ".jpeg", ".png", ".gif"},
+                    errors,
+                    "imageFile",
+                    true);
+        }
 
         List<Integer> instructorIds = new ArrayList<>();
         List<Integer> categoryIds = new ArrayList<>();
+        instructorIds.add(instructor.getInstructorID());
 
-        // Validate instructor & category
+        // Validate instructor
         if (instructorIdsStr != null && !instructorIdsStr.trim().isEmpty()) {
             for (String id : instructorIdsStr.split(",")) {
                 if (id != null && !id.trim().isEmpty()) {
@@ -240,6 +333,7 @@ public class InstructorCourseServlet extends HttpServlet {
                 }
             }
         }
+        // Validate category
         if (categoryIdsStr != null && !categoryIdsStr.trim().isEmpty()) {
             for (String id : categoryIdsStr.split(",")) {
                 if (id != null && !id.trim().isEmpty()) {
@@ -247,566 +341,1482 @@ public class InstructorCourseServlet extends HttpServlet {
                 }
             }
         }
+        // If có lỗi validate thì trả lại form 
+        if (!errors.isEmpty()) {
 
-        // Video
-        String[] videoLessonIds = request.getParameterValues("videoLessonId[]");
-        String[] videoTitleArr = request.getParameterValues("videoTitle[]");
-        String[] videoDescriptionArr = request.getParameterValues("videoDescription[]");
-        String[] videoDurationArr = request.getParameterValues("videoDuration[]");
-        if (videoLessonIds == null || videoLessonIds.length == 0) {
-            errors.put("lessons", "You must add at least one video.");
+            List<Category> categories = categoryDAO.getAllCategories();
+            List<Instructor> instructors = instructorDAO.getAllInstructorsExcept(instructor.getInstructorID());
+            request.setAttribute("categories", categories);
+            request.setAttribute("instructorList", instructors);
+            request.setAttribute("selectedCategoryIds", categoryIds);
+            request.setAttribute("selectedInstructorIds", instructorIds);
+            request.setAttribute("selectedInstructorIdsAsString", instructorIdsStr);
+            request.setAttribute("selectedCategoryIdsAsString", categoryIdsStr);
+            request.setAttribute("errors", errors);
+            request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/create-course.jsp").forward(request, response);
+            return;
+        }
+        // If không lỗi validate thì tạo đối tượng course để insert
+        Course course = new Course(name, description, price, imgUrl, duration + " weeks", level, action);
+        // Bắt đầu insert courese
+        int created = courseDAO.insertCourseFull(course, instructorIds, categoryIds);
+        // Kiểm tra xem thành công hay thất bại
+        if (created > 0) {
+            // Thành công thì redirect về trang list course cùng session messeage (được xóa ngay sau khi hiện)
+            request.getSession().setAttribute("message", "Course created successfully.");
         } else {
-            for (int i = 0; i < videoTitleArr.length; i++) {
-                if (videoTitleArr[i] == null || videoTitleArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All video titles are required.");
-                    break;
+            // Thất bại thì redirect về trang list course cùng session error (được xóa ngay sau khi hiện)
+            request.getSession().setAttribute("error", "Course creation failed. System error occurred.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses");
+    }
+
+    private void showFormEditCourse(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String partInfo = request.getPathInfo();
+        String[] pathParts = partInfo.split("/");
+        if (pathParts.length < 2 || !Validator.isValidInteger(pathParts[1])) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        // lấy courseID valid từ url sau kiểm tra
+        int courseIdValid = Integer.parseInt(pathParts[1]);
+        // dùng courseID valid và instructorID để lấy thông tin khóa học
+        // không cho phép lấy khóa học của instructorID khác
+        Course course = courseDAO.getCourseByIdAndInstructor(courseIdValid, instructor.getInstructorID());
+        // nếu course là null thì instructor không sở hữu khóa học đó
+        if (course == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        // nếu course not null thì phải kiểm tra trạng thái trước
+        // trạng thái banned, approved, pending sẽ không được phép edit
+        if (courseDAO.isCourseStatus(courseIdValid, "banned")) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        if (courseDAO.isCourseStatus(courseIdValid, "approved")) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        if (courseDAO.isCourseStatus(courseIdValid, "pending")) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        // bởi vì trên db lưu durationStr là dạng 1 weeks, 2 weeks,... 
+        // nên chỉ lấy phần đầu
+        String[] durationInfo = course.getDuration().split(" ");
+        // "2 weeks" durationInfo[0] = 2, durationInfo[1] = weeks
+        course.setDurationNumber(Integer.parseInt(durationInfo[0]));
+        // lấy những thông tin cần thiết của course và lessons của nó bằng courseIdValid
+        List<Integer> categoryIds = courseDAO.getCategoryIdsByCourseId(courseIdValid);
+        List<Integer> instructorIds = courseDAO.getInstructorIdsByCourseId(courseIdValid);
+        List<Lesson> lessons = lessonDAO.getLessonsByCourseId(courseIdValid);
+        List<Category> categories = categoryDAO.getAllCategories();
+        List<Instructor> instructors = instructorDAO.getAllInstructorsExcept(instructor.getInstructorID());
+        // điền lại những category và instuctor đã chọn
+        request.setAttribute("selectedCategoryIds", Validator.joinIntegerList(categoryIds));
+        request.setAttribute("selectedInstructorIds", Validator.joinIntegerList(instructorIds));
+        request.setAttribute("categories", categories);
+        request.setAttribute("instructorList", instructors);
+        request.setAttribute("lessons", lessons);
+        request.setAttribute("course", course);
+
+        // load session
+        request.setAttribute("lessonErrors", request.getSession().getAttribute("lessonErrors"));
+        request.setAttribute("editLessonErrors", request.getSession().getAttribute("editLessonErrors"));
+        request.setAttribute("lesson", request.getSession().getAttribute("lesson"));
+        request.setAttribute("editLesson", request.getSession().getAttribute("editLesson"));
+        request.setAttribute("openAddLessonModal", request.getSession().getAttribute("openAddLessonModal"));
+        request.setAttribute("openEditLessonModal", request.getSession().getAttribute("openEditLessonModal"));
+
+        request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/edit-course.jsp").forward(request, response);
+
+        // remove session
+        request.getSession().removeAttribute("lessonErrors");
+        request.getSession().removeAttribute("editLessonErrors");
+        request.getSession().removeAttribute("lesson");
+        request.getSession().removeAttribute("editLesson");
+        request.getSession().removeAttribute("openAddLessonModal");
+        request.getSession().removeAttribute("openEditLessonModal");
+    }
+
+    private void editCourse(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        // All attributes of course from request
+        String courseID = request.getParameter("courseID");
+        String name = request.getParameter("name");
+        String description = request.getParameter("description");
+        String priceStr = request.getParameter("price");
+        String durationStr = request.getParameter("duration");
+        String level = request.getParameter("level");
+        String instructorIdsStr = request.getParameter("instructorIds");
+        String categoryIdsStr = request.getParameter("categoryIds");
+        String action = request.getParameter("action"); // only is "draft"
+        if (!Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        if (!("draft".equals(action))) {
+            action = "draft";
+        }
+
+        if (Validator.isNullOrEmpty(name)) {
+            errors.put("name", "Course name is required.");
+        } else if (!Validator.isValidText(name, 50)) {
+            errors.put("name", "Maximum length is 50 characters.");
+        }
+        if (Validator.isNullOrEmpty(description)) {
+            errors.put("description", "Description is required.");
+        } else if (!Validator.isValidText(description, 50)) {
+            errors.put("description", "Maximum length is 50 characters.");
+        }
+
+        double price = 0.0;
+        if (Validator.isNullOrEmpty(priceStr)) {
+            errors.put("price", "Price is required.");
+        } else if (!Validator.isValidDouble(priceStr, 0.0, 10000000.0)) {
+            errors.put("price", "Price must be a valid number from 0 to 10000000.");
+        } else {
+            price = Validator.parseDoubleOrDefault(priceStr, 0.0);
+        }
+
+        if (Validator.isNullOrEmpty(level)) {
+            errors.put("level", "Level is required.");
+        }
+
+        int duration = 1;
+        if (Validator.isNullOrEmpty(durationStr)) {
+            errors.put("duration", "Duration is required.");
+        } else if (!Validator.isValidInteger(durationStr, 1, 50)) {
+            errors.put("duration", "Duration must be a valid number from 1 to 50.");
+        } else {
+            duration = Validator.parseIntOrDefault(durationStr, 1);
+        }
+
+        if (Validator.isNullOrEmpty(instructorIdsStr)) {
+            errors.put("instructorIds", "Please select at least one instructor.");
+        }
+
+        if (Validator.isNullOrEmpty(categoryIdsStr)) {
+            errors.put("categoryIds", "Please select at least one category.");
+        }
+
+        String imgUrl = "";
+        if (errors.isEmpty()) {
+            imgUrl = FileUploadUtil.handleUpload(
+                    request.getPart("imageFile"),
+                    request.getServletContext().getRealPath("/assets/imgs/courses"),
+                    "/assets/imgs/courses",
+                    5L * 1024 * 1024,
+                    new String[]{".jpg", ".jpeg", ".png", ".gif"},
+                    errors,
+                    "imageFile",
+                    false);
+        }
+
+        int courseIdValid = Integer.parseInt(courseID);
+        int durationValid = duration;
+        double priceValid = price;
+        List<Integer> instructorIds = new ArrayList<>();
+        List<Integer> categoryIds = new ArrayList<>();
+        // Validate instructor
+        if (instructorIdsStr != null && !instructorIdsStr.trim().isEmpty()) {
+            for (String id : instructorIdsStr.split(",")) {
+                if (id != null && !id.trim().isEmpty()) {
+                    instructorIds.add(Integer.parseInt(id.trim()));
                 }
-                if (videoDescriptionArr[i] == null || videoDescriptionArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All video descriptions are required.");
-                    break;
+            }
+        }
+        // Validate category
+        if (categoryIdsStr != null && !categoryIdsStr.trim().isEmpty()) {
+            for (String id : categoryIdsStr.split(",")) {
+                if (id != null && !id.trim().isEmpty()) {
+                    categoryIds.add(Integer.parseInt(id.trim()));
                 }
-                if (videoDurationArr[i] == null || videoDurationArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All video durations are required.");
-                    break;
-                }
-                try {
-                    int duration = Integer.parseInt(videoDurationArr[i]);
-                    if (duration <= 0) {
-                        errors.put("lessons", "Video duration must be greater than 0.");
+            }
+        }
+        List<Category> categories = categoryDAO.getAllCategories();
+        List<Instructor> instructors = instructorDAO.getAllInstructorsExcept(instructor.getInstructorID());
+        List<Lesson> lesson = lessonDAO.getLessonsByCourseId(courseIdValid);
+        Course courseToGiveImageUrl = courseDAO.getCourseByIdAndInstructor(courseIdValid, instructor.getInstructorID());
+        String oldImage = (courseToGiveImageUrl != null) ? courseToGiveImageUrl.getImageUrl() : "";
+        if (!errors.isEmpty()) {
+
+            Course course = new Course();
+            course.setCourseID(courseIdValid);
+            course.setName(name);
+            course.setDescription(description);
+            course.setPrice(priceValid);
+            course.setLevel(level);
+            course.setDurationNumber(durationValid);
+            course.setImageUrl(oldImage);
+            request.setAttribute("errors", errors);
+            request.setAttribute("course", course);
+            request.setAttribute("lessons", lesson);
+            request.setAttribute("categories", categories);
+            request.setAttribute("instructorList", instructors);
+            request.setAttribute("selectedCategoryIds", Validator.joinIntegerList(categoryIds));
+            request.setAttribute("selectedInstructorIds", Validator.joinIntegerList(instructorIds));
+            request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/edit-course.jsp").forward(request, response);
+            return;
+        }
+
+        Course course = new Course();
+        course.setCourseID(courseIdValid);
+        course.setPrice(priceValid);
+        course.setName(name);
+        course.setLevel(level);
+        course.setDescription(description);
+        course.setApprovalStatus(action);
+        course.setDuration(durationValid + " weeks");
+        if (Validator.isNullOrEmpty(imgUrl)) {
+            course.setImageUrl(oldImage);
+        } else {
+            course.setImageUrl(imgUrl);
+        }
+        boolean updated = courseDAO.updateCourseFull(course, instructorIds, categoryIds);
+        if (updated) {
+            request.getSession().setAttribute("message", "Course updated successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Update course failed due to a system error. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/edit/" + courseIdValid + "?tab=course");
+    }
+
+    private void deleteCourse(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String courseID = request.getParameter("courseID");
+        if (!Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int courseIdvalid = Integer.parseInt(courseID);
+        boolean isOwner = courseDAO.isInstructorOwnerOfCourse(instructor.getInstructorID(), courseIdvalid);
+        if (!isOwner) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        boolean deleted = courseDAO.deleteCourseById(courseIdvalid);
+        if (deleted) {
+            request.getSession().setAttribute("message", "Course deleted successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to delete course. System error occurred.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses");
+    }
+
+    private void submitCourse(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String courseID = request.getParameter("courseID");
+        if (!Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int courseIdValid = Integer.parseInt(courseID);
+
+        boolean isOwner = courseDAO.isInstructorOwnerOfCourse(instructor.getInstructorID(), courseIdValid);
+        if (!isOwner) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        String STATUS = "pending";
+        boolean updatedStatus = courseDAO.updateCourseApprovalStatus(courseIdValid, STATUS);
+        if (updatedStatus) {
+            request.getSession().setAttribute("message", "Course status updated successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to update course status. System error occurred.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses");
+    }
+
+    private void cancelSubmitCourse(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String courseID = request.getParameter("courseID");
+        if (!Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int courseIdValid = Integer.parseInt(courseID);
+
+        boolean isOwner = courseDAO.isInstructorOwnerOfCourse(instructor.getInstructorID(), courseIdValid);
+        if (!isOwner) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        String STATUS = "draft";
+        boolean updatedStatus = courseDAO.updateCourseApprovalStatus(courseIdValid, STATUS);
+        if (updatedStatus) {
+            request.getSession().setAttribute("message", "Course status updated successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to update course status. System error occurred.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses");
+    }
+
+    private void createLesson(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        String courseID = request.getParameter("courseID");
+        if (!Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int courseIdValid = Integer.parseInt(courseID);
+        String title = request.getParameter("title");
+        if (Validator.isNullOrEmpty(title)) {
+            errors.put("title", "Lesson title is required.");
+        } else if (!Validator.isValidText(title, 50)) {
+            errors.put("title", "Maximun length is 50 characters.");
+        }
+        int orderIndex = 1;
+        String orderIndexStr = request.getParameter("orderIndex");
+        if (!Validator.isValidInteger(orderIndexStr)) {
+            errors.put("orderIndex", "Lesson order must be a valid number.");
+        } else {
+            orderIndex = Integer.parseInt(orderIndexStr);
+            if (orderIndex <= 0) {
+                errors.put("orderIndex", "Lesson order must be a valid number.");
+            }
+            List<Integer> orderIndexCurrent = lessonDAO.getLessonOrderIndexesByCourse(courseIdValid);
+            if (!orderIndexCurrent.isEmpty()) {
+                for (Integer integer : orderIndexCurrent) {
+                    if (integer == orderIndex) {
+                        errors.put("orderIndex", "Lesson order is duplicated.");
                         break;
                     }
-                } catch (NumberFormatException ex) {
-                    errors.put("lessons", "Video duration must be a valid number.");
-                    break;
                 }
             }
         }
-        System.out.println("debug: videoLessonId: " + videoLessonIds);
-        System.out.println("debug: videoTitle: " + videoTitleArr);
-        System.out.println("debug: videoDescription: " + videoDescriptionArr);
-        System.out.println("debug: videoDuration: " + videoDurationArr);
+        int orderIndexValid = orderIndex;
+        if (!errors.isEmpty()) {
+            Lesson lesson = new Lesson();
+            lesson.setTitle(title);
+            lesson.setOrderIndex(orderIndexValid);
+            request.getSession().setAttribute("lesson", lesson);
+            request.getSession().setAttribute("lessonErrors", errors);
+            request.getSession().setAttribute("openAddLessonModal", true);
+            response.sendRedirect(request.getContextPath() + "/instructor/courses/edit/" + courseIdValid + "?tab=lesson");
+            return;
+        }
+        Lesson lesson = new Lesson();
+        lesson.setCourseID(courseIdValid);
+        lesson.setTitle(title);
+        lesson.setOrderIndex(orderIndexValid);
+        boolean created = lessonDAO.createLesson(lesson);
+        if (created) {
+            request.getSession().setAttribute("message", "New lesson created successfully.");
 
-        // Material
-        String[] materialLessonIds = request.getParameterValues("materialLessonId[]");
-        String[] materialTitleArr = request.getParameterValues("materialTitle[]");
-        String[] materialDescriptionArr = request.getParameterValues("materialDescription[]");
-        String[] materialContentArr = request.getParameterValues("materialContent[]");
-        if (materialLessonIds == null || materialLessonIds.length == 0) {
-            errors.put("lessons", "You must add at least one material.");
         } else {
-            for (int i = 0; i < materialTitleArr.length; i++) {
-                if (materialTitleArr[i] == null || materialTitleArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All material titles are required.");
-                    break;
-                }
-                if (materialDescriptionArr[i] == null || materialDescriptionArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All material descriptions are required.");
-                    break;
-                }
-                // Nếu yêu cầu nội dung
-                if (materialContentArr[i] == null || materialContentArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All material content is required.");
-                    break;
-                }
-            }
+            request.getSession().setAttribute("error", "Create lesson failed due to a system error. Please try again or contact admin.");
         }
-        System.out.println("debug: materialLessonId: " + materialLessonIds);
-        System.out.println("debug: materialTitle: " + materialTitleArr);
-        System.out.println("debug: materialDescription: " + materialDescriptionArr);
-        System.out.println("debug: materialContent: " + materialContentArr);
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/edit/" + courseIdValid + "?tab=lesson");
+    }
 
-        // Answer
-        String[] answerQuizLessonIdArr = request.getParameterValues("answerQuizLessonId[]");
-        String[] answerQuizIndexArr = request.getParameterValues("answerQuizIndex[]");
-        String[] answerQuestionIndexArr = request.getParameterValues("answerQuestionIndex[]");
-        String[] answerIndexArr = request.getParameterValues("answerIndex[]");
-        String[] answerContentArr = request.getParameterValues("answerContent[]");
-        Map<String, Boolean> questionHasCorrect = new HashMap<>(); // Validate answer đúng duy nhất cho mỗi câu hỏi
-        Map<String, Integer> answerCountPerQuestion = new HashMap<>(); // Thêm map này để đếm số đáp án mỗi câu hỏi
+    private void editLesson(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
 
-        if (answerContentArr == null || answerContentArr.length == 0) {
-            errors.put("lessons", "You must add at least one answer for a question.");
+        Map<String, String> errors = new HashMap<>();
+        String courseID = request.getParameter("courseID");
+        String lessonID = request.getParameter("lessonID");
+        if (!Validator.isValidInteger(courseID) || !Validator.isValidInteger(lessonID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int courseIdValid = Integer.parseInt(courseID);
+        int lessonIdValid = Integer.parseInt(lessonID);
+        String title = request.getParameter("title");
+        if (Validator.isNullOrEmpty(title)) {
+            errors.put("title", "Lesson title is required.");
+        } else if (!Validator.isValidText(title, 50)) {
+            errors.put("title", "Maximun length is 50 character.");
+        }
+        int orderIndex = 1;
+        String orderIndexStr = request.getParameter("orderIndex");
+        if (!Validator.isValidInteger(orderIndexStr)) {
+            errors.put("orderIndex", "Lesson order must be a valid number.");
         } else {
-            for (int i = 0; i < answerContentArr.length; i++) {
-                if (answerContentArr[i] == null || answerContentArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All answer content is required.");
-                    break;
-                }
-                String questionKey = answerQuizLessonIdArr[i] + "_" + answerQuizIndexArr[i] + "_" + answerQuestionIndexArr[i];
-
-                // Đếm số đáp án cho từng câu hỏi
-                answerCountPerQuestion.put(questionKey, answerCountPerQuestion.getOrDefault(questionKey, 0) + 1);
-
-                String radioName = "answerIsCorrect_" + answerQuizLessonIdArr[i] + "_" + answerQuizIndexArr[i] + "_" + answerQuestionIndexArr[i];
-                String correctVal = request.getParameter(radioName);
-                if (correctVal != null && correctVal.equals(answerIndexArr[i])) {
-                    questionHasCorrect.put(questionKey, true);
-                }
+            orderIndex = Integer.parseInt(orderIndexStr);
+            if (orderIndex <= 0) {
+                errors.put("orderIndex", "Lesson order must be a valid number.");
             }
-            // Kiểm tra từng câu hỏi đã có đáp án đúng và đủ số lượng đáp án chưa
-            for (String key : answerCountPerQuestion.keySet()) {
-                if (answerCountPerQuestion.get(key) < 2) {
-                    errors.put("lessons", "Each question must have at least 2 answers.");
-                    break;
-                }
-                if (!questionHasCorrect.getOrDefault(key, false)) {
-                    errors.put("lessons", "Each question must have one correct answer.");
-                    break;
+            List<Integer> orderIndexCurrent = lessonDAO.getLessonOrderIndexesByCourseExceptLesson(courseIdValid, lessonIdValid);
+            if (!orderIndexCurrent.isEmpty()) {
+                for (Integer integer : orderIndexCurrent) {
+                    if (integer == orderIndex) {
+                        errors.put("orderIndex", "Lesson order is duplicated.");
+                        break;
+                    }
                 }
             }
         }
-        System.out.println("debug: answerQuizLessonId: " + answerQuizLessonIdArr);
-        System.out.println("debug: answerQuizIndex: " + answerQuizIndexArr);
-        System.out.println("debug: answerQuestionIndex: " + answerQuestionIndexArr);
-        System.out.println("debug: answerIndex: " + answerIndexArr);
-        System.out.println("debug: answerContent: " + answerContentArr);
-
-        // Question
-        String[] questionQuizLessonIdArr = request.getParameterValues("questionQuizLessonId[]");
-        String[] questionQuizIndexArr = request.getParameterValues("questionQuizIndex[]");
-        String[] questionIndexArr = request.getParameterValues("questionIndex[]");
-        String[] questionContentArr = request.getParameterValues("questionContent[]");
-        String[] questionPointsArr = request.getParameterValues("questionPoints[]");
-        if (questionQuizLessonIdArr == null || questionQuizLessonIdArr.length == 0) {
-            errors.put("lessons", "You must add at least one question.");
-        } else {
-            for (int i = 0; i < questionQuizLessonIdArr.length; i++) {
-                if (questionContentArr[i] == null || questionContentArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All question content is required.");
-                    break;
-                }
-                if (questionPointsArr[i] == null || questionPointsArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All question points required.");
-                    break;
-                }
-            }
-        }
-        System.out.println("debug: questionQuizLessonId: " + questionQuizLessonIdArr);
-        System.out.println("debug: questionQuizIndex: " + questionQuizIndexArr);
-        System.out.println("debug: questionIndex: " + questionIndexArr);
-        System.out.println("debug: questionContent: " + questionContentArr);
-        System.out.println("debug: questionPoints: " + questionPointsArr);
-
-        // Quiz
-        String[] quizLessonIds = request.getParameterValues("quizLessonId[]");
-        String[] quizIndexArr = request.getParameterValues("quizIndex[]");
-        String[] quizTitleArr = request.getParameterValues("quizTitle[]");
-        String[] quizDescriptionArr = request.getParameterValues("quizDescription[]");
-        String[] quizTimeLimitArr = request.getParameterValues("quizTimeLimit[]");
-        String[] quizPassingScoreArr = request.getParameterValues("quizPassingScore[]");
-        if (quizLessonIds == null || quizLessonIds.length == 0) {
-            errors.put("lessons", "You must add at least one quiz.");
-        } else {
-            for (int i = 0; i < quizLessonIds.length; i++) {
-                if (quizTitleArr[i] == null || quizTitleArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All quiz titles are required.");
-                    break;
-                }
-                if (quizTimeLimitArr[i] == null || quizTimeLimitArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All quiz time limit required.");
-                    break;
-                }
-                if (quizPassingScoreArr[i] == null || quizPassingScoreArr[i].trim().isEmpty()) {
-                    errors.put("lessons", "All quiz passing score required.");
-                    break;
-                }
-            }
-        }
-        System.out.println("debug: quizLessonId: " + quizLessonIds);
-        System.out.println("debug: quizIndex: " + quizIndexArr);
-        System.out.println("debug: quizTitle: " + quizTitleArr);
-        System.out.println("debug: quizDescription: " + quizDescriptionArr);
-        System.out.println("debug: quizTimeLimit: " + quizTimeLimitArr);
-        System.out.println("debug: quizPassingScore: " + quizPassingScoreArr);
-
-        // Lesson
-        String[] lessonTempIds = request.getParameterValues("lessonTempId[]");
-        String[] lessonTitles = request.getParameterValues("lessonTitle[]");
-        String[] lessonDescriptions = request.getParameterValues("lessonDescription[]");
-        if (lessonTempIds == null || lessonTempIds.length == 0) {
-            errors.put("lessons", "You must add at least one lesson.");
-        } else {
-            for (int i = 0; i < lessonTitles.length; i++) {
-                if (lessonTitles[i] == null || lessonTitles[i].trim().isEmpty()) {
-                    errors.put("lessons", "All lesson titles are required.");
-                    break;
-                }
-                if (lessonDescriptions[i] == null || lessonDescriptions[i].trim().isEmpty()) {
-                    errors.put("lessons", "All lesson descriptions are required.");
-                    break;
-                }
-            }
-        }
-        System.out.println("debug: lessonTempId: " + lessonTempIds);
-        System.out.println("debug: lessonTitle: " + lessonTitles);
-        System.out.println("debug: lessonDescription: " + lessonDescriptions);
+        int orderIndexValid = orderIndex;
 
         if (!errors.isEmpty()) {
 
-            // Build lại list lessons từ param
-            List<Map<String, Object>> oldLessons = new ArrayList<>();
-            // Loop qua từng lesson
-            if (lessonTitles != null) {
-                for (int i = 0; i < lessonTitles.length; i++) {
-                    Map<String, Object> lesson = new HashMap<>();
-                    String tempId = (lessonTempIds != null && i < lessonTempIds.length) ? lessonTempIds[i] : String.valueOf(i);
-
-                    lesson.put("tempId", tempId);
-                    lesson.put("title", lessonTitles[i]);
-                    lesson.put("description", (lessonDescriptions != null && i < lessonDescriptions.length) ? lessonDescriptions[i] : "");
-
-                    // --- Quizzes ---
-                    List<Map<String, Object>> quizzes = new ArrayList<>();
-                    if (quizLessonIds != null && quizIndexArr != null) {
-                        for (int q = 0; q < quizLessonIds.length; q++) {
-                            // Đúng lesson
-                            if (quizLessonIds[q].equals(tempId)) {
-                                String quizIndex = quizIndexArr[q];
-                                Map<String, Object> quiz = new HashMap<>();
-                                quiz.put("quizIndex", quizIndex);
-                                quiz.put("title", quizTitleArr != null && q < quizTitleArr.length ? quizTitleArr[q] : "");
-                                quiz.put("description", quizDescriptionArr != null && q < quizDescriptionArr.length ? quizDescriptionArr[q] : "");
-                                quiz.put("timeLimit", quizTimeLimitArr != null && q < quizTimeLimitArr.length ? quizTimeLimitArr[q] : "");
-                                quiz.put("passingScore", quizPassingScoreArr != null && q < quizPassingScoreArr.length ? quizPassingScoreArr[q] : "");
-
-                                // --- Questions ---
-                                List<Map<String, Object>> questions = new ArrayList<>();
-                                if (questionQuizLessonIdArr != null && questionQuizIndexArr != null && questionIndexArr != null) {
-                                    for (int qq = 0; qq < questionQuizLessonIdArr.length; qq++) {
-                                        if (questionQuizLessonIdArr[qq].equals(tempId)
-                                                && questionQuizIndexArr[qq].equals(quizIndex)) {
-                                            String questionIndex = questionIndexArr[qq];
-                                            Map<String, Object> question = new HashMap<>();
-                                            question.put("questionIndex", questionIndex);
-                                            question.put("content", questionContentArr != null && qq < questionContentArr.length ? questionContentArr[qq] : "");
-                                            question.put("points", questionPointsArr != null && qq < questionPointsArr.length ? questionPointsArr[qq] : "");
-
-                                            // --- Answers ---
-                                            List<Map<String, Object>> answers = new ArrayList<>();
-                                            if (answerQuizLessonIdArr != null && answerQuizIndexArr != null && answerQuestionIndexArr != null && answerIndexArr != null) {
-                                                for (int a = 0; a < answerQuizLessonIdArr.length; a++) {
-                                                    if (answerQuizLessonIdArr[a].equals(tempId)
-                                                            && answerQuizIndexArr[a].equals(quizIndex)
-                                                            && answerQuestionIndexArr[a].equals(questionIndex)) {
-                                                        Map<String, Object> answer = new HashMap<>();
-                                                        answer.put("answerIndex", answerIndexArr[a]);
-                                                        answer.put("content", answerContentArr != null && a < answerContentArr.length ? answerContentArr[a] : "");
-                                                        // Xác định đúng đáp án
-                                                        String radioName = "answerIsCorrect_" + tempId + "_" + quizIndex + "_" + questionIndex;
-                                                        String correctVal = request.getParameter(radioName);
-                                                        boolean isCorrect = (correctVal != null && correctVal.equals(answerIndexArr[a]));
-                                                        answer.put("isCorrect", isCorrect); // Đây là Boolean
-                                                        answers.add(answer);
-                                                    }
-                                                }
-                                            }
-                                            question.put("answers", answers);
-                                            questions.add(question);
-                                        }
-                                    }
-                                }
-                                quiz.put("questions", questions);
-                                quizzes.add(quiz);
-                            }
-                        }
-                    }
-                    lesson.put("quizzes", quizzes);
-
-                    // --- Materials ---
-                    List<Map<String, String>> materials = new ArrayList<>();
-                    if (materialLessonIds != null) {
-                        int matCount = 0;
-                        for (int m = 0; m < materialLessonIds.length; m++) {
-                            if (materialLessonIds[m].equals(tempId)) {
-                                Map<String, String> mat = new HashMap<>();
-                                mat.put("title", materialTitleArr != null && matCount < materialTitleArr.length ? materialTitleArr[matCount] : "");
-                                mat.put("description", materialDescriptionArr != null && matCount < materialDescriptionArr.length ? materialDescriptionArr[matCount] : "");
-                                mat.put("content", materialContentArr != null && matCount < materialContentArr.length ? materialContentArr[matCount] : "");
-                                // Không map file (file input không giữ lại)
-                                materials.add(mat);
-                                matCount++;
-                            }
-                        }
-                    }
-                    lesson.put("materials", materials);
-
-                    // --- Videos ---
-                    List<Map<String, String>> videos = new ArrayList<>();
-                    if (videoLessonIds != null) {
-                        int vidCount = 0;
-                        for (int v = 0; v < videoLessonIds.length; v++) {
-                            if (videoLessonIds[v].equals(tempId)) {
-                                Map<String, String> vid = new HashMap<>();
-                                vid.put("title", videoTitleArr != null && vidCount < videoTitleArr.length ? videoTitleArr[vidCount] : "");
-                                vid.put("description", videoDescriptionArr != null && vidCount < videoDescriptionArr.length ? videoDescriptionArr[vidCount] : "");
-                                vid.put("duration", videoDurationArr != null && vidCount < videoDurationArr.length ? videoDurationArr[vidCount] : "");
-                                // Không map file (file input không giữ lại)
-                                videos.add(vid);
-                                vidCount++;
-                            }
-                        }
-                    }
-                    lesson.put("videos", videos);
-
-                    oldLessons.add(lesson);
-                }
-            }
-            HttpSession session = request.getSession();
-            SuperUser user = (SuperUser) session.getAttribute("user");
-            // Get instructor information using getInstructorBySuperUserId
-            Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
-            // Add instructor to request attributes
-            request.setAttribute("avatar", user.getAvatar());
-            request.setAttribute("instructor", instructor);
-            List<Category> categories = categoryDAO.getAllCategories();
-            System.out.println("debug: " + categories);
-            List<Instructor> instructors = instructorDAO.getAll();
-            Instructor inst = null;
-            for (Instructor instructor1 : instructors) {
-                if (instructor1.getInstructorID() == instructor.getInstructorID()) {
-                    inst = instructor1;
-                }
-            }
-            instructors.remove(inst);
-            System.out.println("debug: " + instructors);
-            request.setAttribute("categories", categories);
-            request.setAttribute("instructorList", instructors);
-
-            request.setAttribute("oldLessons", oldLessons);
-            // Nếu có lỗi sau khi upload (do file), trả lại form
-            request.setAttribute("errors", errors);
-            request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/create-course.jsp").forward(request, response);
+            Lesson lessonReturn = new Lesson();
+            lessonReturn.setCourseID(courseIdValid);
+            lessonReturn.setLessonID(lessonIdValid);
+            lessonReturn.setTitle(title);
+            lessonReturn.setOrderIndex(orderIndexValid);
+            request.getSession().setAttribute("editLesson", lessonReturn);
+            request.getSession().setAttribute("editLessonErrors", errors);
+            request.getSession().setAttribute("openEditLessonModal", true);
+            response.sendRedirect(request.getContextPath() + "/instructor/courses/edit/" + courseIdValid + "?tab=lesson");
             return;
         }
 
-        try {
-            Collection<Part> parts = request.getParts();
-            // 1. Upload Video Files
-            String videoPath = request.getServletContext().getRealPath("/assets/videos");
-            List<String> videoFileUrls = new ArrayList<>();
-            List<Part> videoFileParts = new ArrayList<>();
-            for (Part part : parts) {
-                if ("videoFile[]".equals(part.getName())) {
-                    videoFileParts.add(part);
-                }
-            }
-            for (int i = 0; i < videoFileParts.size(); i++) {
-                Part videoFilePart = videoFileParts.get(i);
-                if (videoFilePart != null && videoFilePart.getSize() > 0) {
-                    String fileName = videoFilePart.getSubmittedFileName().toLowerCase();
-                    if (!(fileName.endsWith(".mp4") || fileName.endsWith(".avi") || fileName.endsWith(".mov") || fileName.endsWith(".wmv"))) {
-                        errors.put("lessons", "Video file must be mp4, avi, mov, or wmv.");
-                        break;
-                    }
-                    if (videoFilePart.getSize() > 200 * 1024 * 1024) {
-                        errors.put("lessons", "Video file is too large (max 200MB).");
-                        break;
-                    }
-                    String url = FileUploadUtil.saveFile(videoFilePart, videoPath, "/assets/videos");
-                    videoFileUrls.add(url);
-                } else {
-                    videoFileUrls.add("");
-                }
-            }
-            if (videoTitleArr != null) {
-                for (int i = 0; i < videoTitleArr.length; i++) {
-                    if ((videoTitleArr[i] != null && !videoTitleArr[i].trim().isEmpty())
-                            || (videoDescriptionArr != null && videoDescriptionArr[i] != null && !videoDescriptionArr[i].trim().isEmpty())
-                            || (videoDurationArr != null && videoDurationArr[i] != null && !videoDurationArr[i].trim().isEmpty())) {
-                        // Nếu đã nhập thông tin thì phải có file
-                        if (videoFileUrls.size() <= i || videoFileUrls.get(i) == null || videoFileUrls.get(i).isEmpty()) {
-                            errors.put("lessons", "Each video must have a file uploaded.");
-                            break;
-                        }
-                    }
-                }
-            }
-            System.out.println("debug videoFile: " + videoFileUrls);
+        Lesson lesson = new Lesson();
+        lesson.setCourseID(courseIdValid);
+        lesson.setLessonID(lessonIdValid);
+        lesson.setTitle(title);
+        lesson.setOrderIndex(orderIndexValid);
+        boolean updated = lessonDAO.updateLesson(lesson);
+        if (updated) {
+            request.getSession().setAttribute("message", "Lesson updated successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Update lesson failed due to a system error. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/edit/" + courseIdValid + "?tab=lesson");
+    }
 
-            // 2. Upload Material Files
-            String materialPath = request.getServletContext().getRealPath("/assets/materials");
-            List<String> materialFileUrls = new ArrayList<>();
-            List<Part> materialFileParts = new ArrayList<>();
-            for (Part part : parts) {
-                if ("materialFile[]".equals(part.getName())) {
-                    materialFileParts.add(part);
-                }
-            }
-            for (int i = 0; i < materialFileParts.size(); i++) {
-                Part materialFilePart = materialFileParts.get(i);
-                if (materialFilePart != null && materialFilePart.getSize() > 0) {
-                    String fileName = materialFilePart.getSubmittedFileName().toLowerCase();
-                    if (!(fileName.endsWith(".zip") || fileName.endsWith(".pdf") || fileName.endsWith(".doc") || fileName.endsWith(".docx"))) {
-                        errors.put("lessons", "Material file must be zip, pdf, doc, or docx.");
-                        break;
-                    }
-                    if (materialFilePart.getSize() > 15 * 1024 * 1024) {
-                        errors.put("lessons", "Material file is too large (max 15MB).");
-                        break;
-                    }
-                    String url = FileUploadUtil.saveFile(materialFilePart, materialPath, "/assets/materials");
-                    materialFileUrls.add(url);
-                } else {
-                    materialFileUrls.add(""); // Không upload file, giữ trống
-                }
-            }
-            if (materialTitleArr != null) {
-                for (int i = 0; i < materialTitleArr.length; i++) {
-                    if ((materialTitleArr[i] != null && !materialTitleArr[i].trim().isEmpty())
-                            || (materialDescriptionArr != null && materialDescriptionArr[i] != null && !materialDescriptionArr[i].trim().isEmpty())
-                            || (materialContentArr != null && materialContentArr[i] != null && !materialContentArr[i].trim().isEmpty())) {
-                        // Nếu đã nhập thông tin thì phải có file
-                        if (materialFileUrls.size() <= i || materialFileUrls.get(i) == null || materialFileUrls.get(i).isEmpty()) {
-                            errors.put("lessons", "Each material must have a file uploaded.");
-                            break;
-                        }
-                    }
-                }
-            }
-            System.out.println("debug materialFile: " + materialFileUrls);
+    private void deleteLesson(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
 
-            // 3. Xử lý upload ảnh khoá học
-            Part imagePart = request.getPart("imageFile");
-            if (imagePart == null || imagePart.getSize() == 0) {
-                errors.put("imageFile", "Course image is required.");
+        String courseID = request.getParameter("courseID");
+        String lessonID = request.getParameter("lessonID");
+        if (!Validator.isValidInteger(lessonID) || !Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int courseIdValid = Integer.parseInt(courseID);
+        int lessonIdValid = Integer.parseInt(lessonID);
+        boolean isOwner = lessonDAO.isInstructorOwnerOfLesson(instructor.getInstructorID(), lessonIdValid);
+        if (!isOwner) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        boolean deleted = lessonDAO.deleteLessonById(lessonIdValid);
+        if (deleted) {
+            request.getSession().setAttribute("message", "Lesson deleted successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to delete lesson. System error occurred.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/edit/" + courseIdValid + "?tab=lesson");
+        return;
+    }
+
+    private void listLessonItems(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String partInfo = request.getPathInfo();
+        String courseID = request.getParameter("courseID");
+        String[] pathParts = partInfo.split("/");
+        if (pathParts.length < 2 || !Validator.isValidInteger(pathParts[1]) || !Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(pathParts[1]);
+        int courseIdValid = Integer.parseInt(courseID);
+        List<LessonItem> lessonItems = lessonDAO.getLessonItemsByLessonID(lessonIdValid);
+        request.setAttribute("courseID", courseIdValid);
+        request.setAttribute("lessonID", lessonIdValid);
+        request.setAttribute("lessonItems", lessonItems);
+        // Lấy lại từ session
+        request.setAttribute("quiz", request.getSession().getAttribute("quiz"));
+        request.setAttribute("editQuiz", request.getSession().getAttribute("editQuiz"));
+        request.setAttribute("material", request.getSession().getAttribute("material"));
+        request.setAttribute("editMaterial", request.getSession().getAttribute("editMaterial"));
+        request.setAttribute("video", request.getSession().getAttribute("video"));
+        request.setAttribute("editVideo", request.getSession().getAttribute("editVideo"));
+        request.setAttribute("errors", request.getSession().getAttribute("errors"));
+        request.setAttribute("editErrors", request.getSession().getAttribute("editErrors"));
+        request.setAttribute("openAddQuizModal", request.getSession().getAttribute("openAddQuizModal"));
+        request.setAttribute("openEditQuizModal", request.getSession().getAttribute("openEditQuizModal"));
+        request.setAttribute("openAddMaterialModal", request.getSession().getAttribute("openAddMaterialModal"));
+        request.setAttribute("openAddMaterialModal", request.getSession().getAttribute("openEditMaterialModal"));
+        request.setAttribute("openAddVideoModal", request.getSession().getAttribute("openAddVideoModal"));
+        request.setAttribute("openAddVideoModal", request.getSession().getAttribute("openEditVideoModal"));
+        request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/lessonitem-list.jsp").forward(request, response);
+        // Xoá để reload không còn nữa!
+        request.getSession().removeAttribute("quiz");
+        request.getSession().removeAttribute("editQuiz");
+        request.getSession().removeAttribute("material");
+        request.getSession().removeAttribute("editMaterial");
+        request.getSession().removeAttribute("video");
+        request.getSession().removeAttribute("editVideo");
+        request.getSession().removeAttribute("errors");
+        request.getSession().removeAttribute("editErrors");
+        request.getSession().removeAttribute("openAddQuizModal");
+        request.getSession().removeAttribute("openEditQuizModal");
+        request.getSession().removeAttribute("openAddMaterialModal");
+        request.getSession().removeAttribute("openEditMaterialModal");
+        request.getSession().removeAttribute("openAddVideoModal");
+        request.getSession().removeAttribute("openEditVideoModal");
+    }
+
+    private void createVideo(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        String lessonId = request.getParameter("lessonID");
+        String courseId = request.getParameter("courseID");
+        String titleVideo = request.getParameter("titleVideo");
+        String descriptionVideo = request.getParameter("descriptionVideo");
+        String durationStr = request.getParameter("duration");
+        Part videoUrl = request.getPart("videoUrl");
+        if (!Validator.isValidInteger(lessonId) || !Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(lessonId);
+        int courseIdValid = Integer.parseInt(courseId);
+        if (Validator.isNullOrEmpty(titleVideo)) {
+            errors.put("titleVideo", "Title video is required.");
+        } else if (!Validator.isValidText(titleVideo, 50)) {
+            errors.put("titleVideo", "Maximun length is 50 characters.");
+        }
+
+        if (Validator.isNullOrEmpty(descriptionVideo)) {
+            errors.put("descriptionVideo", "Description video is required.");
+        } else if (!Validator.isValidText(descriptionVideo, 50)) {
+            errors.put("descriptionVideo", "Maximun length is 50 characters.");
+        }
+        int duration = 1;
+        if (!Validator.isValidInteger(durationStr)) {
+            errors.put("duration", "Duration must be a valid number.");
+        } else {
+            duration = Integer.parseInt(durationStr);
+            if (duration <= 0) {
+                errors.put("duration", "Duration must be a valid number.");
+            }
+        }
+
+        String videoURL = "";
+        if (errors.isEmpty()) {
+            videoURL = FileUploadUtil.handleUpload(
+                    videoUrl,
+                    request.getServletContext().getRealPath("/assets/videos"),
+                    "/assets/videos",
+                    200 * 1024 * 1024, // 200MB
+                    new String[]{".mp4", ".avi", ".mov"},
+                    errors,
+                    "videoUrl",
+                    true);
+        }
+
+        if (!errors.isEmpty()) {
+            Video video = new Video();
+            video.setTitle(titleVideo);
+            video.setDescription(descriptionVideo);
+            video.setDuration(duration);
+            request.getSession().setAttribute("errors", errors);
+            request.getSession().setAttribute("video", video);
+            request.getSession().setAttribute("openAddVideoModal", true);
+            response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+            return;
+        }
+        int durationValid = duration;
+        Video video = new Video();
+        video.setTitle(titleVideo);
+        video.setDescription(descriptionVideo);
+        video.setDuration(durationValid);
+        video.setVideoUrl(videoURL);
+
+        int created = lessonDAO.addVideoToLesson(lessonIdValid, video);
+        if (created > 0) {
+            request.getSession().setAttribute("message", "Video created successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to create video. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+    }
+
+    private void editVideo(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        String lessonID = request.getParameter("lessonID");
+        String videoID = request.getParameter("videoID");
+        String courseId = request.getParameter("courseID");
+        String titleVideo = request.getParameter("titleVideo");
+        String descriptionVideo = request.getParameter("descriptionVideo");
+        String durationStr = request.getParameter("duration");
+        Part videoUrl = request.getPart("videoUrl");
+        if (!Validator.isValidInteger(lessonID) || !Validator.isValidInteger(videoID) || !Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(lessonID);
+        int videoIdValid = Integer.parseInt(videoID);
+        int courseIdValid = Integer.parseInt(courseId);
+        if (Validator.isNullOrEmpty(titleVideo)) {
+            errors.put("titleVideo", "Title video is required.");
+        } else if (!Validator.isValidText(titleVideo, 50)) {
+            errors.put("titleVideo", "Maximun length is 50 characters.");
+        }
+
+        if (Validator.isNullOrEmpty(descriptionVideo)) {
+            errors.put("descriptionVideo", "Description video is required.");
+        } else if (!Validator.isValidText(descriptionVideo, 50)) {
+            errors.put("descriptionVideo", "Maximun length is 50 characters.");
+        }
+        int duration = 1;
+        if (!Validator.isValidInteger(durationStr)) {
+            errors.put("duration", "Duration must be a valid number.");
+        } else {
+            duration = Integer.parseInt(durationStr);
+            if (duration <= 0) {
+                errors.put("duration", "Duration must be a valid number.");
+            }
+        }
+
+        String videoURL = "";
+        if (errors.isEmpty()) {
+            videoURL = FileUploadUtil.handleUpload(
+                    videoUrl,
+                    request.getServletContext().getRealPath("/assets/videos"),
+                    "/assets/videos",
+                    200 * 1024 * 1024, // 200MB
+                    new String[]{".mp4", ".avi", ".mov"},
+                    errors,
+                    "videoUrl",
+                    false);
+        }
+
+        if (!errors.isEmpty()) {
+            Video video = new Video();
+            video.setVideoID(videoIdValid);
+            video.setLessonID(lessonIdValid);
+            video.setTitle(titleVideo);
+            video.setDescription(descriptionVideo);
+            video.setDuration(duration);
+            request.getSession().setAttribute("editErrors", errors);
+            request.getSession().setAttribute("editVideo", video);
+            request.getSession().setAttribute("openEditVideoModal", true);
+            response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+            return;
+        }
+        int durationValid = duration;
+        Video video = new Video();
+        video.setLessonID(lessonIdValid);
+        video.setVideoID(videoIdValid);
+        video.setTitle(titleVideo);
+        video.setDescription(descriptionVideo);
+        video.setDuration(durationValid);
+        video.setVideoUrl(videoURL);
+        boolean updated = videoDAO.updateVideoItem(videoIdValid, video);
+        if (updated) {
+            request.getSession().setAttribute("message", "Video updated successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to update video. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+    }
+
+    private void deleteVideo(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String lessonID = request.getParameter("lessonID");
+        String videoID = request.getParameter("videoID");
+        String courseId = request.getParameter("courseID");
+        if (!Validator.isValidInteger(videoID) || !Validator.isValidInteger(lessonID) || !Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(lessonID);
+        int videoIdValid = Integer.parseInt(videoID);
+        int courseIdValid = Integer.parseInt(courseId);
+        boolean isOwner = lessonDAO.isInstructorOwnerOfLesson(instructor.getInstructorID(), lessonIdValid);
+        if (!isOwner) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        boolean deleted = videoDAO.deleteVideoItem(videoIdValid);
+        if (deleted) {
+            request.getSession().setAttribute("message", "Video deleted successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to delete video. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+    }
+
+    private void createMaterial(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        String lessonId = request.getParameter("lessonID");
+        String courseId = request.getParameter("courseID");
+        String titleMaterial = request.getParameter("titleMaterial");
+        String descriptionMaterial = request.getParameter("descriptionMaterial");
+        String contentMaterial = request.getParameter("contentMaterial");
+        Part materialUrl = request.getPart("materialUrl");
+        if (!Validator.isValidInteger(lessonId) || !Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(lessonId);
+        int courseIdValid = Integer.parseInt(courseId);
+        if (Validator.isNullOrEmpty(titleMaterial)) {
+            errors.put("titleMaterial", "Title material is required.");
+        } else if (!Validator.isValidText(titleMaterial, 50)) {
+            errors.put("titleMaterial", "Maximun length is 50 characters.");
+        }
+        if (Validator.isNullOrEmpty(descriptionMaterial)) {
+            errors.put("descriptionMaterial", "Description material is required.");
+        } else if (!Validator.isValidText(descriptionMaterial, 50)) {
+            errors.put("descriptionMaterial", "Maximun length is 50 characters.");
+        }
+        if (Validator.isNullOrEmpty(contentMaterial)) {
+            errors.put("contentMaterial", "Content material is required.");
+        } else if (!Validator.isValidText(contentMaterial, 50)) {
+            errors.put("contentMaterial", "Maximun length is 50 characters.");
+        }
+        String materialURL = "";
+        if (errors.isEmpty()) {
+            materialURL = FileUploadUtil.handleUpload(
+                    materialUrl,
+                    request.getServletContext().getRealPath("/assets/materials"),
+                    "assets/materials",
+                    50 * 1024 * 1024, // 50MB
+                    new String[]{".pdf", ".doc", ".docx", ".ppt", ".pptx"},
+                    errors,
+                    "materialUrl",
+                    true);
+        }
+        if (!errors.isEmpty()) {
+            Material material = new Material();
+            material.setTitle(titleMaterial);
+            material.setDescription(descriptionMaterial);
+            material.setContent(contentMaterial);
+            request.getSession().setAttribute("errors", errors);
+            request.getSession().setAttribute("material", material);
+            request.getSession().setAttribute("openAddMaterialModal", true);
+            response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+            return;
+        }
+        Material material = new Material();
+        material.setTitle(titleMaterial);
+        material.setDescription(descriptionMaterial);
+        material.setFileUrl(materialURL);
+        material.setContent(contentMaterial);
+
+        int created = lessonDAO.addMaterialToLesson(lessonIdValid, material);
+        if (created > 0) {
+            request.getSession().setAttribute("message", "Material created successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to create material. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+    }
+
+    private void editMaterial(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        String lessonId = request.getParameter("lessonID");
+        String materialID = request.getParameter("materialID");
+        String courseId = request.getParameter("courseID");
+        String titleMaterial = request.getParameter("titleMaterial");
+        String descriptionMaterial = request.getParameter("descriptionMaterial");
+        String contentMaterial = request.getParameter("contentMaterial");
+        Part materialUrl = request.getPart("materialUrl");
+        if (!Validator.isValidInteger(lessonId) || !Validator.isValidInteger(materialID) || !Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(lessonId);
+        int materialIdValid = Integer.parseInt(materialID);
+        int courseIdValid = Integer.parseInt(courseId);
+        if (Validator.isNullOrEmpty(titleMaterial)) {
+            errors.put("titleMaterial", "Title material is required.");
+        } else if (!Validator.isValidText(titleMaterial, 50)) {
+            errors.put("titleMaterial", "Maximun length is 50 characters.");
+        }
+        if (Validator.isNullOrEmpty(descriptionMaterial)) {
+            errors.put("descriptionMaterial", "Description material is required.");
+        } else if (!Validator.isValidText(descriptionMaterial, 50)) {
+            errors.put("descriptionMaterial", "Maximun length is 50 characters.");
+        }
+        if (Validator.isNullOrEmpty(contentMaterial)) {
+            errors.put("contentMaterial", "Content material is required.");
+        } else if (!Validator.isValidText(contentMaterial, 50)) {
+            errors.put("contentMaterial", "Maximun length is 50 characters.");
+        }
+        String materialURL = "";
+        if (errors.isEmpty()) {
+            materialURL = FileUploadUtil.handleUpload(
+                    materialUrl,
+                    request.getServletContext().getRealPath("/assets/materials"),
+                    "assets/materials",
+                    50 * 1024 * 1024, // 50MB
+                    new String[]{".pdf", ".doc", ".docx", ".ppt", ".pptx"},
+                    errors,
+                    "materialUrl",
+                    false);
+        }
+        if (!errors.isEmpty()) {
+            Material material = new Material();
+            material.setMaterialID(materialIdValid);
+            material.setLessonID(lessonIdValid);
+            material.setTitle(titleMaterial);
+            material.setDescription(descriptionMaterial);
+            material.setContent(contentMaterial);
+            request.getSession().setAttribute("editErrors", errors);
+            request.getSession().setAttribute("editMaterial", material);
+            request.getSession().setAttribute("openEditMaterialModal", true);
+            response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+            return;
+        }
+        Material material = new Material();
+        material.setTitle(titleMaterial);
+        material.setDescription(descriptionMaterial);
+        material.setFileUrl(materialURL);
+        material.setContent(contentMaterial);
+        boolean updated = materialDAO.updateMaterialItem(materialIdValid, material);
+        if (updated) {
+            request.getSession().setAttribute("message", "Material updated successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to update material. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+
+    }
+
+    private void deleteMaterial(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String lessonID = request.getParameter("lessonID");
+        String materialID = request.getParameter("materialID");
+        String courseId = request.getParameter("courseID");
+        if (!Validator.isValidInteger(materialID) || !Validator.isValidInteger(lessonID) || !Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(lessonID);
+        int materialIdValid = Integer.parseInt(materialID);
+        int courseIdValid = Integer.parseInt(courseId);
+        boolean isOwner = lessonDAO.isInstructorOwnerOfLesson(instructor.getInstructorID(), lessonIdValid);
+        if (!isOwner) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        boolean deleted = materialDAO.deleteMaterialItem(materialIdValid);
+        if (deleted) {
+            request.getSession().setAttribute("message", "Material deleted successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to delete material. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+    }
+
+    private void createQuiz(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        String lessonId = request.getParameter("lessonID");
+        String courseId = request.getParameter("courseID");
+        String titleQuiz = request.getParameter("titleQuiz");
+        String descriptionQuiz = request.getParameter("descriptionQuiz");
+        String timeLimitStr = request.getParameter("timeLimit");
+        String passingScoreStr = request.getParameter("passingScore");
+        if (!Validator.isValidInteger(lessonId) || !Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(lessonId);
+        int courseIdValid = Integer.parseInt(courseId);
+        if (Validator.isNullOrEmpty(titleQuiz)) {
+            errors.put("titleQuiz", "Title quiz is required.");
+        } else if (!Validator.isValidText(titleQuiz, 50)) {
+            errors.put("titleQuiz", "Maximun length is 50 characters.");
+        }
+        if (Validator.isNullOrEmpty(descriptionQuiz)) {
+            errors.put("descriptionQuiz", "Description quiz is required.");
+        } else if (!Validator.isValidText(descriptionQuiz, 50)) {
+            errors.put("descriptionQuiz", "Maximun length is 50 characters.");
+        }
+        Integer timeLimit = null;
+        if (!Validator.isNullOrEmpty(timeLimitStr)) {
+            if (!Validator.isValidInteger(timeLimitStr)) {
+                errors.put("timeLimit", "Time limit must be a valid number.");
             } else {
-                String fileName = imagePart.getSubmittedFileName().toLowerCase();
-                if (!(fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png") || fileName.endsWith(".gif"))) {
-                    errors.put("imageFile", "Course image must be JPG, PNG, JPEG or GIF.");
-                }
-                if (imagePart.getSize() > 5 * 1024 * 1024) {
-                    errors.put("imageFile", "Image file is too large (max 5MB).");
-                }
-            }
-            String imgPath = request.getServletContext().getRealPath("/assets/imgs/courses");
-            String imgUrl = null;
-            if (imagePart != null && imagePart.getSize() > 0) {
-                imgUrl = FileUploadUtil.saveFile(imagePart, imgPath, "/assets/imgs/courses");
-            }
-            System.out.println("debug imageFile: " + imgUrl);
-
-            List<Instructor> listInstructor = new ArrayList<>();
-            for (Integer instructorId : instructorIds) {
-                listInstructor.add(new Instructor(instructorId, ""));
-            }
-
-            List<Category> listCategory = new ArrayList<>();
-            for (Integer categoryId : categoryIds) {
-                listCategory.add(new Category(categoryId, ""));
-            }
-            Course course = new Course();
-            course.setName(name);
-            course.setDescription(description);
-            course.setPrice(new Double(priceStr));
-            course.setDuration(durationStr + " weeks");
-            course.setLevel(level);
-            course.setImageUrl(imgUrl == null ? "" : imgUrl.substring(1));
-            course.setInstructors(listInstructor);
-            course.setCategories(listCategory);
-            course.setApprovalStatus(action);
-
-            List<Lesson> listLesson = new ArrayList<>();
-            for (int i = 0; i < lessonTitles.length; i++) {
-                Lesson lesson = new Lesson();
-                int lessonIndex = Integer.parseInt(lessonTempIds[i]) + 1;
-                lesson.setOrderIndex(lessonIndex);
-                lesson.setTitle(lessonTitles[i]);
-                System.out.println("lesson: " + lesson);
-                listLesson.add(lesson);
-            }
-
-            for (Lesson lesson : listLesson) {
-                List<Video> lessonVideos = new ArrayList<>();
-                for (int j = 0; j < videoLessonIds.length; j++) {
-                    if (lesson.getOrderIndex() == (Integer.parseInt(videoLessonIds[j]) + 1)) {
-                        Video video = new Video();
-                        video.setTitle(videoTitleArr[j]);
-                        video.setDescription(videoDescriptionArr[j]);
-                        video.setDuration(Integer.parseInt(videoDurationArr[j]));
-                        video.setVideoUrl(videoFileUrls.get(j)); // Phải build list videoFileUrls cùng thứ tự
-                        lessonVideos.add(video);
+                try {
+                    int passed = Integer.parseInt(timeLimitStr);
+                    if (passed <= 0) {
+                        errors.put("timeLimit", "Time limit must be a valid number.");
+                    } else {
+                        timeLimit = passed;
                     }
+                } catch (NumberFormatException ex) {
+                    errors.put("timeLimit", "Time limit must be a valid number.");
                 }
-                lesson.setVideos(lessonVideos);
             }
-
-            for (Lesson lesson : listLesson) {
-                List<Material> lessonMaterials = new ArrayList<>();
-                for (int j = 0; j < materialLessonIds.length; j++) {
-                    if (lesson.getOrderIndex() == (Integer.parseInt(materialLessonIds[j]) + 1)) {
-                        Material mat = new Material();
-                        mat.setTitle(materialTitleArr[j]);
-                        mat.setDescription(materialDescriptionArr[j]);
-                        mat.setContent(materialContentArr[j]);
-                        mat.setFileUrl(materialFileUrls.get(j)); // build đúng thứ tự
-                        lessonMaterials.add(mat);
-                    }
+        }
+        int passingScore = 70;
+        if (!Validator.isValidInteger(passingScoreStr)) {
+            errors.put("passingScore", "Passing score must be a valid number.");
+        } else {
+            try {
+                int passed = Integer.parseInt(passingScoreStr);
+                if (passed <= 0) {
+                    errors.put("passingScore", "Passing score must be a valid number.");
+                } else {
+                    passingScore = passed;
                 }
-                lesson.setMaterials(lessonMaterials);
+            } catch (NumberFormatException ex) {
+                errors.put("passingScore", "Pasing score must be a valid number.");
             }
+        }
 
-            for (Lesson lesson : listLesson) {
-                List<Quiz> lessonQuizzes = new ArrayList<>();
-                for (int q = 0; q < quizLessonIds.length; q++) {
-                    if (lesson.getOrderIndex() == (Integer.parseInt(quizLessonIds[q]) + 1)) {
-                        Quiz quiz = new Quiz();
-                        int quizIndex = Integer.parseInt(quizIndexArr[q]) + 1;
-                        quiz.setTitle(quizTitleArr[q]);
-                        quiz.setDescription(quizDescriptionArr[q]);
-                        quiz.setTimeLimit(Integer.parseInt(quizTimeLimitArr[q]));
-                        quiz.setPassingScore(Integer.parseInt(quizPassingScoreArr[q]));
-
-                        // --- Questions ---
-                        List<Question> quizQuestions = new ArrayList<>();
-                        for (int k = 0; k < questionQuizLessonIdArr.length; k++) {
-                            if ((Integer.parseInt(questionQuizLessonIdArr[k]) + 1) == lesson.getOrderIndex()
-                                    && (Integer.parseInt(questionQuizIndexArr[k] + 1) == quizIndex)) {
-                                Question question = new Question();
-                                int questionIndex = Integer.parseInt(questionIndexArr[k]) + 1;
-                                question.setOrderIndex(questionIndex);
-                                question.setContent(questionContentArr[k]);
-                                question.setPoints(Integer.parseInt(questionPointsArr[k]));
-
-                                // --- Answers ---
-                                List<Answer> questionAnswers = new ArrayList<>();
-                                for (int a = 0; a < answerQuizLessonIdArr.length; a++) {
-                                    if ((Integer.parseInt(answerQuizLessonIdArr[a]) + 1) == lesson.getOrderIndex()
-                                            && (Integer.parseInt(answerQuizIndexArr[a]) + 1) == quizIndex
-                                            && (Integer.parseInt(answerQuestionIndexArr[a]) + 1) == questionIndex) {
-                                        Answer ans = new Answer();
-                                        ans.setOrderIndex(Integer.parseInt(answerIndexArr[a]) + 1);
-                                        ans.setContent(answerContentArr[a]);
-                                        // xác định đúng sai
-                                        String radioName = "answerIsCorrect_" + lesson.getOrderIndex() + "_" + quizIndex + "_" + questionIndex;
-                                        String correctVal = request.getParameter(radioName);
-                                        ans.setCorrect(correctVal != null && correctVal.equals(answerIndexArr[a]));
-                                        questionAnswers.add(ans);
-                                    }
-                                }
-                                question.setAnswers(questionAnswers);
-                                quizQuestions.add(question);
-                            }
-                        }
-                        quiz.setQuestions(quizQuestions);
-                        lessonQuizzes.add(quiz);
-                    }
-                }
-                lesson.setQuizs(lessonQuizzes);
-            }
-            course.setLessons(listLesson);
-            System.out.println(course);
-            for (Lesson lesson : course.getLessons()) {
-                System.out.println(lesson);
-
-            }
-            courseDAO.insertFullCourse(course);
-
-        } catch (ServletException | IOException ex) {
-            errors.put("general", "File upload failed: " + ex.getMessage());
-            request.setAttribute("errors", errors);
-            request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/create-course.jsp").forward(request, response);
+        if (!errors.isEmpty()) {
+            Quiz quiz = new Quiz();
+            quiz.setTitle(titleQuiz);
+            quiz.setDescription(descriptionQuiz);
+            quiz.setTimeLimit(timeLimit);
+            quiz.setPassingScore(passingScore);
+            request.getSession().setAttribute("errors", errors);
+            request.getSession().setAttribute("quiz", quiz);
+            request.getSession().setAttribute("openAddQuizModal", true);
+            response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
             return;
         }
+
+        Quiz quiz = new Quiz();
+        quiz.setTitle(titleQuiz);
+        quiz.setDescription(descriptionQuiz);
+        quiz.setTimeLimit(timeLimit);
+        quiz.setPassingScore(passingScore);
+        int created = lessonDAO.addQuizToLesson(lessonIdValid, quiz);
+        if (created > 0) {
+            request.getSession().setAttribute("message", "Quiz created successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to create quiz. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+
+    }
+
+    private void editQuiz(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        String lessonID = request.getParameter("lessonID");
+        String quizID = request.getParameter("quizID");
+        String courseId = request.getParameter("courseID");
+        String titleQuiz = request.getParameter("titleQuiz");
+        String descriptionQuiz = request.getParameter("descriptionQuiz");
+        String timeLimitStr = request.getParameter("timeLimit");
+        String passingScoreStr = request.getParameter("passingScore");
+        if (!Validator.isValidInteger(lessonID) || !Validator.isValidInteger(quizID) || !Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(lessonID);
+        int quizIdValid = Integer.parseInt(quizID);
+        int courseIdValid = Integer.parseInt(courseId);
+        if (Validator.isNullOrEmpty(titleQuiz)) {
+            errors.put("titleQuiz", "Title quiz is required.");
+        } else if (!Validator.isValidText(titleQuiz, 50)) {
+            errors.put("titleQuiz", "Maximun length is 50 characters.");
+        }
+        if (Validator.isNullOrEmpty(descriptionQuiz)) {
+            errors.put("descriptionQuiz", "Description quiz is required.");
+        } else if (!Validator.isValidText(descriptionQuiz, 50)) {
+            errors.put("descriptionQuiz", "Maximun length is 50 characters.");
+        }
+
+        Integer timeLimit = null;
+        if (!Validator.isNullOrEmpty(timeLimitStr)) {
+            if (!Validator.isValidInteger(timeLimitStr)) {
+                errors.put("timeLimit", "Time limit must be a valid number.");
+            } else {
+                try {
+                    int passed = Integer.parseInt(timeLimitStr);
+                    if (passed <= 0) {
+                        errors.put("timeLimit", "Time limit must be a valid number.");
+                    } else {
+                        timeLimit = passed;
+                    }
+                } catch (NumberFormatException ex) {
+                    errors.put("timeLimit", "Time limit must be a valid number.");
+                }
+            }
+        }
+        int passingScore = 70;
+        if (!Validator.isValidInteger(passingScoreStr)) {
+            errors.put("passingScore", "Passing score must be a valid number.");
+        } else {
+            try {
+                int passed = Integer.parseInt(passingScoreStr);
+                if (passed <= 0) {
+                    errors.put("passingScore", "Passing score must be a valid number.");
+                } else {
+                    passingScore = passed;
+                }
+            } catch (NumberFormatException ex) {
+                errors.put("passingScore", "Pasing score must be a valid number.");
+            }
+        }
+        if (!errors.isEmpty()) {
+            Quiz quiz = new Quiz();
+            quiz.setQuizID(quizIdValid);
+            quiz.setLessonID(lessonIdValid);
+            quiz.setTitle(titleQuiz);
+            quiz.setDescription(descriptionQuiz);
+            quiz.setTimeLimit(timeLimit);
+            quiz.setPassingScore(passingScore);
+            request.getSession().setAttribute("editErrors", errors);
+            request.getSession().setAttribute("editQuiz", quiz);
+            request.getSession().setAttribute("openEditQuizModal", true);
+            response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+            return;
+        }
+        Quiz quiz = new Quiz();
+        quiz.setTitle(titleQuiz);
+        quiz.setDescription(descriptionQuiz);
+        quiz.setTimeLimit(timeLimit);
+        quiz.setPassingScore(passingScore);
+        boolean updated = quizDAO.updateQuizItem(quizIdValid, quiz);
+        if (updated) {
+            request.getSession().setAttribute("message", "Quiz updated successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to update quiz. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+
+    }
+
+    private void deleteQuiz(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String lessonID = request.getParameter("lessonID");
+        String quizID = request.getParameter("quizID");
+        String courseId = request.getParameter("courseID");
+        if (!Validator.isValidInteger(quizID) || !Validator.isValidInteger(lessonID) || !Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int lessonIdValid = Integer.parseInt(lessonID);
+        int quizIdValid = Integer.parseInt(quizID);
+        int courseIdValid = Integer.parseInt(courseId);
+        boolean isOwner = lessonDAO.isInstructorOwnerOfLesson(instructor.getInstructorID(), lessonIdValid);
+        if (!isOwner) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        boolean deleted = quizDAO.deleteQuizItem(quizIdValid);
+        if (deleted) {
+            request.getSession().setAttribute("message", "Quiz deleted successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to delete quiz. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/courses/lessons/view/" + lessonIdValid + "?courseID=" + courseIdValid);
+    }
+
+    private void listQuestion(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String partInfo = request.getPathInfo();
+        String courseId = request.getParameter("courseID");
+        String lessonId = request.getParameter("lessonID");
+        String[] pathParts = partInfo.split("/");
+        if (pathParts.length < 2 || !Validator.isValidInteger(pathParts[1]) || !Validator.isValidInteger(courseId) || !Validator.isValidInteger(lessonId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        int quizIdValid = Integer.parseInt(pathParts[1]);
+        int courseIdValid = Integer.parseInt(courseId);
+        int lessonIdValid = Integer.parseInt(lessonId);
+        List<Question> questions = quizDAO.getQuestionsByQuizId(quizIdValid);
+        request.setAttribute("quizID", quizIdValid);
+        request.setAttribute("questions", questions);
+        request.setAttribute("courseID", courseIdValid);
+        request.setAttribute("lessonID", lessonIdValid);
+
+        // load session
+        request.setAttribute("questionErrors", request.getSession().getAttribute("questionErrors"));
+        request.setAttribute("questionFormValues", request.getSession().getAttribute("questionFormValues"));
+        request.setAttribute("openAddQuestionModal", request.getSession().getAttribute("openAddQuestionModal"));
+        request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/question-list.jsp").forward(request, response);
+        // remove session
+        request.getSession().removeAttribute("questionErrors");
+        request.getSession().removeAttribute("questionFormValues");
+        request.getSession().removeAttribute("openAddQuestionModal");
+
+    }
+
+    private void createQuestion(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        int totalAnswers = 4;
+
+        String quizID = request.getParameter("quizID");
+        String lessonID = request.getParameter("lessonID");
+        String courseID = request.getParameter("courseID");
+        if (!Validator.isValidInteger(quizID) || !Validator.isValidInteger(lessonID) || !Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int quizIdValid = Integer.parseInt(quizID);
+        int lessonIdValid = Integer.parseInt(lessonID);
+        int courseIdValid = Integer.parseInt(courseID);
+
+        // --- Lấy dữ liệu từ form ---
+        String questionContent = request.getParameter("questionContent");
+        String orderIndexStr = request.getParameter("orderIndex");
+        String pointsStr = request.getParameter("points");
+        String correctAnswerStr = request.getParameter("correctAnswer");
+
+        // --- Validate câu hỏi ---
+        if (Validator.isNullOrEmpty(questionContent)) {
+            errors.put("question", "Question content is required.");
+        } else if (!Validator.isValidText(questionContent, 50)) {
+            errors.put("question", "Maximum length is 50 characters.");
+        }
+
+        // --- Validate điểm ---
+        int points = 1;
+        if (!Validator.isValidInteger(pointsStr)) {
+            errors.put("points", "Question point must be a valid number.");
+        } else {
+            int parsed = Integer.parseInt(pointsStr);
+            if (parsed <= 0) {
+                errors.put("points", "Question point must be a positive number.");
+            } else {
+                points = parsed;
+            }
+        }
+
+        // --- Validate thứ tự câu hỏi ---
+        int orderIndex = 1;
+        if (!Validator.isValidInteger(orderIndexStr)) {
+            errors.put("orderIndex", "Question index must be a valid number.");
+        } else {
+            int parsed = Integer.parseInt(orderIndexStr);
+            if (parsed <= 0) {
+                errors.put("orderIndex", "Question index must be a positive number.");
+            } else if (quizDAO.isDuplicateQuestionOrderIndex(quizIdValid, parsed)) {
+                errors.put("orderIndex", "Question order is duplicated.");
+            } else {
+                orderIndex = parsed;
+            }
+        }
+
+        // --- Validate đáp án đúng ---
+        int correctAnswer = -1;
+        if (Validator.isNullOrEmpty(correctAnswerStr)) {
+            errors.put("correctAnswer", "Please select the correct answer.");
+        } else if (Validator.isValidInteger(correctAnswerStr)) {
+            correctAnswer = Integer.parseInt(correctAnswerStr);
+            if (correctAnswer < 1 || correctAnswer > totalAnswers) {
+                errors.put("correctAnswer", "Correct answer is out of valid range.");
+            }
+        } else {
+            errors.put("correctAnswer", "Correct answer must be a valid number.");
+        }
+
+        // --- Validate nội dung từng đáp án ---
+        List<Answer> listAnswer = new ArrayList<>();
+        for (int i = 1; i <= totalAnswers; i++) {
+            String content = request.getParameter("answerContent" + i);
+            if (Validator.isNullOrEmpty(content)) {
+                errors.put("answer" + i, "Answer #" + i + " is required.");
+            }
+            Answer a = new Answer();
+            a.setContent(content);
+            a.setOrderIndex(i);
+            a.setCorrect(i == correctAnswer);
+            listAnswer.add(a);
+        }
+
+        // --- Nếu có lỗi, quay lại form và giữ dữ liệu ---
+        if (!errors.isEmpty()) {
+            Map<String, String> formValues = new HashMap<>();
+            formValues.put("questionContent", questionContent);
+            formValues.put("orderIndex", orderIndexStr);
+            formValues.put("points", pointsStr);
+            formValues.put("correctAnswer", correctAnswerStr);
+            for (int i = 1; i <= totalAnswers; i++) {
+                formValues.put("answer" + i, request.getParameter("answerContent" + i));
+            }
+
+            request.getSession().setAttribute("questionErrors", errors);
+            request.getSession().setAttribute("questionFormValues", formValues);
+            request.getSession().setAttribute("openAddQuestionModal", true);
+            response.sendRedirect(request.getContextPath() + "/instructor/lessons/quizzes/view/" + quizIdValid + "?courseID=" + courseIdValid + "&lessonID=" + lessonIdValid);
+            return;
+        }
+
+        // --- Nếu hợp lệ, tạo mới câu hỏi và lưu ---
+        Question question = new Question();
+        question.setContent(questionContent);
+        question.setType("multiple_choice");
+        question.setPoints(points);
+        question.setOrderIndex(orderIndex);
+        question.setAnswers(listAnswer);
+
+        int created = quizDAO.insertQuestionWithAnswers(question, quizIdValid, listAnswer);
+        if (created > 0) {
+            request.getSession().setAttribute("message", "Question created successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to create question. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/lessons/quizzes/view/" + quizIdValid + "?courseID=" + courseIdValid + "&lessonID=" + lessonIdValid);
+
+    }
+
+    private void showFormEditQuestion(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String partInfo = request.getPathInfo();
+        String lessonID = request.getParameter("lessonID");
+        String courseID = request.getParameter("courseID");
+        String[] pathParts = partInfo.split("/");
+        if (pathParts.length < 2 || !Validator.isValidInteger(pathParts[1]) || !Validator.isValidInteger(lessonID) || !Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int questionIdValid = Integer.parseInt(pathParts[1]);
+        int lessonIdValid = Integer.parseInt(lessonID);
+        int courseIdValid = Integer.parseInt(courseID);
+        request.setAttribute("lessonID", lessonIdValid);
+        request.setAttribute("courseID", courseIdValid);
+        Question question = quizDAO.getQuestionAndAnswersById(questionIdValid);
+        request.setAttribute("question", question);
+        request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/edit-question.jsp").forward(request, response);
+    }
+
+    private void editQuestion(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        Map<String, String> errors = new HashMap<>();
+        int totalAnswers = 4;
+
+        // Lấy và kiểm tra quizID & questionID
+        String quizID = request.getParameter("quizID");
+        String questionID = request.getParameter("questionID");
+        String lessonID = request.getParameter("lessonID");
+        String courseID = request.getParameter("courseID");
+        if (!Validator.isValidInteger(quizID) || !Validator.isValidInteger(questionID) || !Validator.isValidInteger(lessonID) || !Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int quizIdValid = Integer.parseInt(quizID);
+        int questionIdValid = Integer.parseInt(questionID);
+        int lessonIdValid = Integer.parseInt(lessonID);
+        int courseIdValid = Integer.parseInt(courseID);
+
+        // Lấy các tham số khác
+        String questionContent = request.getParameter("questionContent");
+        String pointsStr = request.getParameter("points");
+        String orderIndexStr = request.getParameter("orderIndex");
+        String correctAnswerStr = request.getParameter("correctAnswer");
+
+        // Validate nội dung câu hỏi
+        if (Validator.isNullOrEmpty(questionContent)) {
+            errors.put("question", "Question content is required.");
+        } else if (!Validator.isValidText(questionContent, 50)) {
+            errors.put("question", "Maximum length is 50 characters.");
+        }
+
+        // Validate điểm
+        int pointValid = 1;
+        if (Validator.isValidInteger(pointsStr)) {
+            int parsed = Integer.parseInt(pointsStr);
+            if (parsed > 0) {
+                pointValid = parsed;
+            } else {
+                errors.put("points", "Question point must be a positive number.");
+            }
+        } else {
+            errors.put("points", "Question point must be a valid number.");
+        }
+
+        // Validate vị trí câu hỏi
+        int orderIndexValid = 1;
+        if (Validator.isValidInteger(orderIndexStr)) {
+            int parsed = Integer.parseInt(orderIndexStr);
+            if (parsed > 0) {
+                List<Integer> usedIndexes = quizDAO.getQuestionOrderIndexes(quizIdValid, questionIdValid);
+                if (usedIndexes.contains(parsed)) {
+                    errors.put("orderIndex", "Question index is duplicated.");
+                } else {
+                    orderIndexValid = parsed;
+                }
+            } else {
+                errors.put("orderIndex", "Question index must be positive.");
+            }
+        } else {
+            errors.put("orderIndex", "Question index must be a valid number.");
+        }
+
+        // Validate đáp án đúng
+        int correctAnswerValid = -1;
+        if (Validator.isNullOrEmpty(correctAnswerStr)) {
+            errors.put("correctAnswer", "Please select the correct answer.");
+        } else if (Validator.isValidInteger(correctAnswerStr)) {
+            correctAnswerValid = Integer.parseInt(correctAnswerStr);
+            if (correctAnswerValid < 1 || correctAnswerValid > totalAnswers) {
+                errors.put("correctAnswer", "Correct answer is out of valid range.");
+            }
+        } else {
+            errors.put("correctAnswer", "Invalid correct answer.");
+        }
+
+        // Validate nội dung các đáp án
+        List<Answer> listAnswer = new ArrayList<>();
+        for (int i = 1; i <= totalAnswers; i++) {
+            String content = request.getParameter("answerContent" + i);
+            String answerIDStr = request.getParameter("answerID" + i);
+            Answer a = new Answer();
+
+            if (Validator.isValidInteger(answerIDStr)) {
+                a.setAnswerID(Integer.parseInt(answerIDStr));
+            }
+
+            a.setContent(content);
+            a.setOrderIndex(i);
+            a.setCorrect(i == correctAnswerValid);
+            listAnswer.add(a);
+
+            if (Validator.isNullOrEmpty(content)) {
+                errors.put("answer" + i, "Answer #" + i + " is required.");
+            }
+        }
+
+        // Nếu có lỗi, chuyển về trang chỉnh sửa kèm dữ liệu
+        if (!errors.isEmpty()) {
+            Question question = new Question();
+            question.setQuizID(quizIdValid);
+            question.setQuestionID(questionIdValid);
+            question.setContent(questionContent);
+            question.setPoints(pointValid);
+            question.setOrderIndex(orderIndexValid);
+            question.setAnswers(listAnswer);
+
+            request.setAttribute("lessonID", lessonIdValid);
+            request.setAttribute("courseID", courseIdValid);
+
+            request.setAttribute("question", question);
+            request.setAttribute("errors", errors);
+            request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/edit-question.jsp").forward(request, response);
+            return;
+        }
+
+        // Cập nhật nếu hợp lệ
+        Question question = new Question();
+        question.setQuestionID(questionIdValid);
+        question.setContent(questionContent);
+        question.setType("multiple_choice");
+        question.setPoints(pointValid);
+        question.setOrderIndex(orderIndexValid);
+
+        boolean updated = quizDAO.updateQuestionWithAnswers(question, listAnswer);
+
+        if (updated) {
+            request.getSession().setAttribute("message", "Question updated successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to update question. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/lessons/quizzes/view/" + quizIdValid + "?courseID=" + courseIdValid + "&lessonID=" + lessonIdValid);
+
+    }
+
+    private void deleteQuestion(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String questionID = request.getParameter("questionID");
+        String quizID = request.getParameter("quizID");
+        String lessonID = request.getParameter("lessonID");
+        String courseID = request.getParameter("courseID");
+        if (!Validator.isValidInteger(questionID) || !Validator.isValidInteger(quizID) || !Validator.isValidInteger(lessonID) || !Validator.isValidInteger(courseID)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        int questionIdValid = Integer.parseInt(questionID);
+        int quizIdValid = Integer.parseInt(quizID);
+        int lessonIdValid = Integer.parseInt(lessonID);
+        int courseIdValid = Integer.parseInt(courseID);
+        boolean deleted = quizDAO.deleteQuestion(questionIdValid);
+        if (deleted) {
+            request.getSession().setAttribute("message", "Question deleted successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to delete question. Please try again or contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/instructor/lessons/quizzes/view/" + quizIdValid + "?courseID=" + courseIdValid + "&lessonID=" + lessonIdValid);
+    }
+
+    private void viewDetailCourse(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
+            throws ServletException, IOException {
+
+        String pathInfo = request.getPathInfo();
+        String[] pathParts = pathInfo.split("/");
+        if (pathParts.length < 2 || !Validator.isValidInteger(pathParts[1])) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        int courseIdValid = Integer.parseInt(pathParts[1]);
+
+        Course course = courseDAO.getCourseById(courseIdValid);
+        if (course == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        // Get lessons
+        List<Lesson> lessons = course.getLessons();
+
+        // For each lesson, fetch its lesson items and content
+        for (Lesson lesson : lessons) {
+            // Get lesson items for this lesson
+            List<LessonItem> lessonItems = lessonItemDAO.getLessonItemsByLessonId(lesson.getLessonID());
+
+            // For each lesson item, fetch the actual content based on item type
+            for (LessonItem item : lessonItems) {
+                String itemType = item.getItemType();
+                int itemId = item.getItemID();
+                switch (itemType) {
+                    case "video":
+                        Video video = videoDAO.getVideoById(itemId);
+                        item.setItem(video);
+                        break;
+                    case "material":
+                        Material material = materialDAO.getMaterialById(itemId);
+                        item.setItem(material);
+                        break;
+                    case "quiz":
+                        Quiz quiz = quizDAO.getQuizById(itemId);
+                        item.setItem(quiz);
+                        break;
+                    default:
+                        // Unknown item type
+                        break;
+                }
+            }
+
+            // Set the lesson items on the lesson
+            lesson.setLessonItems(lessonItems);
+        }
+
+        course.setLessons(lessons);
+
+        request.setAttribute("course", course);
+        // Forward to course details page
+        request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/course-detail.jsp").forward(request, response);
 
     }
 

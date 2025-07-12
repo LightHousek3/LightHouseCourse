@@ -27,6 +27,9 @@ public class Course {
     private Timestamp approvalDate;
     private String rejectionReason;
 
+    // Form Edit Course cần phần số của trường duration
+    private int durationNumber;
+
     // Relationships
     private List<Instructor> instructors;
     private List<Category> categories;
@@ -62,6 +65,16 @@ public class Course {
         this.categories = categories;
         this.lessons = lessons;
         this.videos = videos;
+    }
+
+    public Course(String name, String description, double price, String imageUrl, String duration, String level, String approvalStatus) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.duration = duration;
+        this.level = level;
+        this.approvalStatus = approvalStatus;
     }
 
     // Getters and setters
@@ -244,6 +257,14 @@ public class Course {
 
     public void setEnrollmentCount(int enrollmentCount) {
         this.enrollmentCount = enrollmentCount;
+    }
+
+    public int getDurationNumber() {
+        return durationNumber;
+    }
+
+    public void setDurationNumber(int durationNumber) {
+        this.durationNumber = durationNumber;
     }
 
     @Override

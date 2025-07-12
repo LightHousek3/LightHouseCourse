@@ -315,7 +315,7 @@ public class VideoDAO extends DBContext {
                 throw new SQLException("Video insert failed!");
             }
         }
-        
+
         return videoId;
     }
 
@@ -336,4 +336,54 @@ public class VideoDAO extends DBContext {
         video.setDuration(rs.getInt("Duration"));
         return video;
     }
+
+    public boolean updateVideoItem(int videoID, Video video) {
+        String sql;
+        boolean hasNewFile = video.getVideoUrl() != null && !video.getVideoUrl().trim().isEmpty();
+        if (hasNewFile) {
+            sql = "UPDATE Videos SET Title = ?, Description = ?, VideoUrl = ?, Duration = ? WHERE VideoID = ?";
+        } else {
+            sql = "UPDATE Videos SET Title = ?, Description = ?, Duration = ? WHERE VideoID = ?";
+        }
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, video.getTitle());
+            ps.setString(2, video.getDescription());
+            if (hasNewFile) {
+                ps.setString(3, video.getVideoUrl());
+                ps.setInt(4, video.getDuration());
+                ps.setInt(5, videoID);
+            } else {
+                ps.setInt(3, video.getDuration());
+                ps.setInt(4, videoID);
+            }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            System.err.println("Update video failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteVideoItem(int videoID) {
+        String sqlDeleteLessonItem = "DELETE FROM LessonItems WHERE ItemType = 'video' AND ItemID = ?";
+        String sqlDeleteVideo = "DELETE FROM Videos WHERE VideoID = ?";
+        try ( Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try ( PreparedStatement ps1 = conn.prepareStatement(sqlDeleteLessonItem);  PreparedStatement ps2 = conn.prepareStatement(sqlDeleteVideo)) {
+                ps1.setInt(1, videoID);
+                ps1.executeUpdate();
+                ps2.setInt(1, videoID);
+                int affected = ps2.executeUpdate();
+                conn.commit();
+                return affected > 0;
+            } catch (SQLException ex) {
+                conn.rollback();
+                System.err.println("Delete video failed: " + ex.getMessage());
+                return false;
+            }
+        } catch (SQLException ex) {
+            System.err.println("Delete video failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
 }
