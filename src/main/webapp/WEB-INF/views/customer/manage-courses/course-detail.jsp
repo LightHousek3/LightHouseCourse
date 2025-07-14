@@ -295,10 +295,12 @@
                                            class="btn btn-success w-100 mb-3">
                                             <i class="fas fa-play-circle me-2"></i>Start Learning
                                         </a>
-                                        <a href="${pageContext.request.contextPath}/refund/request/${course.courseID}"
-                                           class="btn btn-outline-danger w-100">
-                                            <i class="fas fa-undo-alt me-2"></i>Request Refund
-                                        </a>
+                                        <c:if test="${order.getAttribute('eligibleForRefund') == true}">
+                                                <a href="${pageContext.request.contextPath}/refund/request/order/${order.orderID}"
+                                                   class="btn btn-outline-danger mt-2">
+                                                    Request Refund
+                                                </a>
+                                            </c:if>
                                     </c:when>
                                     <c:otherwise>
                                         <form action="${pageContext.request.contextPath}/cart/add"
@@ -308,7 +310,7 @@
                                                 <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                             </button>
                                         </form>
-                                        <a href="${pageContext.request.contextPath}/checkout?courseId=${course.courseID}"
+                                        <a href="${ pageContext.request.contextPath}/order/checkout?courseId=${course.courseID}"
                                            class="btn btn-outline-primary w-100">
                                             <i class="fas fa-credit-card me-2"></i>Buy Now
                                         </a>

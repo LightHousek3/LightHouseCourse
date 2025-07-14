@@ -216,11 +216,14 @@
                                                     </div>
                                                     <div class="col-md-6 col-8 mb-2 mb-md-0">
                                                         <h5>${item.course.name}</h5>
-                                                        <c:forEach var="instructor" items="${item.course.instructors}">
+                                                        <c:if test="${not empty item.course.instructors}">
                                                             <p class="text-muted mb-0">
-                                                                <i class="fas fa-chalkboard-teacher me-2"></i>${instructor.fullName}
+                                                                <i class="fas fa-chalkboard-teacher me-1"></i>
+                                                                <c:forEach var="instructor" items="${item.course.instructors}" varStatus="status">
+                                                                    ${instructor.name}<c:if test="${!status.last}">, </c:if>
+                                                                </c:forEach>
                                                             </p>
-                                                        </c:forEach>
+                                                        </c:if>
                                                         <div class="mt-1">
                                                             <c:forEach var="category" items="${item.course.categories}">
                                                                 <span class="category-badge">${category.name}</span>

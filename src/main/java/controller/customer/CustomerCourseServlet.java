@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import model.Course;
 import model.Category;
-import model.SuperUser;
+import model.Customer;
 import util.Validator;
 import java.util.Collections;
 import model.Rating;
@@ -26,6 +26,8 @@ import java.util.Comparator;
 import model.CourseProgress;
 import model.Customer;
 import model.OrderDetail;
+import model.Order;
+import util.RefundUtil;
 
 /**
  * Course controller for listing courses and showing course details.
@@ -367,6 +369,7 @@ public class CustomerCourseServlet extends HttpServlet {
          }
 //         Get course ratings
          List<Rating> ratings = ratingDAO.getRatingsByCourseId(courseId);
+         List<Order> orders = orderDAO.getOrdersByUserId(user.getCustomerID());
         double averageRating = ratingDAO.getAverageRatingForCourse(courseId);
         int ratingCount = ratingDAO.getRatingCountForCourse(courseId);
 
@@ -380,6 +383,10 @@ public class CustomerCourseServlet extends HttpServlet {
         request.setAttribute("ratings", ratings);
         request.setAttribute("averageRating", averageRating);
         request.setAttribute("ratingCount", ratingCount);
+        for (Order order : orders) {
+            boolean isEligibleForRefund = RefundUtil.isEntireOrderEligibleForRefund(order, user.getCustomerID());
+            order.setAttribute("eligibleForRefund", isEligibleForRefund);
+        }
 
         // Set error message if applicable
         String error = request.getParameter("error");
