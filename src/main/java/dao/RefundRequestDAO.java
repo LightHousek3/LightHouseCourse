@@ -190,12 +190,7 @@ public class RefundRequestDAO extends DBContext {
                 }
             }
         } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (ps != null) {
-                ps.close();
-            }
+            closeResources(rs, ps, conn);
         }
     }
 
@@ -725,5 +720,81 @@ public class RefundRequestDAO extends DBContext {
         }
 
         return refunds;
+    }
+    
+    /**
+     * Checks if a user has a pending refund request for a specific course
+     * 
+     * @param customerId   The customer ID
+     * @param courseId The course ID
+     * @return true if there's a pending refund request, false otherwise
+     */
+    public boolean hasPendingRefundForCourse(int customerId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        boolean hasPending = false;
+
+        try {
+            conn = DBContext.getConnection();
+            // Join with OrderDetails to find refund requests for this specific course
+            String sql = "SELECT COUNT(*) FROM RefundRequests r " +
+                    "JOIN Orders o ON r.OrderID = o.OrderID " +
+                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
+                    "WHERE r.CustomerID = ? AND od.CourseID = ? AND r.Status = 'pending'";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, customerId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                hasPending = rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return hasPending;
+    }
+    
+    /**
+     * Checks if a user has an approved refund request for a specific course
+     * 
+     * @param customerId   The customer ID
+     * @param courseId The course ID
+     * @return true if there's an approved refund request, false otherwise
+     */
+    public boolean hasApprovedRefundForCourse(int customerId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        boolean hasApproved = false;
+
+        try {
+            conn = DBContext.getConnection();
+            // Join with OrderDetails to find refund requests for this specific course
+            String sql = "SELECT COUNT(*) FROM RefundRequests r " +
+                    "JOIN Orders o ON r.OrderID = o.OrderID " +
+                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
+                    "WHERE r.CustomerID = ? AND od.CourseID = ? AND r.Status = 'approved'";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, customerId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                hasApproved = rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return hasApproved;
     }
 }

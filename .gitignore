@@ -5,3 +5,13 @@ nb-configuration.xml
 
 # Maven
 target/
+
+# Configuration files with sensitive data
+src/main/resources/config.properties
+
+# IDE Files
+.idea/
+*.iml
+.settings/
+.classpath
+.project

@@ -14,7 +14,7 @@ import java.sql.Timestamp;
  */
 public class CourseProgress {
     private int progressID;
-    private int userID;
+    private int customerID;
     private int courseID;
     private BigDecimal completionPercentage;
     private Timestamp lastAccessDate;
@@ -29,7 +29,7 @@ public class CourseProgress {
     }
 
     public CourseProgress(int userID, int courseID) {
-        this.userID = userID;
+        this.customerID = userID;
         this.courseID = courseID;
         this.completionPercentage = BigDecimal.ZERO;
     }
@@ -37,7 +37,7 @@ public class CourseProgress {
     public CourseProgress(int progressID, int userID, int courseID, BigDecimal completionPercentage,
             Timestamp lastAccessDate, boolean isCompleted) {
         this.progressID = progressID;
-        this.userID = userID;
+        this.customerID = userID;
         this.courseID = courseID;
         this.completionPercentage = completionPercentage;
         this.lastAccessDate = lastAccessDate;
@@ -52,12 +52,12 @@ public class CourseProgress {
         this.progressID = progressID;
     }
 
-    public int getUserID() {
-        return userID;
+    public int getCustomerID() {
+        return customerID;
     }
 
-    public void setUserID(int userID) {
-        this.userID = userID;
+    public void setCustomerID(int customerID) {
+        this.customerID = customerID;
     }
 
     public int getCourseID() {
@@ -120,7 +120,7 @@ public class CourseProgress {
     public String toString() {
         return "CourseProgress{" +
                 "progressID=" + progressID +
-                ", userID=" + userID +
+                ", userID=" + customerID +
                 ", courseID=" + courseID +
                 ", completionPercentage=" + completionPercentage +
                 ", lastAccessDate=" + lastAccessDate +

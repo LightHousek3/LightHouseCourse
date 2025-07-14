@@ -64,12 +64,8 @@ public class CustomerHomeServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        // Get cart
-        HttpSession session = request.getSession();
-        SuperUser user = (SuperUser) session.getAttribute("user");
-
         // Forward to home page
-        request.getRequestDispatcher("/WEB-INF/views/customer/manage-courses/homepage.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/customer/homepage.jsp").forward(request, response);
     }
 
     /**
