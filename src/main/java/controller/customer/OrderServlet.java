@@ -12,6 +12,9 @@ import dao.OrderDAO;
 import dao.CourseDAO;
 import dao.CourseProgressDAO;
 import dao.RefundRequestDAO;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import model.CartItem;
 import util.CartUtil;
 import model.Order;
 import model.OrderDetail;
@@ -58,6 +61,12 @@ public class OrderServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String servletPath = request.getServletPath();
+
+        if (servletPath.equals("/order/checkout")) {
+            // Process checkout (either from cart or direct course purchase)
+            processCheckout(request, response);
+        }
     }
 
     private void showCheckout(HttpServletRequest request, HttpServletResponse response)
@@ -101,6 +110,122 @@ public class OrderServlet extends HttpServlet {
         }
 
         request.getRequestDispatcher("/WEB-INF/views/customer/order/checkout.jsp").forward(request, response);
+    }
+    
+    private void processCheckout(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // Get user from session
+        HttpSession session = request.getSession();
+        Customer customer = (Customer) session.getAttribute("user");
+
+        if (customer == null) {
+            // Redirect to login page
+            response.sendRedirect(request.getContextPath() + "/login?redirect=checkout");
+            return;
+        }
+
+        // Get payment method from form
+        String paymentMethod = request.getParameter("payment-method");
+
+        if (paymentMethod == null || paymentMethod.trim().isEmpty()) {
+            // Default payment method
+            paymentMethod = "Credit Card";
+        }
+
+        // Create order
+        Order order = new Order();
+        order.setUserID(customer.getCustomerID());
+        order.setOrderDate(new Timestamp(System.currentTimeMillis()));
+        order.setStatus("completed");
+        order.setPaymentMethod(paymentMethod);
+
+        // Create order details
+        List<OrderDetail> details = new ArrayList<>();
+
+        // Check if this is a direct course checkout
+        String courseIdParam = request.getParameter("courseId");
+
+        if (courseIdParam != null && Validator.isValidNumber(courseIdParam)) {
+            // Direct course checkout
+            int courseId = Integer.parseInt(courseIdParam);
+
+            // Get course from database
+            Course course = courseDAO.getCourseById(courseId);
+
+            if (course == null) {
+                // Course not found
+                response.sendRedirect(request.getContextPath() + "/courses?error=course_not_found");
+                return;
+            }
+
+            // Check if user already purchased this course
+            boolean alreadyPurchased = orderDAO.hasUserPurchasedCourse(customer.getCustomerID(), courseId);
+
+            if (alreadyPurchased) {
+                // User already purchased this course
+                response.sendRedirect(request.getContextPath() + "/course/" + courseId + "?error=already_purchased");
+                return;
+            }
+
+            // Create order detail for this course
+            OrderDetail detail = new OrderDetail();
+            detail.setCourseID(course.getCourseID());
+            detail.setPrice(course.getPrice());
+            details.add(detail);
+
+            // Set total amount
+            order.setTotalAmount(course.getPrice());
+
+            // Set course attribute for error handling
+            request.setAttribute("course", course);
+            request.setAttribute("isDirectCheckout", true);
+
+        } else {
+            // Cart checkout
+            CartUtil cart = (CartUtil) session.getAttribute("cart");
+
+            if (cart == null || cart.isEmpty()) {
+                // Redirect to cart page with message
+                response.sendRedirect(request.getContextPath() + "/cart?error=empty");
+                return;
+            }
+
+            // Create order details from cart items
+            for (CartItem item : cart.getItems()) {
+                OrderDetail detail = new OrderDetail();
+                detail.setCourseID(item.getCourse().getCourseID());
+                detail.setPrice(item.getPrice());
+                details.add(detail);
+            }
+
+            // Set total amount
+            order.setTotalAmount(cart.getTotalPrice());
+
+            request.setAttribute("isDirectCheckout", false);
+        }
+
+        order.setOrderDetails(details);
+
+        // Insert order into database
+        int orderId = orderDAO.insertOrder(order);
+
+        if (orderId > 0) {
+            // If this was a cart checkout, clear the cart
+            if (courseIdParam == null) {
+                CartUtil cart = (CartUtil) session.getAttribute("cart");
+                if (cart != null) {
+                    cart.clear();
+                }
+            }
+
+            // Redirect to order confirmation page
+            response.sendRedirect(request.getContextPath() + "/order/detail/" + orderId + "?success=true");
+        } else {
+            // Show error message
+            request.setAttribute("error", "Checkout failed. Please try again.");
+            request.getRequestDispatcher("/WEB-INF/views/user/order/checkout.jsp").forward(request, response);
+        }
     }
 
     private void showOrderHistory(HttpServletRequest request, HttpServletResponse response)
