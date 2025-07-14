@@ -112,6 +112,108 @@ public class OrderDAO extends DBContext {
 
         return details;
     }
+    
+    /**
+     * Get all courses purchased by a customer with their order details.
+     * Returns a list of Object arrays where each array contains:
+     * [0] - Course object
+     * [1] - OrderDetail object with information about the purchase
+     * 
+     * @param customerId The ID of the customer
+     * @return List of Object arrays containing Course and OrderDetail
+     */
+    public List<Object[]> getCustomerPurchasedCoursesWithOrderDetails(int customerId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Object[]> purchasedCourses = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.CourseID, c.Name, c.Description, c.Price, c.ImageUrl, " +
+                    "c.Duration, c.Level, od.*, o.OrderDate FROM Orders o " +
+                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
+                    "JOIN Courses c ON od.CourseID = c.CourseID " +
+                    "WHERE o.CustomerID = ? AND o.Status = 'completed' " +
+                    "ORDER BY o.OrderDate DESC";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, customerId);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                // Create basic Course object from the result set
+                Course course = new Course();
+                course.setCourseID(rs.getInt("CourseID"));
+                course.setName(rs.getString("Name"));
+                course.setDescription(rs.getString("Description"));
+                course.setPrice(rs.getDouble("Price"));
+                course.setImageUrl(rs.getString("ImageUrl"));
+                course.setDuration(rs.getString("Duration"));
+                course.setLevel(rs.getString("Level"));
+
+                // Get full course details including instructors using CourseDAO
+                int courseId = rs.getInt("CourseID");
+                Course fullCourseDetails = courseDAO.getCourseById(courseId);
+                if (fullCourseDetails != null && fullCourseDetails.getInstructors() != null) {
+                    course.setInstructors(fullCourseDetails.getInstructors());
+                }
+
+                // Create OrderDetail object
+                OrderDetail orderDetail = new OrderDetail();
+                orderDetail.setOrderDetailID(rs.getInt("OrderDetailID"));
+                orderDetail.setOrderID(rs.getInt("OrderID"));
+                orderDetail.setCourseID(rs.getInt("CourseID"));
+                orderDetail.setPrice(rs.getDouble("Price"));
+
+                // Add to list as Object array
+                Object[] data = { course, orderDetail };
+                purchasedCourses.add(data);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return purchasedCourses;
+    }
+    
+    /**
+     * Check if a user has purchased a course.
+     * 
+     * @param customerId   The ID of the customer
+     * @param courseId The ID of the course
+     * @return true if purchased, false otherwise
+     */
+    public boolean hasCustomerPurchasedCourse(int customerId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT COUNT(*) FROM Orders o "
+                    + "JOIN OrderDetails od ON o.OrderID = od.OrderID "
+                    + "WHERE o.CustomerID = ? AND od.CourseID = ? AND o.Status = 'completed'";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, customerId);
+            ps.setInt(2, courseId);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return false;
+    }
 
     /**
      * Map a ResultSet to an Order object
