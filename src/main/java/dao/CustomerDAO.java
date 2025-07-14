@@ -35,8 +35,8 @@ public class CustomerDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "INSERT INTO Customers (Username, Password, Email, IsActive, FullName, Phone, Address, Avatar, AuthProvider, AuthProviderId) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO Customers (Username, Password, Email, IsActive, FullName, Phone, Address, Avatar, AuthProvider, AuthProviderId, Token) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, customer.getUsername());
@@ -49,6 +49,7 @@ public class CustomerDAO extends DBContext {
             ps.setString(8, customer.getAvatar());
             ps.setString(9, customer.getAuthProvider());
             ps.setString(10, customer.getAuthProviderId());
+            ps.setString(11, customer.getToken()); // Thêm dòng này
 
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 1) {
@@ -403,5 +404,24 @@ public class CustomerDAO extends DBContext {
         customer.setAuthProviderId(authProviderId);
 
         return customer;
+    }
+
+    public boolean activateCustomerByEmailAndToken(String email, String token) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Customers SET IsActive = 1, Token = NULL WHERE Email = ? AND Token = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setString(2, token);
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(null, ps, conn);
+        }
     }
 }
