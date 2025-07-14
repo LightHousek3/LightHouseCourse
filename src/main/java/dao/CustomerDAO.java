@@ -203,19 +203,34 @@ public class CustomerDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "UPDATE Customers SET Username = ?, Password = ?, Email = ?, IsActive = ?, "
-                    + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE CustomerID = ? ";
-
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, customer.getUsername());
-            ps.setString(2, customer.getPassword());
-            ps.setString(3, customer.getEmail());
-            ps.setBoolean(4, customer.isActive());
-            ps.setString(5, customer.getFullName());
-            ps.setString(6, customer.getPhone());
-            ps.setString(7, customer.getAddress());
-            ps.setString(8, customer.getAvatar());
-            ps.setInt(9, customer.getCustomerID());
+            // If the password is not null, then update.
+            if (customer.getPassword() != null) {
+                String sql = "UPDATE Customers SET Username = ?, Password = ?, Email = ?, IsActive = ?, "
+                        + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE CustomerID = ?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, customer.getUsername());
+                ps.setString(2, customer.getPassword());
+                ps.setString(3, customer.getEmail());
+                ps.setBoolean(4, customer.isActive());
+                ps.setString(5, customer.getFullName());
+                ps.setString(6, customer.getPhone());
+                ps.setString(7, customer.getAddress());
+                ps.setString(8, customer.getAvatar());
+                ps.setInt(9, customer.getCustomerID());
+            } else {
+                //If password == null then do not update the Password column.
+                String sql = "UPDATE Customers SET Username = ?, Email = ?, IsActive = ?, "
+                        + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE CustomerID = ?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, customer.getUsername());
+                ps.setString(2, customer.getEmail());
+                ps.setBoolean(3, customer.isActive());
+                ps.setString(4, customer.getFullName());
+                ps.setString(5, customer.getPhone());
+                ps.setString(6, customer.getAddress());
+                ps.setString(7, customer.getAvatar());
+                ps.setInt(8, customer.getCustomerID());
+            }
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected == 1;
@@ -404,10 +419,10 @@ public class CustomerDAO extends DBContext {
 
         return customer;
     }
-    
+
     /**
      * Authenticate a customer.
-     * 
+     *
      * @param username The username
      * @param password The encrypted password
      * @return The authenticated user, or null if authentication failed
@@ -443,11 +458,11 @@ public class CustomerDAO extends DBContext {
 
         return user;
     }
-    
+
     /**
      * Find a customer by their social provider ID.
-     * 
-     * @param provider   The authentication provider (e.g., "google", "facebook")
+     *
+     * @param provider The authentication provider (e.g., "google", "facebook")
      * @param providerId The ID from the provider
      * @return Customer object if found, null otherwise
      */
@@ -480,7 +495,7 @@ public class CustomerDAO extends DBContext {
 
     /**
      * Process a social login - either find existing user or create new one.
-     * 
+     *
      * @param customer The customer object from social authentication
      * @return Customer object with database ID if successful, null otherwise
      */
@@ -520,7 +535,7 @@ public class CustomerDAO extends DBContext {
 
     /**
      * Update a customer's social login details.
-     * 
+     *
      * @param customer The customer to update customer
      * @return true if update customer successful, false otherwise
      */
