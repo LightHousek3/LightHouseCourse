@@ -5,9 +5,76 @@
 <!-- Navigation Bar -->
 <style>
     .dropdown-menu.scrollable-dropdown {
-        max-height: 300px; 
-        overflow-y: auto; 
-        overflow-x: hidden; 
+        max-height: 300px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .dropdown-menu.scrollable-dropdown::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .dropdown-menu.scrollable-dropdown::-webkit-scrollbar-track {
+        background: #f8f9fa;
+        border-radius: 3px;
+    }
+
+    .dropdown-menu.scrollable-dropdown::-webkit-scrollbar-thumb {
+        background: #dee2e6;
+        border-radius: 3px;
+        transition: background 0.3s ease;
+    }
+
+    .dropdown-menu.scrollable-dropdown::-webkit-scrollbar-thumb:hover {
+        background: #adb5bd;
+    }
+
+    .dropdown-menu.scrollable-dropdown {
+        scrollbar-width: thin;
+        scrollbar-color: #dee2e6 #f8f9fa;
+    }
+
+    .dropdown-menu.scrollable-dropdown .dropdown-item {
+        transition: all 0.3s ease;
+        border-radius: 4px;
+        margin: 2px 8px;
+        padding: 8px 12px;
+    }
+
+    .dropdown-menu.scrollable-dropdown .dropdown-item:hover {
+        background: linear-gradient(135deg, #e83e8c, #ffb6c1);
+        color: white;
+        transform: translateX(5px);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .dropdown-menu.scrollable-dropdown {
+            max-height: 250px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .dropdown-menu.scrollable-dropdown {
+            max-height: 200px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .navbar-collapse .navbar-nav {
+            margin-bottom: 0;
+        }
+        .navbar-collapse.has-category .navbar-nav {
+            margin-bottom: 10px;
+        }
+    }
+
+    .dropdown-menu.scrollable-dropdown {
+        max-height: 300px;
+        overflow-y: auto;
+        overflow-x: hidden;
         border-radius: 8px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
@@ -54,6 +121,10 @@
         height: 30px;
         border-radius: 50%
     }
+    
+    .nav-link::after {
+        background-color: #fff;
+    }
 
     /* Responsive design */
     @media (max-width: 768px) {
@@ -79,7 +150,7 @@
     .navbar {
         position: sticky;
         top: 0;
-        z-index: 1050; 
+        z-index: 1050;
     }
 
     .category-nav {
@@ -101,12 +172,12 @@
         padding: 0;
         list-style: none;
         overflow-x: auto;
-        scrollbar-width: none; 
-        -ms-overflow-style: none; 
+        scrollbar-width: none;
+        -ms-overflow-style: none;
     }
 
     .category-nav .category-list::-webkit-scrollbar {
-        display: none; 
+        display: none;
     }
 
     .category-nav .category-item {
@@ -121,15 +192,18 @@
         font-size: 14px;
     }
 
-    .category-nav .category-link:hover,
+    .category-nav .category-link:hover {
+        background-color: #FF69B4;
+        color: white;
+    }
     .category-nav .category-link.active {
         background-color: #e83e8c;
         color: white;
     }
 
     .scroll-button {
-        background-color: #222; 
-        color: #fff;           
+        background-color: #222;
+        color: #fff;
         border: none;
         width: 30px;
         height: 100%;
@@ -170,21 +244,32 @@
 
     .category-nav::before {
         left: 0;
-
     }
 
     .category-nav::after {
         right: 0;
+    }
 
+    .user-mobile-menu {
+        display: none;
+        padding-left: 0;
     }
 
     /* Mobile responsive */
     @media (max-width: 768px) {
-
-
         .category-nav .category-link {
             width: 100%;
             border-top: 1px solid #444;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dropdown-menu {
+            display: none !important;
+        }
+        .user-mobile-menu {
+            display: block;
+            margin-top: 8px;
         }
     }
 </style>
@@ -240,40 +325,47 @@
                     </c:when>
                     <c:otherwise>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link d-flex align-items-center gap-2" href="#" id="userDropdown"
+                               role="button" data-bs-toggle="dropdown">
                                 <c:choose>
                                     <c:when test="${not empty sessionScope.user.avatar}">
                                         <c:choose>
                                             <c:when test="${fn:startsWith(sessionScope.user.avatar, 'https')}">
-                                                <img src="${sessionScope.user.avatar}"
-                                                     alt="Customer Avatar" class="avatar-customer"
-                                                     id="avatarCustomer">
+                                                <img src="${sessionScope.user.avatar}" alt="Customer Avatar" class="avatar-customer" id="avatarCustomer">
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <img src="${pageContext.request.contextPath}${sessionScope.user.avatar}"
-                                                         alt="Customer Avatar" class="avatar-customer"
-                                                         id="avatarCustomer">
+                                                    <img src="${pageContext.request.contextPath}${sessionScope.user.avatar}" alt="Customer Avatar" class="avatar-customer" id="avatarCustomer">
                                                     </c:otherwise>
                                                 </c:choose>
                                             </c:when>
                                             <c:otherwise>
-                                                <div class="avatar-placeholder"
-                                                     id="avatarPlaceholder">
+                                                <div class="avatar-placeholder" id="avatarPlaceholder">
                                                     <i class="fas fa-user"></i>
                                                 </div>
                                             </c:otherwise>
                                         </c:choose>
                                         ${sessionScope.user.username}
                                         </a>
-                                        <ul class="dropdown-menu dropdown-menu-end">
+
+                                        <!-- Desktop Dropdown -->
+                                        <ul class="dropdown-menu">
                                             <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">My Profile</a></li>
                                             <li><a class="dropdown-item" href="${pageContext.request.contextPath}/my-courses">My Courses</a></li>
                                             <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order/history">My Orders</a></li>
                                             <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a></li>
+                                            <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout">Logout</a></li>
+                                        </ul>
+
+                                        <!-- Mobile List -->
+                                        <ul class="user-mobile-menu list-unstyled">
+                                            <li><a class="nav-link" href="${pageContext.request.contextPath}/profile">My Profile</a></li>
+                                            <li><a class="nav-link" href="${pageContext.request.contextPath}/my-courses">My Courses</a></li>
+                                            <li><a class="nav-link" href="${pageContext.request.contextPath}/order/history">My Orders</a></li>
+                                            <li><a class="nav-link text-danger" href="${pageContext.request.contextPath}/logout">Logout</a></li>
                                         </ul>
                                         </li>
                                     </c:otherwise>
+
                                 </c:choose>
                                 </ul>
                                 </div>

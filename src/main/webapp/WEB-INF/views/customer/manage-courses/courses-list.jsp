@@ -9,14 +9,12 @@
         <!-- Include common header resources -->
         <jsp:include page="/WEB-INF/views/customer/common/head.jsp" />
         <style>
-            /* Đặt chiều cao cố định cho phần categories */
             .categories-container {
-                height: 60px; /* Điều chỉnh chiều cao phù hợp với số lượng category có thể hiển thị */
+                height: 60px;
                 overflow: hidden;
                 margin-bottom: 15px;
             }
 
-            /* Đặt chiều cao cố định cho phần tiêu đề */
             .card-title {
                 height: 50px;
                 overflow: hidden;
@@ -29,21 +27,18 @@
                 line-height: 1.4;
             }
 
-            /* Đảm bảo card body có cấu trúc đồng nhất */
             .card-body {
                 display: flex;
                 flex-direction: column;
                 padding: 1.5rem;
             }
 
-            /* Đảm bảo phần instructor luôn có chiều cao cố định */
             .instructor-container {
                 height: 24px;
                 overflow: hidden;
                 margin-bottom: 15px;
             }
 
-            /* Đẩy các phần cuối cùng (price, level) xuống dưới cùng */
             .card-body .mt-auto {
                 margin-top: auto !important;
             }
@@ -118,12 +113,11 @@
                 text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
             }
             .category-sidebar {
-                max-height: 400px; /* Chiều cao tối đa */
-                overflow-y: auto; /* Thanh cuộn dọc khi cần */
-                overflow-x: hidden; /* Ẩn thanh cuộn ngang */
+                max-height: 400px;
+                overflow-y: auto;
+                overflow-x: hidden;
             }
 
-            /* Tùy chỉnh thanh cuộn webkit (Chrome, Safari, Edge) */
             .category-sidebar::-webkit-scrollbar {
                 width: 8px;
             }
@@ -143,7 +137,6 @@
                 background: #555;
             }
 
-            /* Tùy chỉnh thanh cuộn Firefox */
             .category-sidebar {
                 scrollbar-width: thin;
                 scrollbar-color: #888 #f1f1f1;
@@ -278,7 +271,7 @@
                             <h5 class="mb-0">Categories</h5>
                         </div>
                         <div class="list-group list-group-flush category-sidebar">
-                            <a href="${pageContext.request.contextPath}/courses" class="list-group-item list-group-item-action ${empty categoryId ? 'active' : ''}">
+                            <a href="${pageContext.request.contextPath}/courses" class="list-group-item list-group-item-action ${empty param.category ? 'active' : ''}">
                                 All Categories
                             </a>
                             <c:forEach var="category" items="${categories}">
@@ -395,12 +388,14 @@
                                             <a href="javascript:void(0);" onclick="addToCart(${course.courseID})" class="btn btn-primary">
                                                 <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                             </a>
+                                            <a href="javascript:void(0);" onclick="buyNow(${course.courseID})" class="btn btn-success">
+                                                <i class="fas fa-credit-card me-2"></i>Buy Now
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </c:forEach>
-
                     </div>
 
                     <!-- Pagination -->

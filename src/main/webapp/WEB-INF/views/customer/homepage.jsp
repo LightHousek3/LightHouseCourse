@@ -329,6 +329,9 @@
                                         <button type="button" class="btn btn-primary add-to-cart-btn" data-course-id="${course.courseID}">
                                             <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                         </button>
+                                        <a href="javascript:void(0);" onclick="buyNow(${course.courseID})" class="btn btn-success">
+                                            <i class="fas fa-credit-card me-2"></i>Buy Now
+                                        </a>
                                     </div>
                                 </div>
                             </div>
