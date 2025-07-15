@@ -502,29 +502,32 @@ public class CourseDAO extends DBContext {
 
         try {
             conn = getConnection();
+            StringBuilder sql = new StringBuilder("SELECT * FROM Courses WHERE 1=1");
+            List<Object> params = new ArrayList<>();
 
-            String sql;
-            if (limit > 0) {
-                if (status != null) {
-                    sql = "SELECT * FROM Courses WHERE ApprovalStatus = ? ORDER BY CourseID OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-                    ps = conn.prepareStatement(sql);
-                    ps.setString(1, status);
-                    ps.setInt(2, offset);
-                    ps.setInt(3, limit);
-                } else {
-                    sql = "SELECT * FROM Courses ORDER BY CourseID OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-                    ps = conn.prepareStatement(sql);
-                    ps.setInt(1, offset);
-                    ps.setInt(2, limit);
-                }
-
+            if (status != null && !status.isEmpty()) {
+                sql.append(" AND ApprovalStatus = ?");
+                params.add(status);
             } else {
-                sql = "SELECT * FROM Courses";
-                ps = conn.prepareStatement(sql);
+                sql.append(" AND ApprovalStatus <> 'draft'");
+            }
+
+            sql.append(" ORDER BY CourseID");
+
+            if (limit > 0) {
+                sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+                params.add(offset);
+                params.add(limit);
+            }
+
+            ps = conn.prepareStatement(sql.toString());
+
+            // Bind params
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
 
             rs = ps.executeQuery();
-
             while (rs.next()) {
                 Course course = mapCourse(rs);
                 courses.add(course);
@@ -570,17 +573,22 @@ public class CourseDAO extends DBContext {
 
         try {
             conn = getConnection();
-            if (status != null) {
-                String sql = "SELECT COUNT(*) AS total FROM Courses WHERE ApprovalStatus = ?";
-                ps = conn.prepareStatement(sql);
-                ps.setString(1, status);
+            StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS total FROM Courses WHERE 1=1");
+            List<Object> params = new ArrayList<>();
+
+            if (status != null && !status.isEmpty()) {
+                sql.append(" AND ApprovalStatus = ?");
+                params.add(status);
             } else {
-                String sql = "SELECT COUNT(*) AS total FROM Courses";
-                ps = conn.prepareStatement(sql);
+                sql.append(" AND ApprovalStatus <> 'draft'");
+            }
+
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
 
             rs = ps.executeQuery();
-
             if (rs.next()) {
                 count = rs.getInt("total");
             }
@@ -600,13 +608,14 @@ public class CourseDAO extends DBContext {
         ResultSet rs = null;
 
         String sql = "SELECT DISTINCT c.*\n"
-                + "        FROM Courses c\n"
-                + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
-                + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
-                + "        LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID\n"
-                + "        WHERE c.Name LIKE ? OR su.FullName LIKE ?\n"
-                + "        ORDER BY c.CourseID\n"
-                + "        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+                + "FROM Courses c\n"
+                + "LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
+                + "LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
+                + "LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID\n"
+                + "WHERE c.ApprovalStatus <> 'draft'\n"
+                + "  AND (c.Name LIKE ? OR su.FullName LIKE ?)\n"
+                + "ORDER BY c.CourseID\n"
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY;";
 
         try {
             conn = getConnection();
@@ -658,11 +667,12 @@ public class CourseDAO extends DBContext {
 
     public int countCoursesByKeyword(String keyword) {
         String sql = "SELECT COUNT(DISTINCT c.CourseID)\n"
-                + "        FROM Courses c\n"
-                + "        LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
-                + "        LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
-                + "        LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID\n"
-                + "        WHERE c.Name LIKE ? OR su.FullName LIKE ?";
+                + "FROM Courses c\n"
+                + "LEFT JOIN CourseInstructors ci ON c.CourseID = ci.CourseID\n"
+                + "LEFT JOIN Instructors i ON ci.InstructorID = i.InstructorID\n"
+                + "LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID\n"
+                + "WHERE c.ApprovalStatus <> 'draft'\n"
+                + "  AND (c.Name LIKE ? OR su.FullName LIKE ?)";
 
         try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -719,6 +729,8 @@ public class CourseDAO extends DBContext {
         if (approvalStatus != null && !approvalStatus.isEmpty()) {
             sql.append(" AND c.ApprovalStatus = ? ");
             params.add(approvalStatus);
+        } else {
+            sql.append(" AND c.ApprovalStatus <> 'draft' ");
         }
 
         // Sorting
@@ -817,6 +829,8 @@ public class CourseDAO extends DBContext {
         if (approvalStatus != null && !approvalStatus.isEmpty()) {
             sql.append(" AND c.ApprovalStatus = ? ");
             params.add(approvalStatus);
+        } else {
+            sql.append(" AND c.ApprovalStatus <> 'draft' ");
         }
 
         try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -1602,4 +1616,59 @@ public class CourseDAO extends DBContext {
         }
         return courses;
     }
+
+    /**
+     * Approve a course by updating its ApprovalStatus to 'APPROVED' and
+     * ApprovalDate to now.
+     *
+     * @param courseId The ID of the course to approve
+     * @return true if update successful, false otherwise
+     */
+    public boolean approveCourse(int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Courses SET ApprovalStatus = 'approved', ApprovalDate = GETDATE() WHERE CourseID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, courseId);
+
+            int affectedRows = ps.executeUpdate();
+            return affectedRows == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(null, ps, conn);
+        }
+    }
+
+    /**
+     * Reject a course by updating its ApprovalStatus to 'REJECTED' and set the
+     * RejectionReason.
+     *
+     * @param courseId The ID of the course to reject
+     * @param reason The rejection reason
+     * @return true if update successful, false otherwise
+     */
+    public boolean rejectCourse(int courseId, String reason) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Courses SET ApprovalStatus = 'rejected', RejectionReason = ? WHERE CourseID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, reason);
+            ps.setInt(2, courseId);
+
+            int affectedRows = ps.executeUpdate();
+            return affectedRows == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(null, ps, conn);
+        }
+    }
+
 }
