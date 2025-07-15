@@ -1,0 +1,436 @@
+/* Toast notifications */
+.discussion-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    background-color: #4361ee;
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    max-width: 300px;
+}
+
+.discussion-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.discussion-toast.error {
+    background-color: #e63946;
+}
+
+/* Discussion Button Container in content header */
+.lesson-discussion-button-container {
+    margin: 10px 0 15px;
+    display: flex;
+    align-items: center;
+}
+
+/* Discussion Button */
+.js-discussion-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    cursor: pointer;
+    color: #4361ee;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.js-discussion-btn:hover {
+    background-color: #edf2ff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.js-discussion-btn i,
+.js-discussion-btn svg {
+    margin-right: 8px;
+    color: #4361ee;
+}
+
+/* Lesson Discussion Modal */
+.lesson-discussion-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9999;
+}
+
+.lesson-discussion-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.lesson-discussion-modal.active .lesson-discussion-overlay {
+    opacity: 1;
+}
+
+.lesson-discussion-content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 50%;
+    background-color: #fff;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+}
+
+.lesson-discussion-modal.active .lesson-discussion-content {
+    transform: translateX(0);
+}
+
+/* Header */
+.lesson-discussion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 1rem;
+}
+
+.lesson-discussion-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.lesson-discussion-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #777;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.lesson-discussion-close:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+/* Simplified Input */
+.simplified-input-container {
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.simplified-discussion-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.simplified-discussion-input:focus {
+    border-color: #4361ee;
+    box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+    outline: none;
+}
+
+.simplified-discussion-input.hidden {
+    display: none;
+}
+
+/* Form */
+.lesson-discussion-form-wrapper {
+    margin-bottom: 1.5rem;
+    background-color: #f9f9f9;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.lesson-discussion-form-wrapper.hidden {
+    display: none;
+}
+
+.lesson-discussion-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.lesson-discussion-form input,
+.lesson-discussion-form textarea {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 100%;
+}
+
+.lesson-discussion-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.lesson-discussion-form input:focus,
+.lesson-discussion-form textarea:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+}
+
+.form-button-container {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+/* Discussions List */
+.lesson-discussions-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.discussion-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.discussion-content {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    color: #333;
+    white-space: pre-wrap;
+}
+
+.discussion-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #777;
+    margin-bottom: 1.5rem;
+}
+
+.discussion-author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.author-avatar {
+    width: 24px;
+    height: 24px;
+    background-color: #4361ee;
+    border-radius: 50%;
+}
+
+/* Replies */
+.discussion-replies {
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+}
+
+.replies-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.replies-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: #555;
+}
+
+.replies-toggle i {
+    transition: transform 0.2s;
+}
+
+.replies-toggle.open i {
+    transform: rotate(180deg);
+}
+
+.reply-button {
+    background: none;
+    border: none;
+    color: #4361ee;
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 0;
+    font-weight: 500;
+}
+
+.reply-button:hover {
+    text-decoration: underline;
+}
+
+.replies-list {
+    display: none;
+    margin-bottom: 1rem;
+}
+
+.replies-list.open {
+    display: block;
+}
+
+.reply-item {
+    padding: 1rem;
+    border-left: 3px solid #e0e0e0;
+    margin-left: 0.5rem;
+    margin-bottom: 0.5rem;
+    background-color: #f9f9f9;
+    border-radius: 0 4px 4px 0;
+}
+
+.instructor-reply {
+    border-left-color: #4361ee;
+}
+
+.reply-content {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    white-space: pre-wrap;
+}
+
+.reply-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8125rem;
+    color: #777;
+}
+
+.instructor-badge {
+    background-color: #4361ee;
+    color: white;
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-left: 0.25rem;
+}
+
+/* Reply Form */
+.reply-form-wrapper {
+    margin-top: 1rem;
+    background-color: #f9f9f9;
+    padding: 0.75rem;
+    border-radius: 4px;
+}
+
+.reply-form-wrapper.hidden {
+    display: none;
+}
+
+.reply-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.reply-form textarea {
+    resize: vertical;
+    min-height: 80px;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9375rem;
+    width: 100%;
+}
+
+.reply-form textarea:focus {
+    outline: none;
+    border-color: #4361ee;
+}
+
+/* States */
+.loading, .error, .no-discussions, .no-replies {
+    padding: 1rem;
+    text-align: center;
+    color: #777;
+    font-style: italic;
+}
+
+.error {
+    color: #e53935;
+}
+
+/* Toast Notifications */
+.discussion-toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.9375rem;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-width: 300px;
+}
+
+.discussion-toast.success {
+    background-color: #4caf50;
+}
+
+.discussion-toast.error {
+    background-color: #f44336;
+}
+
+.discussion-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .lesson-discussion-content {
+        width: 100%;
+    }
+
+    .form-button-container {
+        flex-direction: column;
+    }
+} 

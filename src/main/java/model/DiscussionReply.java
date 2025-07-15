@@ -28,10 +28,10 @@ public class DiscussionReply {
     public DiscussionReply() {
     }
 
-    public DiscussionReply(int discussionID, int authorID, String authorType, String content) {
+    public DiscussionReply(int discussionID, int authorID, String content) {
         this.discussionID = discussionID;
         this.authorID = authorID;
-        this.authorType = authorType;
+        this.authorType = "customer";
         this.content = content;
     }
 
