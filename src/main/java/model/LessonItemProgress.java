@@ -132,9 +132,16 @@ public class LessonItemProgress {
         this.isCompleted = isCompleted;
     }
 
+    // Add this method for Jakarta EL compatibility
+    public boolean getIsCompleted() {
+        return isCompleted;
+    }
+
     @Override
     public String toString() {
-        return "LessonItemProgress{" + "progressID=" + progressID + ", userID=" + customerID + ", lessonItemID=" + lessonItemID + ", isCompleted=" + isCompleted + ", completionDate=" + completionDate + ", lastAccessDate=" + lastAccessDate + '}';
+        return "LessonItemProgress{" + "progressID=" + progressID + ", userID=" + customerID + ", lessonItemID="
+                + lessonItemID + ", isCompleted=" + isCompleted + ", completionDate=" + completionDate
+                + ", lastAccessDate=" + lastAccessDate + '}';
     }
-    
+
 }

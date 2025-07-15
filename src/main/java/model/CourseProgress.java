@@ -82,6 +82,11 @@ public class CourseProgress {
         return isCompleted;
     }
 
+    // Add this method for Jakarta EL compatibility
+    public boolean getIsCompleted() {
+        return isCompleted;
+    }
+
     public void setCompleted(boolean completed) {
         isCompleted = completed;
     }
