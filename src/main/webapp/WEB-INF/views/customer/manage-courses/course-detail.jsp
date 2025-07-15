@@ -257,7 +257,7 @@
                         </div>
                     </div>
                     <div class="col-lg-4">
-                        <div class="card">
+                        <div class="card course-card" data-course-id="${course.courseID}">
                             <c:choose>
                                 <c:when test="${not empty course.imageUrl}">
                                     <img src="${pageContext.request.contextPath}/${course.imageUrl}" class="card-img-top course-img" alt="${course.name}">
@@ -291,25 +291,21 @@
                                         </div>
                                     </c:when>
                                     <c:when test="${alreadyPurchased}">
-                                        <a href="${pageContext.request.contextPath}/learn/course/${course.courseID}"
+                                        <a href="${pageContext.request.contextPath}/learning/${course.courseID}"
                                            class="btn btn-success w-100 mb-3">
                                             <i class="fas fa-play-circle me-2"></i>Start Learning
                                         </a>
                                         <c:if test="${order.getAttribute('eligibleForRefund') == true}">
-                                                <a href="${pageContext.request.contextPath}/refund/request/order/${order.orderID}"
-                                                   class="btn btn-outline-danger mt-2">
-                                                    Request Refund
-                                                </a>
-                                            </c:if>
+                                            <a href="${pageContext.request.contextPath}/refund/request/order/${order.orderID}"
+                                               class="btn btn-outline-danger mt-2">
+                                                Request Refund
+                                            </a>
+                                        </c:if>
                                     </c:when>
                                     <c:otherwise>
-                                        <form action="${pageContext.request.contextPath}/cart/add"
-                                              method="post">
-                                            <input type="hidden" name="courseId" value="${course.courseID}">
-                                            <button type="submit" class="btn btn-primary w-100 mb-3">
-                                                <i class="fas fa-shopping-cart me-2"></i>Add to Cart
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-primary add-to-cart-btn w-100 mb-3" data-course-id="${course.courseID}">
+                                            <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                        </button>
                                         <a href="${ pageContext.request.contextPath}/order/checkout?courseId=${course.courseID}"
                                            class="btn btn-outline-primary w-100">
                                             <i class="fas fa-credit-card me-2"></i>Buy Now
@@ -715,6 +711,16 @@
         <script src="${pageContext.request.contextPath}/assets/js/script.js"></script>
 
         <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+                addToCartButtons.forEach(button => {
+                    button.addEventListener('click', function () {
+                        const courseId = this.getAttribute('data-course-id');
+                        console.log("courseId: ", courseId);
+                        addToCart(courseId);
+                    });
+                });
+            });
             // Handle form submission via AJAX for ratings
             $(document).ready(function () {
                 const message = sessionStorage.getItem("notificationMessage");

@@ -71,11 +71,11 @@ public class RefundRequestDAO extends DBContext {
     /**
      * Processes a refund request (approve or reject).
      *
-     * @param refundId The ID of the refund request
-     * @param status The new status ("approved" or "rejected")
-     * @param superUserId The ID of the admin processing the request
+     * @param refundId     The ID of the refund request
+     * @param status       The new status ("approved" or "rejected")
+     * @param superUserId  The ID of the admin processing the request
      * @param adminMessage The message from admin explaining the decision
-     * (required)
+     *                     (required)
      * @return true if update successful, false otherwise
      */
     public boolean processRequest(int refundId, String status, int superUserId, String adminMessage) {
@@ -135,7 +135,7 @@ public class RefundRequestDAO extends DBContext {
     /**
      * Updates order when refund request is approved.
      *
-     * @param conn Database connection
+     * @param conn     Database connection
      * @param refundId The ID of the refund request
      * @throws SQLException If a SQL error occurs
      */
@@ -339,9 +339,9 @@ public class RefundRequestDAO extends DBContext {
     /**
      * Gets refund requests filtered by status and search text.
      *
-     * @param status The status to filter by (or "all")
-     * @param search The search text to filter by
-     * @param page The page number
+     * @param status   The status to filter by (or "all")
+     * @param search   The search text to filter by
+     * @param page     The page number
      * @param pageSize The number of items per page
      * @return List of matching RefundRequest objects
      */
@@ -355,16 +355,16 @@ public class RefundRequestDAO extends DBContext {
             conn = getConnection();
             StringBuilder sql = new StringBuilder(
                     "SELECT r.*, c.FullName as CustomerName, "
-                    + "o.TotalAmount as OriginalAmount, a.FullName as AdminName, "
-                    + "STUFF((SELECT ', ' + co.Name "
-                    + "       FROM OrderDetails od "
-                    + "       JOIN Courses co ON od.CourseID = co.CourseID "
-                    + "       WHERE od.OrderID = r.OrderID "
-                    + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
-                    + "FROM RefundRequests r "
-                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
-                    + "JOIN Orders o ON r.OrderID = o.OrderID "
-                    + "LEFT JOIN SuperUsers a ON r.ProcessedBy = a.SuperUserID WHERE 1=1");
+                            + "o.TotalAmount as OriginalAmount, a.FullName as AdminName, "
+                            + "STUFF((SELECT ', ' + co.Name "
+                            + "       FROM OrderDetails od "
+                            + "       JOIN Courses co ON od.CourseID = co.CourseID "
+                            + "       WHERE od.OrderID = r.OrderID "
+                            + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
+                            + "FROM RefundRequests r "
+                            + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                            + "JOIN Orders o ON r.OrderID = o.OrderID "
+                            + "LEFT JOIN SuperUsers a ON r.ProcessedBy = a.SuperUserID WHERE 1=1");
 
             if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("all")) {
                 sql.append(" AND r.Status = ?");
@@ -442,8 +442,8 @@ public class RefundRequestDAO extends DBContext {
     /**
      * Gets refund requests filtered by status.
      *
-     * @param status The status to filter by
-     * @param page The page number
+     * @param status   The status to filter by
+     * @param page     The page number
      * @param pageSize The number of items per page
      * @return List of matching RefundRequest objects
      */
@@ -538,7 +538,7 @@ public class RefundRequestDAO extends DBContext {
      * Checks if a customer has a pending refund request for an order
      *
      * @param customerId The customer ID
-     * @param orderId The order ID
+     * @param orderId    The order ID
      * @return true if there's a pending refund request, false otherwise
      */
     public boolean hasPendingRefundForOrder(int customerId, int orderId) {
@@ -572,7 +572,7 @@ public class RefundRequestDAO extends DBContext {
      * Checks if a customer has an approved refund request for an order
      *
      * @param customerId The customer ID
-     * @param orderId The order ID
+     * @param orderId    The order ID
      * @return true if there's an approved refund request, false otherwise
      */
     public boolean hasApprovedRefundForOrder(int customerId, int orderId) {
@@ -720,13 +720,15 @@ public class RefundRequestDAO extends DBContext {
 
         return refunds;
     }
-    
+
     /**
      * Checks if a user has a pending refund request for a specific course
+     * but only considers the most recent order for that course
      * 
-     * @param customerId   The customer ID
-     * @param courseId The course ID
-     * @return true if there's a pending refund request, false otherwise
+     * @param customerId The customer ID
+     * @param courseId   The course ID
+     * @return true if the most recent order for this course has a pending refund
+     *         request, false otherwise
      */
     public boolean hasPendingRefundForCourse(int customerId, int courseId) {
         Connection conn = null;
@@ -736,11 +738,17 @@ public class RefundRequestDAO extends DBContext {
 
         try {
             conn = DBContext.getConnection();
-            // Join with OrderDetails to find refund requests for this specific course
-            String sql = "SELECT COUNT(*) FROM RefundRequests r " +
-                    "JOIN Orders o ON r.OrderID = o.OrderID " +
-                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
-                    "WHERE r.CustomerID = ? AND od.CourseID = ? AND r.Status = 'pending'";
+            // Get the most recent order for this customer and course
+            String sql = "WITH RecentOrder AS (" +
+                    "  SELECT TOP 1 o.OrderID " +
+                    "  FROM Orders o " +
+                    "  JOIN OrderDetails od ON o.OrderID = od.OrderID " +
+                    "  WHERE o.CustomerID = ? AND od.CourseID = ? " +
+                    "  ORDER BY o.OrderDate DESC" +
+                    ") " +
+                    "SELECT COUNT(*) FROM RefundRequests r " +
+                    "JOIN RecentOrder ro ON r.OrderID = ro.OrderID " +
+                    "WHERE r.Status = 'pending'";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, customerId);
@@ -758,13 +766,15 @@ public class RefundRequestDAO extends DBContext {
 
         return hasPending;
     }
-    
+
     /**
      * Checks if a user has an approved refund request for a specific course
+     * but only considers the most recent order for that course
      * 
-     * @param customerId   The customer ID
-     * @param courseId The course ID
-     * @return true if there's an approved refund request, false otherwise
+     * @param customerId The customer ID
+     * @param courseId   The course ID
+     * @return true if the most recent order for this course has been refunded,
+     *         false otherwise
      */
     public boolean hasApprovedRefundForCourse(int customerId, int courseId) {
         Connection conn = null;
@@ -774,11 +784,17 @@ public class RefundRequestDAO extends DBContext {
 
         try {
             conn = DBContext.getConnection();
-            // Join with OrderDetails to find refund requests for this specific course
-            String sql = "SELECT COUNT(*) FROM RefundRequests r " +
-                    "JOIN Orders o ON r.OrderID = o.OrderID " +
-                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
-                    "WHERE r.CustomerID = ? AND od.CourseID = ? AND r.Status = 'approved'";
+            // Get the most recent order for this customer and course
+            String sql = "WITH RecentOrder AS (" +
+                    "  SELECT TOP 1 o.OrderID " +
+                    "  FROM Orders o " +
+                    "  JOIN OrderDetails od ON o.OrderID = od.OrderID " +
+                    "  WHERE o.CustomerID = ? AND od.CourseID = ? " +
+                    "  ORDER BY o.OrderDate DESC" +
+                    ") " +
+                    "SELECT COUNT(*) FROM RefundRequests r " +
+                    "JOIN RecentOrder ro ON r.OrderID = ro.OrderID " +
+                    "WHERE r.Status = 'approved'";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, customerId);

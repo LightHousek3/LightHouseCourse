@@ -15,6 +15,7 @@ import model.Order;
 import model.RefundRequest;
 import model.Customer;
 import util.RefundUtil;
+import model.OrderDetail;
 
 /**
  * Servlet handling refund-related operations.
@@ -80,7 +81,28 @@ public class RefundServlet extends HttpServlet {
                 request.setAttribute("refundAmount", refundAmount);
                 request.setAttribute("refundPercentage", RefundUtil.getRefundPercentage(order));
 
-                request.getRequestDispatcher("/WEB-INF/views/customer/order/refund-request.jsp").forward(request, response);
+                // Set additional attributes required by the JSP
+                if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+                    // For an entire order refund, we need to show the course names
+                    StringBuilder courseNameBuilder = new StringBuilder();
+                    for (int i = 0; i < order.getOrderDetails().size(); i++) {
+                        OrderDetail detail = order.getOrderDetails().get(i);
+                        if (detail.getCourse() != null) {
+                            courseNameBuilder.append(detail.getCourse().getName());
+                            if (i < order.getOrderDetails().size() - 1) {
+                                courseNameBuilder.append(", ");
+                            }
+                        }
+                    }
+                    request.setAttribute("courseName", courseNameBuilder.toString());
+                }
+
+                // Set order date and original price
+                request.setAttribute("orderDate", order.getOrderDate());
+                request.setAttribute("originalPrice", order.getTotalAmount());
+
+                request.getRequestDispatcher("/WEB-INF/views/customer/order/refund-request.jsp").forward(request,
+                        response);
 
             } catch (NumberFormatException e) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid order ID");
@@ -128,7 +150,28 @@ public class RefundServlet extends HttpServlet {
                     request.setAttribute("refundAmount", refundAmount);
                     request.setAttribute("refundPercentage", RefundUtil.getRefundPercentage(order));
 
-                    request.getRequestDispatcher("/WEB-INF/views/customer/order/refund-request.jsp").forward(request, response);
+                    // Set additional attributes required by the JSP (same as in doGet)
+                    if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+                        // For an entire order refund, we need to show the course names
+                        StringBuilder courseNameBuilder = new StringBuilder();
+                        for (int i = 0; i < order.getOrderDetails().size(); i++) {
+                            OrderDetail detail = order.getOrderDetails().get(i);
+                            if (detail.getCourse() != null) {
+                                courseNameBuilder.append(detail.getCourse().getName());
+                                if (i < order.getOrderDetails().size() - 1) {
+                                    courseNameBuilder.append(", ");
+                                }
+                            }
+                        }
+                        request.setAttribute("courseName", courseNameBuilder.toString());
+                    }
+
+                    // Set order date and original price
+                    request.setAttribute("orderDate", order.getOrderDate());
+                    request.setAttribute("originalPrice", order.getTotalAmount());
+
+                    request.getRequestDispatcher("/WEB-INF/views/customer/order/refund-request.jsp").forward(request,
+                            response);
                     return;
                 }
 
@@ -148,11 +191,12 @@ public class RefundServlet extends HttpServlet {
 
                 if (refundId > 0) {
                     // Success
-                    response.sendRedirect(request.getContextPath()+ "/order/history?success=true");
+                    response.sendRedirect(request.getContextPath() + "/order/history?success=true");
                 } else {
                     // Error
                     request.setAttribute("error", "Failed to create refund request");
-                    request.getRequestDispatcher("/WEB-INF/views/customer/order/refund-request.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/customer/order/refund-request.jsp").forward(request,
+                            response);
                 }
 
             } catch (NumberFormatException e) {
