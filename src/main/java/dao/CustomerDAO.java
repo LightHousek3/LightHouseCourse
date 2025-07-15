@@ -209,20 +209,34 @@ public class CustomerDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "UPDATE Customers SET Username = ?, Password = ?, Email = ?, IsActive = ?, "
-                    + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE CustomerID = ? ";
-
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, customer.getUsername());
-            ps.setString(2, customer.getPassword());
-            ps.setString(2, customer.getPassword()); // Fixed: Changed from getUsername() to getPassword()
-            ps.setString(3, customer.getEmail());
-            ps.setBoolean(4, customer.isActive());
-            ps.setString(5, customer.getFullName());
-            ps.setString(6, customer.getPhone());
-            ps.setString(7, customer.getAddress());
-            ps.setString(8, customer.getAvatar());
-            ps.setInt(9, customer.getCustomerID());
+            // If the password is not null, then update.
+            if (customer.getPassword() != null) {
+                String sql = "UPDATE Customers SET Username = ?, Password = ?, Email = ?, IsActive = ?, "
+                        + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE CustomerID = ?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, customer.getUsername());
+                ps.setString(2, customer.getPassword());
+                ps.setString(3, customer.getEmail());
+                ps.setBoolean(4, customer.isActive());
+                ps.setString(5, customer.getFullName());
+                ps.setString(6, customer.getPhone());
+                ps.setString(7, customer.getAddress());
+                ps.setString(8, customer.getAvatar());
+                ps.setInt(9, customer.getCustomerID());
+            } else {
+                // If password == null then do not update the Password column.
+                String sql = "UPDATE Customers SET Username = ?, Email = ?, IsActive = ?, "
+                        + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE CustomerID = ?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, customer.getUsername());
+                ps.setString(2, customer.getEmail());
+                ps.setBoolean(3, customer.isActive());
+                ps.setString(4, customer.getFullName());
+                ps.setString(5, customer.getPhone());
+                ps.setString(6, customer.getAddress());
+                ps.setString(7, customer.getAvatar());
+                ps.setInt(8, customer.getCustomerID());
+            }
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected == 1;
@@ -237,7 +251,7 @@ public class CustomerDAO extends DBContext {
     /**
      * Update customer password in the database.
      *
-     * @param customerId The ID of the customer
+     * @param customerId  The ID of the customer
      * @param newPassword The new password (already encrypted)
      * @return true if update successful, false otherwise
      */
@@ -440,7 +454,10 @@ public class CustomerDAO extends DBContext {
                 cp.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
                 cp.setCompletionPercentage(BigDecimal.valueOf(rs.getFloat("CompletionPercentage")));
                 cp.setCompleted(rs.getBoolean("IsCompleted"));
-                cp.setCourseName(rs.getString("CourseName") != null ? rs.getString("CourseName") : "Not Available"); // Lấy từ alias CourseName
+                cp.setCourseName(rs.getString("CourseName") != null ? rs.getString("CourseName") : "Not Available"); // Lấy
+                                                                                                                     // từ
+                                                                                                                     // alias
+                                                                                                                     // CourseName
                 progressList.add(cp);
 
                 // Log chi tiết
@@ -523,7 +540,7 @@ public class CustomerDAO extends DBContext {
      * Get lesson progress by customer ID and course ID.
      *
      * @param customerId The ID of the customer
-     * @param courseId The ID of the course
+     * @param courseId   The ID of the course
      * @return List of lesson progress for the specified customer and course
      */
     public List<LessonProgress> getLessonProgressByCustomerIdAndCourseId(int customerId, int courseId) {
@@ -564,9 +581,9 @@ public class CustomerDAO extends DBContext {
      * Get lesson item progress by customer ID and course ID.
      *
      * @param customerId The ID of the customer
-     * @param courseId The ID of the course
+     * @param courseId   The ID of the course
      * @return List of lesson item progress for the specified customer and
-     * course
+     *         course
      */
     public List<LessonItemProgress> getLessonItemProgressByCustomerIdAndCourseId(int customerId, int courseId) {
         Connection conn = null;
@@ -653,10 +670,10 @@ public class CustomerDAO extends DBContext {
 
         return customers;
     }
-    
+
     /**
      * Authenticate a customer.
-     * 
+     *
      * @param username The username
      * @param password The encrypted password
      * @return The authenticated user, or null if authentication failed
@@ -692,10 +709,10 @@ public class CustomerDAO extends DBContext {
 
         return user;
     }
-    
+
     /**
      * Find a customer by their social provider ID.
-     * 
+     *
      * @param provider   The authentication provider (e.g., "google", "facebook")
      * @param providerId The ID from the provider
      * @return Customer object if found, null otherwise
@@ -729,7 +746,7 @@ public class CustomerDAO extends DBContext {
 
     /**
      * Process a social login - either find existing user or create new one.
-     * 
+     *
      * @param customer The customer object from social authentication
      * @return Customer object with database ID if successful, null otherwise
      */
@@ -769,7 +786,7 @@ public class CustomerDAO extends DBContext {
 
     /**
      * Update a customer's social login details.
-     * 
+     *
      * @param customer The customer to update customer
      * @return true if update customer successful, false otherwise
      */
