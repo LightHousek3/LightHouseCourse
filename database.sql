@@ -1,4 +1,4 @@
--- LightHouseCourse Database Script for SQL Server
+﻿-- LightHouseCourse Database Script for SQL Server
 -- Create Database
 USE master;
 GO
@@ -472,7 +472,6 @@ INSERT INTO Orders (CustomerID, OrderDate, TotalAmount, Status)
 VALUES 
 (1, DATEADD(day, -60, GETDATE()), 2700000, 'completed'),
 (1, DATEADD(day, -45, GETDATE()), 1100050, 'completed'),
-(1, DATEADD(day, -30, GETDATE()), 1500000, 'completed'),
 (2, DATEADD(day, -55, GETDATE()), 1500000, 'completed'),
 (3, DATEADD(day, -50, GETDATE()), 2800000, 'completed'),
 (4, DATEADD(day, -40, GETDATE()), 1700000, 'completed'),
@@ -482,17 +481,17 @@ VALUES
 (8, DATEADD(day, -20, GETDATE()), 1750000, 'completed'),
 (9, DATEADD(day, -15, GETDATE()), 2290000, 'completed'),
 (10, DATEADD(day, -10, GETDATE()), 1500000, 'completed'),
-(11, DATEADD(day, -5, GETDATE()), 3100000, 'completed'),
+(11, DATEADD(day, -5, GETDATE()), 1400000, 'completed'),
 (12, DATEADD(day, -4, GETDATE()), 1000050, 'pending'),
 (13, DATEADD(day, -3, GETDATE()), 890000, 'pending'),
-(14, DATEADD(day, -2, GETDATE()), 2350000, 'pending');
+(14, DATEADD(day, -2, GETDATE()), 2900000, 'pending');
 
 -- Insert OrderDetails
 INSERT INTO OrderDetails (OrderID, CourseID, Price)
 VALUES 
-(1, 1, 1500000), (1, 2, 1200000), (2, 3, 1100050), (3, 1, 1500000), (4, 1, 1500000), (5, 1, 1500000), 
-(5, 6, 1300000), (6, 4, 1700000), (7, 5, 1000050), (7, 10, 1500000), (8, 6, 1300000), (9, 7, 1400000), 
-(10, 11, 1750000), (11, 9, 890000), (11, 12, 1400000), (12, 1, 1500000), (12, 7, 1400000), (13, 5, 1000050), 
+(1, 1, 1500000), (1, 2, 1200000), (2, 3, 1100050), (3, 1, 1500000), (4, 1, 1500000), 
+(4, 6, 1300000), (5, 4, 1700000), (6, 5, 1000050), (6, 10, 1500000), (7, 6, 1300000), (8, 7, 1400000), 
+(9, 11, 1750000), (10, 9, 890000), (10, 12, 1400000), (11, 1, 1500000), (12, 7, 1400000), (13, 5, 1000050), 
 (14, 9, 890000), (15, 6, 1300000), (15, 10, 1600000);
 
 -- Insert CartItems
@@ -740,16 +739,16 @@ VALUES
 (19, 'Working with REST APIs', 'Fetching and processing data from APIs', '/assets/videos/python-apis.mp4', 2200),
 (20, 'Processing Large Datasets', 'Techniques for handling big data in Python', '/assets/videos/big-data-python.mp4', 2600),
 -- React Native Mobile Apps (CourseID 3)
-(21, 'Setting Up React Native Environment', 'Guide to setting up React Native development environment', '/assets/videos/react-native-setup.mp4', 2000),
-(22, 'Building Your First React Native App', 'Step-by-step app creation tutorial', '/assets/videos/react-native-first-app.mp4', 2800),
-(23, 'Navigation in React Native', 'Implementing navigation using React Navigation', '/assets/videos/react-native-navigation.mp4', 2500),
-(24, 'State Management with Redux', 'Managing app state with Redux', '/assets/videos/react-native-redux.mp4', 2700),
-(25, 'Using Native Components', 'Integrating device-native features', '/assets/videos/react-native-native-components.mp4', 2400),
-(26, 'Handling User Input', 'Managing forms and user interactions', '/assets/videos/react-native-user-input.mp4', 2200),
-(27, 'Networking with APIs', 'Connecting to REST APIs in React Native', '/assets/videos/react-native-networking.mp4', 2600),
-(28, 'Deploying to App Stores', 'Publishing apps to Google Play and App Store', '/assets/videos/react-native-deployment.mp4', 3000),
-(29, 'Performance Optimization', 'Optimizing React Native apps for performance', '/assets/videos/react-native-performance.mp4', 2300),
-(30, 'Final Project Walkthrough', 'Building a complete React Native app', '/assets/videos/react-native-final-project.mp4', 3600),
+(21, 'Setting Up React Native Environment', 'Guide to setting up React Native development environment', '/assets/videos/react-native-setup.mp4', 179),
+(22, 'Building Your First React Native App', 'Step-by-step app creation tutorial', '/assets/videos/react-native-first-app.mp4', 350),
+(23, 'Navigation in React Native', 'Implementing navigation using React Navigation', '/assets/videos/react-native-navigation.mp4', 175),
+(24, 'State Management with Redux', 'Managing app state with Redux', '/assets/videos/react-native-redux.mp4', 173),
+(25, 'Using Native Components', 'Integrating device-native features', '/assets/videos/react-native-native-components.mp4', 178),
+(26, 'Handling User Input', 'Managing forms and user interactions', '/assets/videos/react-native-user-input.mp4', 131),
+(27, 'Networking with APIs', 'Connecting to REST APIs in React Native', '/assets/videos/react-native-networking.mp4', 169),
+(28, 'Deploying to App Stores', 'Publishing apps to Google Play and App Store', '/assets/videos/react-native-deployment.mp4', 179),
+(29, 'Performance Optimization', 'Optimizing React Native apps for performance', '/assets/videos/react-native-performance.mp4', 164),
+(30, 'Final Project Walkthrough', 'Building a complete React Native app', '/assets/videos/react-native-final-project.mp4', 167),
 -- Game Development with Unity (CourseID 4)
 (31, 'Unity Interface Overview', 'Introduction to Unity editor and tools', '/assets/videos/unity-intro.mp4', 2000),
 (32, 'Game Objects and Components', 'Working with Unity game objects', '/assets/videos/unity-game-objects.mp4', 2200),
@@ -1513,7 +1512,7 @@ VALUES
 (23, 'What does createStackNavigator do in React Navigation?', 'multiple_choice', 1, 2),
 (24, 'Which hook manages state in a functional React Native component?', 'multiple_choice', 1, 1),
 (24, 'What is the purpose of the useEffect hook in React Native?', 'multiple_choice', 1, 2),
-(25, 'Which React Native API accesses the device�s geolocation?', 'multiple_choice', 1, 1),
+(25, 'Which React Native API accesses the device''s geolocation?', 'multiple_choice', 1, 1),
 (25, 'What does the PermissionsAndroid.request method do?', 'multiple_choice', 1, 2),
 (26, 'Which component handles user text input in React Native?', 'multiple_choice', 1, 1),
 (26, 'What prop of TextInput triggers on text change?', 'multiple_choice', 1, 2),
@@ -1529,7 +1528,7 @@ VALUES
 (31, 'Which Unity window allows scene editing?', 'multiple_choice', 1, 1),
 (31, 'What is the purpose of the Project window in Unity?', 'multiple_choice', 1, 2),
 (32, 'What is the core building block of a Unity scene?', 'multiple_choice', 1, 1),
-(32, 'Which Unity component defines an object�s position?', 'multiple_choice', 1, 2),
+(32, 'Which Unity component defines an object''s position?', 'multiple_choice', 1, 2),
 (33, 'Which method in MonoBehaviour runs once at startup?', 'multiple_choice', 1, 1),
 (33, 'What is the purpose of the Update method in Unity?', 'multiple_choice', 1, 2),
 (34, 'Which Unity component detects physical collisions?', 'multiple_choice', 1, 1),
@@ -1564,7 +1563,7 @@ VALUES
 (48, 'What is the principle of mobile-first design?', 'multiple_choice', 1, 1),
 (48, 'Why is responsive design essential for mobile apps?', 'multiple_choice', 1, 2),
 -- Advanced JavaScript (CourseID 6, LessonIDs 49-58, QuizIDs 49-58, QuestionIDs 97-116)
-(49, 'What determines a variable�s scope in JavaScript?', 'multiple_choice', 1, 1),
+(49, 'What determines a variable''s scope in JavaScript?', 'multiple_choice', 1, 1),
 (49, 'What is a common use of closures in event handlers?', 'multiple_choice', 1, 2),
 (50, 'What is a closure in JavaScript?', 'multiple_choice', 1, 1),
 (50, 'How does the "this" keyword behave in a closure?', 'multiple_choice', 1, 2),
@@ -1613,7 +1612,7 @@ VALUES
 (70, 'What is the role of the Controller in MVC?', 'multiple_choice', 1, 2),
 (71, 'Which framework builds traditional iOS UIs?', 'multiple_choice', 1, 1),
 (71, 'What is a UITableView used for in UIKit?', 'multiple_choice', 1, 2),
-(72, 'What is the benefit of SwiftUI�s declarative syntax?', 'multiple_choice', 1, 1),
+(72, 'What is the benefit of SwiftUI''s declarative syntax?', 'multiple_choice', 1, 1),
 (72, 'What does the @State property wrapper do in SwiftUI?', 'multiple_choice', 1, 2),
 (73, 'Which iOS framework stores persistent data?', 'multiple_choice', 1, 1),
 (73, 'What is the purpose of UserDefaults in iOS?', 'multiple_choice', 1, 2),
@@ -1669,7 +1668,7 @@ VALUES
 (97, 'Why is version control critical in DevOps?', 'multiple_choice', 1, 2),
 -- Ethical Hacking (CourseID 11, LessonIDs 98-109, QuizIDs 98-109, QuestionIDs 195-218)
 (98, 'What is the purpose of ethical hacking?', 'multiple_choice', 1, 1),
-(98, 'What is a penetration test�s primary goal?', 'multiple_choice', 1, 2),
+(98, 'What is a penetration test''s primary goal?', 'multiple_choice', 1, 2),
 (99, 'Which reconnaissance technique gathers public data?', 'multiple_choice', 1, 1),
 (99, 'What does OSINT stand for in ethical hacking?', 'multiple_choice', 1, 2),
 (100, 'Which tool scans network ports?', 'multiple_choice', 1, 1),
@@ -1677,7 +1676,7 @@ VALUES
 (101, 'What does enumeration identify in a network?', 'multiple_choice', 1, 1),
 (101, 'Which protocol is used in SMB enumeration?', 'multiple_choice', 1, 2),
 (102, 'Which tool assesses system vulnerabilities?', 'multiple_choice', 1, 1),
-(102, 'What is a vulnerability scanner�s output?', 'multiple_choice', 1, 2),
+(102, 'What is a vulnerability scanner''s output?', 'multiple_choice', 1, 2),
 (103, 'What is privilege escalation in system hacking?', 'multiple_choice', 1, 1),
 (103, 'Which technique exploits weak passwords?', 'multiple_choice', 1, 2),
 (104, 'What is a keylogger in malware attacks?', 'multiple_choice', 1, 1),
@@ -1686,7 +1685,7 @@ VALUES
 (105, 'What is the purpose of packet sniffing?', 'multiple_choice', 1, 2),
 (106, 'What is phishing in social engineering?', 'multiple_choice', 1, 1),
 (106, 'What is the goal of pretexting?', 'multiple_choice', 1, 2),
-(107, 'What is a DoS attack�s objective?', 'multiple_choice', 1, 1),
+(107, 'What is a DoS attack''s objective?', 'multiple_choice', 1, 1),
 (107, 'What distinguishes a DDoS attack?', 'multiple_choice', 1, 2),
 (108, 'What is session hijacking in web security?', 'multiple_choice', 1, 1),
 (108, 'How are session cookies exploited?', 'multiple_choice', 1, 2),
@@ -1754,16 +1753,16 @@ VALUES
 (138, 'What integrates devices in an IoT system?', 'multiple_choice', 1, 1),
 (138, 'What is the role of an IoT gateway?', 'multiple_choice', 1, 2),
 (139, 'Which protocol is common in smart home devices?', 'multiple_choice', 1, 1),
-(139, 'What is a smart home hub�s function?', 'multiple_choice', 1, 2),
+(139, 'What is a smart home hub''s function?', 'multiple_choice', 1, 2),
 -- Vue.js for Frontend Development (CourseID 15, LessonIDs 140-149, QuizIDs 140-149, QuestionIDs 279-298)
 (140, 'What is the core feature of Vue.js?', 'multiple_choice', 1, 1),
 (140, 'What does the data property do in a Vue instance?', 'multiple_choice', 1, 2),
-(141, 'What is a Vue component�s structure?', 'multiple_choice', 1, 1),
+(141, 'What is a Vue component''s structure?', 'multiple_choice', 1, 1),
 (141, 'What is the purpose of props in Vue.js?', 'multiple_choice', 1, 2),
 (142, 'Which Vue directive binds data to HTML attributes?', 'multiple_choice', 1, 1),
 (142, 'What does the v-if directive control?', 'multiple_choice', 1, 2),
-(143, 'What powers Vue.js�s reactivity system?', 'multiple_choice', 1, 1),
-(143, 'What is a computed property�s benefit?', 'multiple_choice', 1, 2),
+(143, 'What powers Vue.js''s reactivity system?', 'multiple_choice', 1, 1),
+(143, 'What is a computed property''s benefit?', 'multiple_choice', 1, 2),
 (144, 'What does Vue Router manage in a Vue app?', 'multiple_choice', 1, 1),
 (144, 'What is a dynamic route in Vue Router?', 'multiple_choice', 1, 2),
 (145, 'What is the purpose of Vuex in Vue.js?', 'multiple_choice', 1, 1),
@@ -1784,18 +1783,18 @@ VALUES
 (152, 'What does a Django view handle?', 'multiple_choice', 1, 1),
 (152, 'What is the role of a Django template?', 'multiple_choice', 1, 2),
 (153, 'What does a Django form validate?', 'multiple_choice', 1, 1),
-(153, 'What is a ModelForm�s advantage?', 'multiple_choice', 1, 2),
+(153, 'What is a ModelForm''s advantage?', 'multiple_choice', 1, 2),
 (154, 'What is the Django admin interface used for?', 'multiple_choice', 1, 1),
 (154, 'How do you create a Django superuser?', 'multiple_choice', 1, 2),
 (155, 'Which Django module handles user authentication?', 'multiple_choice', 1, 1),
 (155, 'What does the login_required decorator do?', 'multiple_choice', 1, 2),
 (156, 'What does Django REST Framework build?', 'multiple_choice', 1, 1),
-(156, 'What is a serializer�s role in Django REST?', 'multiple_choice', 1, 2),
+(156, 'What is a serializer''s role in Django REST?', 'multiple_choice', 1, 2),
 (157, 'Which Django class tests views?', 'multiple_choice', 1, 1),
 (157, 'What does the Django test client simulate?', 'multiple_choice', 1, 2),
 (158, 'What does Gunicorn do in Django deployment?', 'multiple_choice', 1, 1),
 (158, 'What is the role of Nginx in Django?', 'multiple_choice', 1, 2),
-(159, 'What is a Django app�s structure?', 'multiple_choice', 1, 1),
+(159, 'What is a Django app''s structure?', 'multiple_choice', 1, 1),
 (159, 'What does the manage.py file execute?', 'multiple_choice', 1, 2);
 
 -- Insert Answers
@@ -2387,8 +2386,350 @@ VALUES
 
 -- Insert into LessonItemProgress
 -- Customer 4, Course 1, Lessons 1-6 completed
+-- Insert into CourseProgress
+INSERT INTO CourseProgress (CustomerID, CourseID, LastAccessDate, CompletionPercentage, IsCompleted)
+VALUES
+(4, 1, GETDATE(), 50.0, 0), -- Customer 4, Course 1, 50% complete
+(5, 1, DATEADD(day, -2, GETDATE()), 75.0, 0), -- Customer 5, Course 1, 75% complete
+(6, 6, GETDATE(), 50.0, 0), -- Customer 6, Course 6, 50% complete
+(7, 15, DATEADD(day, -1, GETDATE()), 30.0, 0), -- Customer 7, Course 15, 30% complete
+(8, 16, DATEADD(day, -3, GETDATE()), 50.0, 0), -- Customer 8, Course 16, 50% complete
+(9, 1, DATEADD(day, -4, GETDATE()), 25.0, 0), -- Customer 9, Course 1, 25% complete
+(10, 15, GETDATE(), 80.0, 0), -- Customer 10, Course 15, 80% complete
+(11, 6, DATEADD(day, -2, GETDATE()), 100.0, 1), -- Customer 11, Course 6, 100% complete
+(12, 16, DATEADD(day, -1, GETDATE()), 30.0, 0); -- Customer 12, Course 16, 30% complete
+
+-- Insert into LessonProgress
+-- CourseID 1 (12 lessons, LessonID 1-12)
+-- Customer 4, Course 1, 50% (6/12 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(4, 1, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(4, 2, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
+(4, 3, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
+(4, 4, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
+(4, 5, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
+(4, 6, 1, DATEADD(day, -5, GETDATE()), GETDATE()),
+(4, 7, 0, NULL, GETDATE()),
+(4, 8, 0, NULL, GETDATE()),
+(4, 9, 0, NULL, GETDATE()),
+(4, 10, 0, NULL, GETDATE()),
+(4, 11, 0, NULL, GETDATE()),
+(4, 12, 0, NULL, GETDATE());
+
+-- Customer 5, Course 1, 75% (9/12 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(5, 1, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
+(5, 2, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
+(5, 3, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
+(5, 4, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
+(5, 5, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())),
+(5, 6, 1, DATEADD(day, -10, GETDATE()), GETDATE()),
+(5, 7, 1, DATEADD(day, -9, GETDATE()), GETDATE()),
+(5, 8, 1, DATEADD(day, -8, GETDATE()), GETDATE()),
+(5, 9, 1, DATEADD(day, -7, GETDATE()), GETDATE()),
+(5, 10, 0, NULL, GETDATE()),
+(5, 11, 0, NULL, GETDATE()),
+(5, 12, 0, NULL, GETDATE());
+
+-- Customer 9, Course 1, 25% (3/12 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(9, 1, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())),
+(9, 2, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())),
+(9, 3, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
+(9, 4, 0, NULL, GETDATE()),
+(9, 5, 0, NULL, GETDATE()),
+(9, 6, 0, NULL, GETDATE()),
+(9, 7, 0, NULL, GETDATE()),
+(9, 8, 0, NULL, GETDATE()),
+(9, 9, 0, NULL, GETDATE()),
+(9, 10, 0, NULL, GETDATE()),
+(9, 11, 0, NULL, GETDATE()),
+(9, 12, 0, NULL, GETDATE());
+
+-- CourseID 6 (10 lessons, LessonID 49-58)
+-- Customer 6, Course 6, 50% (5/10 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(6, 49, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(6, 50, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
+(6, 51, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
+(6, 52, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
+(6, 53, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
+(6, 54, 0, NULL, GETDATE()),
+(6, 55, 0, NULL, GETDATE()),
+(6, 56, 0, NULL, GETDATE()),
+(6, 57, 0, NULL, GETDATE()),
+(6, 58, 0, NULL, GETDATE());
+
+-- Customer 11, Course 6, 100% (10/10 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(11, 49, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())),
+(11, 50, 1, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())),
+(11, 51, 1, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())),
+(11, 52, 1, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())),
+(11, 53, 1, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())),
+(11, 54, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
+(11, 55, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
+(11, 56, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
+(11, 57, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
+(11, 58, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE()));
+
+-- CourseID 15 (10 lessons, LessonID 140-149)
+-- Customer 7, Course 15, 30% (3/10 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(7, 140, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
+(7, 141, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
+(7, 142, 1, DATEADD(day, -4, GETDATE()), GETDATE()),
+(7, 143, 0, NULL, GETDATE()),
+(7, 144, 0, NULL, GETDATE()),
+(7, 145, 0, NULL, GETDATE()),
+(7, 146, 0, NULL, GETDATE()),
+(7, 147, 0, NULL, GETDATE()),
+(7, 148, 0, NULL, GETDATE()),
+(7, 149, 0, NULL, GETDATE());
+
+-- Customer 10, Course 15, 75% (7.5/10 lessons, rounded to 8 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(10, 140, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
+(10, 141, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
+(10, 142, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
+(10, 143, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
+(10, 144, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())),
+(10, 145, 1, DATEADD(day, -10, GETDATE()), GETDATE()),
+(10, 146, 1, DATEADD(day, -9, GETDATE()), GETDATE()),
+(10, 147, 1, DATEADD(day, -8, GETDATE()), GETDATE()),
+(10, 148, 0, NULL, GETDATE()),
+(10, 149, 0, NULL, GETDATE());
+
+-- CourseID 16 (10 lessons, LessonID 150-159)
+-- Customer 8, Course 16, 50% (5/10 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(8, 150, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(8, 151, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
+(8, 152, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
+(8, 153, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
+(8, 154, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
+(8, 155, 0, NULL, GETDATE()),
+(8, 156, 0, NULL, GETDATE()),
+(8, 157, 0, NULL, GETDATE()),
+(8, 158, 0, NULL, GETDATE()),
+(8, 159, 0, NULL, GETDATE());
+
+-- Customer 12, Course 16, 25% (2.5/10 lessons, rounded to 3 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(12, 150, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
+(12, 151, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
+(12, 152, 1, DATEADD(day, -4, GETDATE()), GETDATE()),
+(12, 153, 0, NULL, GETDATE()),
+(12, 154, 0, NULL, GETDATE()),
+(12, 155, 0, NULL, GETDATE()),
+(12, 156, 0, NULL, GETDATE()),
+(12, 157, 0, NULL, GETDATE()),
+(12, 158, 0, NULL, GETDATE()),
+(12, 159, 0, NULL, GETDATE());
+
+-- Insert into LessonItemProgress
+-- Customer 4, Course 1, Lessons 1-6 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
+(4, 1, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 1
+(4, 2, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 1
+(4, 3, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 1
+(4, 4, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 2
+(4, 5, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 2
+(4, 6, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 2
+(4, 7, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 3
+(4, 8, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 3
+(4, 9, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 3
+(4, 10, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 4
+(4, 11, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 4
+(4, 12, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 4
+(4, 13, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 5
+(4, 14, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 5
+(4, 15, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 5
+(4, 16, 1, DATEADD(day, -5, GETDATE()), GETDATE()), -- Video for Lesson 6
+(4, 17, 1, DATEADD(day, -5, GETDATE()), GETDATE()), -- Quiz for Lesson 6
+(4, 18, 1, DATEADD(day, -5, GETDATE()), GETDATE()); -- Material for Lesson 6
+
+-- Customer 5, Course 1, Lessons 1-9 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(5, 1, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 1
+(5, 2, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 1
+(5, 3, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 1
+(5, 4, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 2
+(5, 5, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 2
+(5, 6, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 2
+(5, 7, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 3
+(5, 8, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 3
+(5, 9, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 3
+(5, 10, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 4
+(5, 11, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 4
+(5, 12, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 4
+(5, 13, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 5
+(5, 14, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 5
+(5, 15, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 5
+(5, 16, 1, DATEADD(day, -10, GETDATE()), GETDATE()), -- Video for Lesson 6
+(5, 17, 1, DATEADD(day, -10, GETDATE()), GETDATE()), -- Quiz for Lesson 6
+(5, 18, 1, DATEADD(day, -10, GETDATE()), GETDATE()), -- Material for Lesson 6
+(5, 19, 1, DATEADD(day, -9, GETDATE()), GETDATE()), -- Video for Lesson 7
+(5, 20, 1, DATEADD(day, -9, GETDATE()), GETDATE()), -- Quiz for Lesson 7
+(5, 21, 1, DATEADD(day, -9, GETDATE()), GETDATE()), -- Material for Lesson 7
+(5, 22, 1, DATEADD(day, -8, GETDATE()), GETDATE()), -- Video for Lesson 8
+(5, 23, 1, DATEADD(day, -8, GETDATE()), GETDATE()), -- Quiz for Lesson 8
+(5, 24, 1, DATEADD(day, -8, GETDATE()), GETDATE()), -- Material for Lesson 8
+(5, 25, 1, DATEADD(day, -7, GETDATE()), GETDATE()), -- Video for Lesson 9
+(5, 26, 1, DATEADD(day, -7, GETDATE()), GETDATE()), -- Quiz for Lesson 9
+(5, 27, 1, DATEADD(day, -7, GETDATE()), GETDATE()); -- Material for Lesson 9
+
+-- Customer 9, Course 1, Lessons 1-3 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(9, 1, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 1
+(9, 2, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 1
+(9, 3, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 1
+(9, 4, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 2
+(9, 5, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 2
+(9, 6, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 2
+(9, 7, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 3
+(9, 8, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 3
+(9, 9, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())); -- Material for Lesson 3
+
+-- Customer 6, Course 6, Lessons 49-53 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(6, 145, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 49
+(6, 146, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 49
+(6, 147, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 49
+(6, 148, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 50
+(6, 149, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 50
+(6, 150, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 50
+(6, 151, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 51
+(6, 152, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 51
+(6, 153, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 51
+(6, 154, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 52
+(6, 155, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 52
+(6, 156, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 52
+(6, 157, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 53
+(6, 158, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 53
+(6, 159, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 53
+
+-- Customer 11, Course 6, Lessons 49-58 completed, LessonItem 145-
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(11, 145, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 49
+(11, 146, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 49
+(11, 147, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 49
+(11, 148, 1, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 50
+(11, 149, 1, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 50
+(11, 150, 1, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 50
+(11, 151, 1, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 51
+(11, 152, 1, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 51
+(11, 153, 1, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 51
+(11, 154, 1, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 52
+(11, 155, 1, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 52
+(11, 156, 1, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 52
+(11, 157, 1, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 53
+(11, 158, 1, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 53
+(11, 159, 1, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 53
+(11, 160, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 54
+(11, 161, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 54
+(11, 162, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 54
+(11, 163, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 55
+(11, 164, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 55
+(11, 165, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 55
+(11, 166, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 56
+(11, 167, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 56
+(11, 168, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 56
+(11, 169, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 57
+(11, 170, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 57
+(11, 171, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 57
+(11, 172, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 58
+(11, 173, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 58
+(11, 174, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 58
+
+-- CourseID 15, LessonID 140-149, LessonItems 418-426
+-- Customer 7, Course 15, Lessons 140-142 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(7, 418, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 140
+(7, 419, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 140
+(7, 420, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 140
+(7, 421, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 141
+(7, 422, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 141
+(7, 423, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 141
+(7, 424, 1, DATEADD(day, -4, GETDATE()), GETDATE()), -- Video for Lesson 142
+(7, 425, 1, DATEADD(day, -4, GETDATE()), GETDATE()), -- Quiz for Lesson 142
+(7, 426, 1, DATEADD(day, -4, GETDATE()), GETDATE()); -- Material for Lesson 142
+
+-- Customer 10, Course 15, Lessons 140-147 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(10, 418, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 140
+(10, 419, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 140
+(10, 420, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 140
+(10, 421, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 141
+(10, 422, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 141
+(10, 423, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 141
+(10, 424, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 142
+(10, 425, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 142
+(10, 426, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 142
+(10, 427, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 143
+(10, 428, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 143
+(10, 429, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 143
+(10, 430, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 144
+(10, 431, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 144
+(10, 432, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 144
+(10, 433, 1, DATEADD(day, -10, GETDATE()), GETDATE()), -- Video for Lesson 145
+(10, 434, 1, DATEADD(day, -10, GETDATE()), GETDATE()), -- Quiz for Lesson 145
+(10, 435, 1, DATEADD(day, -10, GETDATE()), GETDATE()), -- Material for Lesson 145
+(10, 436, 1, DATEADD(day, -9, GETDATE()), GETDATE()), -- Video for Lesson 146
+(10, 437, 1, DATEADD(day, -9, GETDATE()), GETDATE()), -- Quiz for Lesson 146
+(10, 438, 1, DATEADD(day, -9, GETDATE()), GETDATE()), -- Material for Lesson 146
+(10, 439, 1, DATEADD(day, -8, GETDATE()), GETDATE()), -- Video for Lesson 147
+(10, 440, 1, DATEADD(day, -8, GETDATE()), GETDATE()), -- Quiz for Lesson 147
+(10, 441, 1, DATEADD(day, -8, GETDATE()), GETDATE()); -- Material for Lesson 147
+
+-- CourseID 16, LessonID 150-159, LessonItems 448-462
+-- Customer 8, Course 16, Lessons 150-154 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(8, 448, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 150
+(8, 449, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 150
+(8, 450, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 150
+(8, 451, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 151
+(8, 452, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 151
+(8, 453, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 151
+(8, 454, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 152
+(8, 455, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 152
+(8, 456, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 152
+(8, 457, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 153
+(8, 458, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 153
+(8, 459, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 153
+(8, 460, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 154
+(8, 461, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 154
+(8, 462, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 154
+
+-- Customer 12, Course 16, Lessons 150-152 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(12, 448, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 150
+(12, 449, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 150
+(12, 450, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 150
+(12, 451, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 151
+(12, 452, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 151
+(12, 453, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 151
+(12, 454, 1, DATEADD(day, -4, GETDATE()), GETDATE()), -- Video for Lesson 152
+(12, 455, 1, DATEADD(day, -4, GETDATE()), GETDATE()), -- Quiz for Lesson 152
+(12, 456, 1, DATEADD(day, -4, GETDATE()), GETDATE()); -- Material for Lesson 152
 (4, 1, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 1
 (4, 2, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 1
 (4, 3, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 1

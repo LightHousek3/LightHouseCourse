@@ -25,7 +25,7 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <h2 class="m-0 d-none d-lg-block">Manage Discussions</h2>
-                <div>
+                <div class="d-flex gap-2">
                     <a href="${pageContext.request.contextPath}/instructor/discussions"
                        class="btn btn-lg btn-primary">
                         <i class="fas fa-sync-alt me-2"></i> Reset Filters

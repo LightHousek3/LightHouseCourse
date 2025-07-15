@@ -8,10 +8,11 @@ import java.util.Date;
 
 /**
  * Model class for Instructor based on database schema
- * 
+ *
  * @author DangPH - CE180896
  */
 public class Instructor {
+
     private int instructorID;
     private int superUserID;
     private String biography;
@@ -28,6 +29,14 @@ public class Instructor {
     // Convenience fields from SuperUser
     private String name;
     private String email;
+    private String username;
+    private String password;
+    private String fullName;
+    private String phone;
+    private String address;
+    private String avatar;
+    private boolean active;
+    private String authProvider;
 
     public Instructor() {
     }
@@ -130,11 +139,97 @@ public class Instructor {
         this.email = email;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public String getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(String authProvider) {
+        this.authProvider = authProvider;
+    }
+
+    public void setBio(String bio) {
+        this.biography = bio;
+    }
+
     @Override
     public String toString() {
-        return "Instructor{" + "instructorID=" + instructorID + ", superUserID=" + superUserID +
-                ", biography=" + biography + ", specialization=" + specialization +
-                ", approvalDate=" + approvalDate + ", totalCourses=" + totalCourses +
-                ", totalStudents=" + totalStudents + '}';
+        return "Instructor{"
+                + "instructorID=" + instructorID
+                + ", superUserID=" + superUserID
+                + ", biography='" + biography + '\''
+                + ", specialization='" + specialization + '\''
+                + ", approvalDate=" + approvalDate
+                + ", totalCourses=" + totalCourses
+                + ", totalStudents=" + totalStudents
+                + ", username='" + username + '\''
+                + ", fullName='" + fullName + '\''
+                + ", email='" + email + '\''
+                + ", phone='" + phone + '\''
+                + ", address='" + address + '\''
+                + ", avatar='" + avatar + '\''
+                + '}';
     }
+
+    public void setAuthProviderId(String authProviderId) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    
+
 }

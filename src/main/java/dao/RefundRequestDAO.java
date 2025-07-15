@@ -11,7 +11,6 @@ import java.util.List;
 import model.RefundRequest;
 import db.DBContext;
 
-
 /**
  * Data Access Object for RefundRequest entities. Handles database operations
  * related to refund requests.
@@ -72,11 +71,11 @@ public class RefundRequestDAO extends DBContext {
     /**
      * Processes a refund request (approve or reject).
      *
-     * @param refundId     The ID of the refund request
-     * @param status       The new status ("approved" or "rejected")
-     * @param superUserId  The ID of the admin processing the request
+     * @param refundId The ID of the refund request
+     * @param status The new status ("approved" or "rejected")
+     * @param superUserId The ID of the admin processing the request
      * @param adminMessage The message from admin explaining the decision
-     *                     (required)
+     * (required)
      * @return true if update successful, false otherwise
      */
     public boolean processRequest(int refundId, String status, int superUserId, String adminMessage) {
@@ -136,7 +135,7 @@ public class RefundRequestDAO extends DBContext {
     /**
      * Updates order when refund request is approved.
      *
-     * @param conn     Database connection
+     * @param conn Database connection
      * @param refundId The ID of the refund request
      * @throws SQLException If a SQL error occurs
      */
@@ -190,12 +189,7 @@ public class RefundRequestDAO extends DBContext {
                 }
             }
         } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (ps != null) {
-                ps.close();
-            }
+            closeResources(rs, ps, conn);
         }
     }
 
@@ -289,8 +283,8 @@ public class RefundRequestDAO extends DBContext {
     }
 
     /**
-     * Gets the total number of refund requests matching the given status and search
-     * criteria.
+     * Gets the total number of refund requests matching the given status and
+     * search criteria.
      *
      * @param status The status to filter by (or "all")
      * @param search The search text to filter by
@@ -345,9 +339,9 @@ public class RefundRequestDAO extends DBContext {
     /**
      * Gets refund requests filtered by status and search text.
      *
-     * @param status   The status to filter by (or "all")
-     * @param search   The search text to filter by
-     * @param page     The page number
+     * @param status The status to filter by (or "all")
+     * @param search The search text to filter by
+     * @param page The page number
      * @param pageSize The number of items per page
      * @return List of matching RefundRequest objects
      */
@@ -361,16 +355,16 @@ public class RefundRequestDAO extends DBContext {
             conn = getConnection();
             StringBuilder sql = new StringBuilder(
                     "SELECT r.*, c.FullName as CustomerName, "
-                            + "o.TotalAmount as OriginalAmount, a.FullName as AdminName, "
-                            + "STUFF((SELECT ', ' + co.Name "
-                            + "       FROM OrderDetails od "
-                            + "       JOIN Courses co ON od.CourseID = co.CourseID "
-                            + "       WHERE od.OrderID = r.OrderID "
-                            + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
-                            + "FROM RefundRequests r "
-                            + "JOIN Customers c ON r.CustomerID = c.CustomerID "
-                            + "JOIN Orders o ON r.OrderID = o.OrderID "
-                            + "LEFT JOIN SuperUsers a ON r.ProcessedBy = a.SuperUserID WHERE 1=1");
+                    + "o.TotalAmount as OriginalAmount, a.FullName as AdminName, "
+                    + "STUFF((SELECT ', ' + co.Name "
+                    + "       FROM OrderDetails od "
+                    + "       JOIN Courses co ON od.CourseID = co.CourseID "
+                    + "       WHERE od.OrderID = r.OrderID "
+                    + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS CourseName "
+                    + "FROM RefundRequests r "
+                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                    + "JOIN Orders o ON r.OrderID = o.OrderID "
+                    + "LEFT JOIN SuperUsers a ON r.ProcessedBy = a.SuperUserID WHERE 1=1");
 
             if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("all")) {
                 sql.append(" AND r.Status = ?");
@@ -378,10 +372,10 @@ public class RefundRequestDAO extends DBContext {
 
             if (search != null && !search.trim().isEmpty()) {
                 sql.append(" AND (c.FullName LIKE ? OR STUFF((SELECT ', ' + co.Name "
-                            + "       FROM OrderDetails od "
-                            + "       JOIN Courses co ON od.CourseID = co.CourseID "
-                            + "       WHERE od.OrderID = r.OrderID "
-                            + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') LIKE ?)");
+                        + "       FROM OrderDetails od "
+                        + "       JOIN Courses co ON od.CourseID = co.CourseID "
+                        + "       WHERE od.OrderID = r.OrderID "
+                        + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') LIKE ?)");
             }
 
             sql.append(" ORDER BY r.RequestDate DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
@@ -448,8 +442,8 @@ public class RefundRequestDAO extends DBContext {
     /**
      * Gets refund requests filtered by status.
      *
-     * @param status   The status to filter by
-     * @param page     The page number
+     * @param status The status to filter by
+     * @param page The page number
      * @param pageSize The number of items per page
      * @return List of matching RefundRequest objects
      */
@@ -544,7 +538,7 @@ public class RefundRequestDAO extends DBContext {
      * Checks if a customer has a pending refund request for an order
      *
      * @param customerId The customer ID
-     * @param orderId    The order ID
+     * @param orderId The order ID
      * @return true if there's a pending refund request, false otherwise
      */
     public boolean hasPendingRefundForOrder(int customerId, int orderId) {
@@ -578,7 +572,7 @@ public class RefundRequestDAO extends DBContext {
      * Checks if a customer has an approved refund request for an order
      *
      * @param customerId The customer ID
-     * @param orderId    The order ID
+     * @param orderId The order ID
      * @return true if there's an approved refund request, false otherwise
      */
     public boolean hasApprovedRefundForOrder(int customerId, int orderId) {
@@ -625,7 +619,7 @@ public class RefundRequestDAO extends DBContext {
         } catch (SQLException e) {
             // For backward compatibility
             try {
-                refund.setUserID(rs.getInt("UserID"));
+                refund.setCustomerID(rs.getInt("CustomerID"));
             } catch (SQLException ex) {
                 // Ignore if neither exists
             }
@@ -725,5 +719,81 @@ public class RefundRequestDAO extends DBContext {
         }
 
         return refunds;
+    }
+    
+    /**
+     * Checks if a user has a pending refund request for a specific course
+     * 
+     * @param customerId   The customer ID
+     * @param courseId The course ID
+     * @return true if there's a pending refund request, false otherwise
+     */
+    public boolean hasPendingRefundForCourse(int customerId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        boolean hasPending = false;
+
+        try {
+            conn = DBContext.getConnection();
+            // Join with OrderDetails to find refund requests for this specific course
+            String sql = "SELECT COUNT(*) FROM RefundRequests r " +
+                    "JOIN Orders o ON r.OrderID = o.OrderID " +
+                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
+                    "WHERE r.CustomerID = ? AND od.CourseID = ? AND r.Status = 'pending'";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, customerId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                hasPending = rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return hasPending;
+    }
+    
+    /**
+     * Checks if a user has an approved refund request for a specific course
+     * 
+     * @param customerId   The customer ID
+     * @param courseId The course ID
+     * @return true if there's an approved refund request, false otherwise
+     */
+    public boolean hasApprovedRefundForCourse(int customerId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        boolean hasApproved = false;
+
+        try {
+            conn = DBContext.getConnection();
+            // Join with OrderDetails to find refund requests for this specific course
+            String sql = "SELECT COUNT(*) FROM RefundRequests r " +
+                    "JOIN Orders o ON r.OrderID = o.OrderID " +
+                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
+                    "WHERE r.CustomerID = ? AND od.CourseID = ? AND r.Status = 'approved'";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, customerId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                hasApproved = rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return hasApproved;
     }
 }

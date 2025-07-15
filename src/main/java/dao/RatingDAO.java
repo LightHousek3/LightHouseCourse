@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import db.DBContext;
 import static db.DBContext.closeResources;
 import static db.DBContext.getConnection;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -510,6 +511,325 @@ public class RatingDAO extends DBContext {
         return average;
     }
 
+    /**
+     * Get all ratings for courses taught by a specific instructor.
+     *
+     * @param instructorId The instructor's ID
+     * @return List of ratings for the instructor's courses
+     */
+    public List<Rating> getRatingsByInstructorId(int instructorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Rating> ratings = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                    + "JOIN Courses co ON r.CourseID = co.CourseID "
+                    + "JOIN CourseInstructors ci ON co.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ? "
+                    + "ORDER BY r.CreatedAt DESC";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Rating rating = mapRating(rs);
+                ratings.add(rating);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return ratings;
+    }
+
+    /**
+     * Get all ratings for courses taught by a specific instructor and filtered
+     * by courseId.
+     *
+     * @param instructorId The instructor's ID
+     * @param courseId The course ID to filter
+     * @return List of ratings for the instructor's courses and courseId
+     */
+    public List<Rating> getRatingsByInstructorIdAndCourseId(int instructorId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Rating> ratings = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                    + "JOIN Courses co ON r.CourseID = co.CourseID "
+                    + "JOIN CourseInstructors ci ON co.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ? AND r.CourseID = ? "
+                    + "ORDER BY r.CreatedAt DESC";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            ps.setInt(2, courseId);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Rating rating = mapRating(rs);
+                ratings.add(rating);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return ratings;
+    }
+
+    /**
+     * Get all ratings for courses taught by a specific instructor and filtered
+     * by stars.
+     *
+     * @param instructorId The instructor's ID
+     * @param stars The star rating to filter
+     * @return List of ratings for the instructor's courses and stars
+     */
+    public List<Rating> getRatingsByInstructorIdAndStars(int instructorId, int stars) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Rating> ratings = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                    + "JOIN Courses co ON r.CourseID = co.CourseID "
+                    + "JOIN CourseInstructors ci ON co.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ? AND r.Stars = ? "
+                    + "ORDER BY r.CreatedAt DESC";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            ps.setInt(2, stars);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Rating rating = mapRating(rs);
+                ratings.add(rating);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return ratings;
+    }
+
+    /**
+     * Get all ratings for courses taught by a specific instructor and filtered
+     * by courseId and stars.
+     *
+     * @param instructorId The instructor's ID
+     * @param courseId The course ID to filter
+     * @param stars The star rating to filter
+     * @return List of ratings for the instructor's courses, courseId, and stars
+     */
+    public List<Rating> getRatingsByInstructorIdAndCourseIdAndStars(int instructorId, int courseId, int stars) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Rating> ratings = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                    + "JOIN Courses co ON r.CourseID = co.CourseID "
+                    + "JOIN CourseInstructors ci ON co.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ? AND r.CourseID = ? AND r.Stars = ? "
+                    + "ORDER BY r.CreatedAt DESC";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            ps.setInt(2, courseId);
+            ps.setInt(3, stars);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Rating rating = mapRating(rs);
+                ratings.add(rating);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return ratings;
+    }
+
+    public List<Rating> getRatingsByInstructorIdPaged(int instructorId, int offset, int limit) {
+        List<Rating> ratings = new ArrayList<>();
+        String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                + "JOIN Courses co ON r.CourseID = co.CourseID "
+                + "JOIN CourseInstructors ci ON co.CourseID = ci.CourseID "
+                + "WHERE ci.InstructorID = ? "
+                + "ORDER BY r.CreatedAt DESC "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, instructorId);
+            ps.setInt(2, offset);
+            ps.setInt(3, limit);
+            try ( ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ratings.add(mapRating(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ratings;
+    }
+
+    public int countByInstructorCourseAndStars(int instructorId, int courseId, int stars) {
+        String sql = "SELECT COUNT(r.RatingID) AS total "
+                + "FROM Ratings r "
+                + "JOIN CourseInstructors ci ON r.CourseID = ci.CourseID "
+                + "WHERE ci.InstructorID = ? AND r.CourseID = ? AND r.Stars = ?";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, instructorId);
+            ps.setInt(2, courseId);
+            ps.setInt(3, stars);
+            try ( ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countByInstructorAndCourse(int instructorId, int courseId) {
+        String sql = "SELECT COUNT(r.RatingID) AS total "
+                + "FROM Ratings r "
+                + "JOIN CourseInstructors ci ON r.CourseID = ci.CourseID "
+                + "WHERE ci.InstructorID = ? AND r.CourseID = ?";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, instructorId);
+            ps.setInt(2, courseId);
+            try ( ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countByInstructorAndStars(int instructorId, int stars) {
+        String sql = "SELECT COUNT(r.RatingID) AS total "
+                + "FROM Ratings r "
+                + "JOIN CourseInstructors ci ON r.CourseID = ci.CourseID "
+                + "WHERE ci.InstructorID = ? AND r.Stars = ?";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, instructorId);
+            ps.setInt(2, stars);
+            try ( ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<Rating> getRatingsByInstructorIdAndCourseIdPaged(int instructorId, int courseId, int offset,
+            int limit) {
+        List<Rating> ratings = new ArrayList<>();
+        String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                + "JOIN Courses co ON r.CourseID = co.CourseID "
+                + "JOIN CourseInstructors ci ON co.CourseID = ci.CourseID "
+                + "WHERE ci.InstructorID = ? AND r.CourseID = ? "
+                + "ORDER BY r.CreatedAt DESC "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, instructorId);
+            ps.setInt(2, courseId);
+            ps.setInt(3, offset);
+            ps.setInt(4, limit);
+            try ( ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ratings.add(mapRating(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ratings;
+    }
+
+    public List<Rating> getRatingsByInstructorIdAndStarsPaged(int instructorId, int stars, int offset, int limit) {
+        List<Rating> ratings = new ArrayList<>();
+        String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                + "JOIN Courses co ON r.CourseID = co.CourseID "
+                + "JOIN CourseInstructors ci ON co.CourseID = ci.CourseID "
+                + "WHERE ci.InstructorID = ? AND r.Stars = ? "
+                + "ORDER BY r.CreatedAt DESC "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, instructorId);
+            ps.setInt(2, stars);
+            ps.setInt(3, offset);
+            ps.setInt(4, limit);
+            try ( ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ratings.add(mapRating(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ratings;
+    }
+
+    public List<Rating> getRatingsByInstructorIdAndCourseIdAndStarsPaged(int instructorId, int courseId, int stars,
+            int offset, int limit) {
+        List<Rating> ratings = new ArrayList<>();
+        String sql = "SELECT r.*, c.Username, co.Name as CourseName FROM Ratings r "
+                + "JOIN Customers c ON r.CustomerID = c.CustomerID "
+                + "JOIN Courses co ON r.CourseID = co.CourseID "
+                + "JOIN CourseInstructors ci ON co.CourseID = ci.CourseID "
+                + "WHERE ci.InstructorID = ? AND r.CourseID = ? AND r.Stars = ? "
+                + "ORDER BY r.CreatedAt DESC "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, instructorId);
+            ps.setInt(2, courseId);
+            ps.setInt(3, stars);
+            ps.setInt(4, offset);
+            ps.setInt(5, limit);
+            try ( ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ratings.add(mapRating(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ratings;
+    }
+
     public List<Integer> getRatingYearsByInstructor(int instructorId) throws SQLException {
         List<Integer> years = new ArrayList<>();
         String sql = "SELECT DISTINCT YEAR(r.CreatedAt) AS Year "
@@ -628,6 +948,180 @@ public class RatingDAO extends DBContext {
         }
 
         return ratingsByMonth;
+    }
+
+    /**
+     * Get a user's rating for a specific course.
+     *
+     * @param userId The ID of the user
+     * @param courseId The ID of the course
+     * @return The user's rating, or null if the user hasn't rated the course
+     */
+    public Rating getByCustomerAndCourse(int userId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Rating rating = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers u ON r.CustomerID = u.CustomerID "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "WHERE r.CustomerID = ? AND r.CourseID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, userId);
+            ps.setInt(2, courseId);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                rating = mapRating(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return rating;
+    }
+
+    /**
+     * Insert a new rating into the database.
+     *
+     * @param rating The rating to insert
+     * @return The ID of the inserted rating, or -1 if insertion failed
+     */
+    public int insertRating(Rating rating) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int generatedId = -1;
+
+        try {
+            conn = getConnection();
+            String sql = "INSERT INTO Ratings (CourseID, CustomerID, Stars, Comment, CreatedAt, UpdatedAt) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)";
+
+            ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, rating.getCourseID());
+            ps.setInt(2, rating.getCustomerID());
+            ps.setInt(3, rating.getStars());
+            ps.setString(4, rating.getComment());
+            ps.setTimestamp(5, new java.sql.Timestamp(rating.getCreatedAt().getTime()));
+            ps.setTimestamp(6, new java.sql.Timestamp(rating.getUpdatedAt().getTime()));
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 1) {
+                rs = ps.getGeneratedKeys();
+                if (rs.next()) {
+                    generatedId = rs.getInt(1);
+                    rating.setRatingID(generatedId);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return generatedId;
+    }
+
+    /**
+     * Get a rating by its ID.
+     *
+     * @param ratingId The ID of the rating to get
+     * @return The rating, or null if not found
+     */
+    public Rating getRatingById(int ratingId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Rating rating = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT r.*, u.Username, c.Name as CourseName FROM Ratings r "
+                    + "JOIN Customers u ON r.CustomerID = u.CustomerID "
+                    + "JOIN Courses c ON r.CourseID = c.CourseID "
+                    + "WHERE r.RatingID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, ratingId);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                rating = mapRating(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return rating;
+    }
+
+    /**
+     * Update an existing rating in the database.
+     *
+     * @param rating The rating to update
+     * @return true if update was successful, false otherwise
+     */
+    public boolean updateRating(Rating rating) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Ratings SET Stars = ?, Comment = ?, UpdatedAt = ? WHERE RatingID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, rating.getStars());
+            ps.setString(2, rating.getComment());
+            ps.setTimestamp(3, new java.sql.Timestamp(new java.util.Date().getTime()));
+            ps.setInt(4, rating.getRatingID());
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Delete a rating from the database.
+     *
+     * @param ratingId The ID of the rating to delete
+     * @return true if deletion was successful, false otherwise
+     */
+    public boolean deleteRating(int ratingId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "DELETE FROM Ratings WHERE RatingID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, ratingId);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
     }
 
 }

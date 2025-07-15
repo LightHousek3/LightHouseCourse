@@ -18,17 +18,18 @@ import model.SuperUser;
 
 /**
  * Data access object for Instructor model
- * 
+ *
  * @author DangPH - CE180896
  */
 public class InstructorDAO extends DBContext {
+
     private Connection conn = null;
     private PreparedStatement ps = null;
     private ResultSet rs = null;
 
     /**
      * Get list of course IDs taught by an instructor
-     * 
+     *
      * @param instructorId The ID of the instructor
      * @return List of course IDs
      */
@@ -55,51 +56,54 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Find an instructor by their user ID
-     * 
+     *
      * @param superUserId The ID of the super user who is an instructor
      * @return Instructor object or null if not found
      */
-    public Instructor getInstructorBySuperUserId(int superUserId) {
-        try {
-            String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
-                    + "i.ApprovalDate, su.FullName, su.Email "
-                    + "FROM Instructors i "
-                    + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
-                    + "WHERE i.SuperUserID = ?";
+   public Instructor getInstructorBySuperUserId(int superUserId) {
+    try {
+        String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
+                + "i.ApprovalDate, su.FullName, su.Email, su.Username, su.Phone, su.Address, su.Password, su.Avatar "
+                + "FROM Instructors i "
+                + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
+                + "WHERE i.SuperUserID = ?";
+        conn = getConnection();
+        ps = conn.prepareStatement(query);
+        ps.setInt(1, superUserId);
+        rs = ps.executeQuery();
+        if (rs.next()) {
+            Instructor instructor = new Instructor();
+            instructor.setInstructorID(rs.getInt("InstructorID"));
+            instructor.setSuperUserID(rs.getInt("SuperUserID"));
+            instructor.setBiography(rs.getString("Biography"));
+            instructor.setSpecialization(rs.getString("Specialization"));
+            instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
+            instructor.setName(rs.getString("FullName"));
+            instructor.setFullName(rs.getString("FullName"));
+            instructor.setEmail(rs.getString("Email"));
+            instructor.setUsername(rs.getString("Username"));
+            instructor.setPhone(rs.getString("Phone"));
+            instructor.setAddress(rs.getString("Address"));
+            instructor.setPassword(rs.getString("Password")); 
+            instructor.setAvatar(rs.getString("Avatar"));
+            // Get statistical info
+            instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
+            instructor.setTotalStudents(countStudentsForInstructor(instructor.getInstructorID()));
 
-            conn = getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setInt(1, superUserId);
-            rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                
-                Instructor instructor = new Instructor();
-                instructor.setInstructorID(rs.getInt("InstructorID"));
-                instructor.setSuperUserID(rs.getInt("SuperUserID"));
-                instructor.setBiography(rs.getString("Biography"));
-                instructor.setSpecialization(rs.getString("Specialization"));
-                instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
-                instructor.setName(rs.getString("FullName"));
-                instructor.setEmail(rs.getString("Email"));
-
-                // Get statistical information
-                instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
-                instructor.setTotalStudents(countStudentsForInstructor(instructor.getInstructorID()));
-
-                return instructor;
-            }
-        } catch (SQLException ex) {
-            System.out.println("Error finding instructor by user ID: " + ex.getMessage());
-        } finally {
-            closeResources(rs, ps, conn);
+            return instructor;
         }
-        return null;
+    } catch (SQLException ex) {
+        System.out.println("Error finding instructor by user ID: " + ex.getMessage());
+    } finally {
+        closeResources(rs, ps, conn);
     }
+    return null;
+}
+
 
     /**
      * Get all instructors from the database
-     * 
+     *
      * @return List of instructors
      */
     public List<Instructor> getAllInstructors() {
@@ -164,7 +168,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Count courses for an instructor
-     * 
+     *
      * @param instructorId The instructor ID
      * @return Number of courses
      */
@@ -190,7 +194,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Count students enrolled in an instructor's courses
-     * 
+     *
      * @param instructorId The instructor ID
      * @return Number of students
      */
@@ -278,4 +282,78 @@ public class InstructorDAO extends DBContext {
             closeResources(rs, ps, conn);
         }
     }
+
+    public boolean editInstructor(Instructor instructor) {
+        try {
+            String sql = "UPDATE Instructors SET Biography = ?, Specialization = ? WHERE InstructorID = ?";
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, instructor.getBiography());
+            ps.setString(2, instructor.getSpecialization());
+            ps.setInt(3, instructor.getInstructorID());
+            int affectedRows = ps.executeUpdate();
+
+            // Update SuperUser info
+            String sql2 = "UPDATE SuperUsers SET FullName = ?, Email = ?, Phone = ?, Address = ?, Avatar = ? WHERE SuperUserID = ?";
+            ps = conn.prepareStatement(sql2);
+            ps.setString(1, instructor.getFullName());
+            ps.setString(2, instructor.getEmail());
+            ps.setString(3, instructor.getPhone());
+            ps.setString(4, instructor.getAddress());
+            ps.setString(5, instructor.getAvatar());
+            ps.setInt(6, instructor.getSuperUserID());
+            ps.executeUpdate();
+
+            return affectedRows > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    public Instructor getInstructorById(int instructorId) {
+        try {
+            String query = "SELECT i.InstructorID, i.Biography, i.Specialization, i.ApprovalDate "
+                    + "FROM Instructors i WHERE i.InstructorID = ?";
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Instructor instructor = new Instructor();
+                instructor.setInstructorID(rs.getInt("InstructorID"));
+                instructor.setBiography(rs.getString("Biography"));
+                instructor.setSpecialization(rs.getString("Specialization"));
+                instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
+                return instructor;
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error finding instructor by ID: " + ex.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return null;
+    }
+
+    public boolean usernameExists(String username) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public boolean emailExists(String email) {
+        // Implementation would go here
+        return false;
+    }
+
+    /**
+     * Find an instructor by their user ID (alias for getInstructorBySuperUserId)
+     *
+     * @param superUserId The ID of the super user who is an instructor
+     * @return Instructor object or null if not found
+     */
+    public Instructor findByUserId(int superUserId) {
+        return getInstructorBySuperUserId(superUserId);
+    }
+
 }
