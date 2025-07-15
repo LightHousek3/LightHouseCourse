@@ -12,6 +12,7 @@ import java.sql.Timestamp;
  * @author DangPH - CE180896
  */
 public class CartItem {
+
     private int cartItemId;
     private int customerID;
     private int courseID;
@@ -30,6 +31,11 @@ public class CartItem {
         this.courseID = courseID;
         this.price = price;
         this.createdAt = new Timestamp(System.currentTimeMillis());
+    }
+
+    public CartItem(Course course, double price) {
+        this.course = course;
+        this.price = price;
     }
 
     public CartItem(int cartItemId, int customerID, int courseID, double price, Timestamp createdAt) {
