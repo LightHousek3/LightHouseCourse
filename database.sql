@@ -125,8 +125,8 @@ CREATE TABLE CourseInstructors (
     CourseID INT NOT NULL,
     InstructorID INT NOT NULL,
     PRIMARY KEY (CourseID, InstructorID),
-    FOREIGN KEY (CourseID) REFERENCES Courses(CourseID),
-    FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID)
+    FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
+    FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID) ON DELETE CASCADE
 );
 GO
 
