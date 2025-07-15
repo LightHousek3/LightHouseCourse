@@ -1,25 +1,30 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
+
+import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents the details of an order in the system.
- *
- * @author DangPH - CE180896
  */
-public class OrderDetail {
-
+public class OrderDetail implements Serializable {
     private int orderDetailID;
     private int orderID;
     private int courseID;
     private double price;
 
+    // Store additional custom attributes
+    private Map<String, Object> attributes;
+
     // Additional field to store course info
     private Course course;
 
+    // Temporary field to store order date for refund purposes
+    private Timestamp orderDate;
+
     public OrderDetail() {
+        attributes = new HashMap<>();
     }
 
     public OrderDetail(int orderDetailID, int orderID, int courseID, double price) {
@@ -27,6 +32,7 @@ public class OrderDetail {
         this.orderID = orderID;
         this.courseID = courseID;
         this.price = price;
+        attributes = new HashMap<>();
     }
 
     public int getOrderDetailID() {
@@ -69,9 +75,78 @@ public class OrderDetail {
         this.course = course;
     }
 
-    @Override
-    public String toString() {
-        return "OrderDetail{" + "orderDetailID=" + orderDetailID + ", orderID=" + orderID + ", courseID=" + courseID + ", price=" + price + ", course=" + course + '}';
+    public Timestamp getOrderDate() {
+        return orderDate;
     }
 
+    public void setOrderDate(Timestamp orderDate) {
+        this.orderDate = orderDate;
+    }
+
+    /**
+     * Set a custom attribute for this order detail
+     * 
+     * @param name  The attribute name
+     * @param value The attribute value
+     */
+    public void setAttribute(String name, Object value) {
+        if (attributes == null) {
+            attributes = new HashMap<>();
+        }
+        attributes.put(name, value);
+    }
+
+    /**
+     * Get a custom attribute for this order detail
+     * 
+     * @param name The attribute name
+     * @return The attribute value, or null if not found
+     */
+    public Object getAttribute(String name) {
+        return attributes != null ? attributes.get(name) : null;
+    }
+
+    /**
+     * Get a boolean attribute with a default value
+     * 
+     * @param name         The attribute name
+     * @param defaultValue The default value if the attribute is not found
+     * @return The attribute value, or the default value if not found
+     */
+    public boolean getBooleanAttribute(String name, boolean defaultValue) {
+        Object value = getAttribute(name);
+        return (value instanceof Boolean) ? (Boolean) value : defaultValue;
+    }
+
+    /**
+     * Check if a boolean attribute is true
+     * 
+     * @param name The attribute name
+     * @return true if the attribute exists and is true, false otherwise
+     */
+    public boolean isAttributeTrue(String name) {
+        return getBooleanAttribute(name, false);
+    }
+
+    /**
+     * Get a double attribute with a default value
+     * 
+     * @param name         The attribute name
+     * @param defaultValue The default value if the attribute is not found
+     * @return The attribute value, or the default value if not found
+     */
+    public double getDoubleAttribute(String name, double defaultValue) {
+        Object value = getAttribute(name);
+        return (value instanceof Double) ? (Double) value : defaultValue;
+    }
+
+    @Override
+    public String toString() {
+        return "OrderDetail{" +
+                "orderDetailID=" + orderDetailID +
+                ", orderID=" + orderID +
+                ", courseID=" + courseID +
+                ", price=" + price +
+                '}';
+    }
 }
