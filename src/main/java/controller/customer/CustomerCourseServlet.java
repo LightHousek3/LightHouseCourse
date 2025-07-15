@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import model.Course;
 import model.Category;
-import model.SuperUser;
+import model.Customer;
 import util.Validator;
 import java.util.Collections;
 import model.Rating;
@@ -26,6 +26,8 @@ import java.util.Comparator;
 import model.CourseProgress;
 import model.Customer;
 import model.OrderDetail;
+import model.Order;
+import util.RefundUtil;
 
 /**
  * Course controller for listing courses and showing course details.
@@ -342,32 +344,32 @@ public class CustomerCourseServlet extends HttpServlet {
         boolean canRateCourse = false;
         Rating userRating = null;
 
-        // if (user != null) {
-        //// alreadyPurchased = orderDAO.hasUserPurchasedCourse(user.getUserID(),
-        // courseId);
-        ////
-        //// // Check for pending and approved refund requests
-        //// if (alreadyPurchased) {
-        //// hasPendingRefund =
-        // refundRequestDAO.hasPendingRefundForCourse(user.getUserID(), courseId);
-        //// hasApprovedRefund =
-        // refundRequestDAO.hasApprovedRefundForCourse(user.getUserID(), courseId);
-        ////
-        //// // Check if user can rate the course (purchased and >80% complete)
-        //// CourseProgressDAO progressDAO = new CourseProgressDAO();
-        //// CourseProgress progress =
-        // progressDAO.getByCustomerAndCourse(user.getUserID(), courseId);
-        //// if (progress != null && progress.getCompletionPercentage().compareTo(new
-        // BigDecimal("80")) >= 0) {
-        //// canRateCourse = true;
-        //// }
+         if (user != null) {
+         alreadyPurchased = orderDAO.hasCustomerPurchasedCourse(user.getCustomerID(), courseId);
         //
-        // // Get user's rating if it exists
-        // userRating = ratingDAO.getByCustomerAndCourse(user.getUserID(), courseId);
-        // }
-        // }
-        // Get course ratings
-        // List<Rating> ratings = ratingDAO.getByCourseId(courseId);
+        // // Check for pending and approved refund requests
+         if (alreadyPurchased) {
+         hasPendingRefund =
+         refundRequestDAO.hasPendingRefundForCourse(user.getCustomerID(), courseId);
+         hasApprovedRefund =
+         refundRequestDAO.hasApprovedRefundForCourse(user.getCustomerID(), courseId);
+        //
+        // // Check if user can rate the course (purchased and >80% complete)
+         CourseProgressDAO progressDAO = new CourseProgressDAO();
+         CourseProgress progress =
+         progressDAO.getByCustomerAndCourse(user.getCustomerID(), courseId);
+         if (progress != null && progress.getCompletionPercentage().compareTo(new
+         BigDecimal("80")) >= 0) {
+         canRateCourse = true;
+         }
+        
+         // Get user's rating if it exists
+         userRating = ratingDAO.getByCustomerAndCourse(user.getCustomerID(), courseId);
+         }
+         }
+//         Get course ratings
+         List<Rating> ratings = ratingDAO.getRatingsByCourseId(courseId);
+         List<Order> orders = orderDAO.getOrdersByUserId(user.getCustomerID());
         double averageRating = ratingDAO.getAverageRatingForCourse(courseId);
         int ratingCount = ratingDAO.getRatingCountForCourse(courseId);
 
@@ -378,9 +380,13 @@ public class CustomerCourseServlet extends HttpServlet {
         request.setAttribute("hasApprovedRefund", hasApprovedRefund);
         request.setAttribute("canRateCourse", canRateCourse);
         request.setAttribute("userRating", userRating);
-        // request.setAttribute("ratings", ratings);
+        request.setAttribute("ratings", ratings);
         request.setAttribute("averageRating", averageRating);
         request.setAttribute("ratingCount", ratingCount);
+        for (Order order : orders) {
+            boolean isEligibleForRefund = RefundUtil.isEntireOrderEligibleForRefund(order, user.getCustomerID());
+            order.setAttribute("eligibleForRefund", isEligibleForRefund);
+        }
 
         // Set error message if applicable
         String error = request.getParameter("error");
