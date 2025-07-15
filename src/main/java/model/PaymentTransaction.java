@@ -19,10 +19,7 @@ public class PaymentTransaction {
     private String provider; // 'VNPAY'
     private String providerTransactionID; // Transaction ID from the provider
     private String bankAccountInfo; // Bank account information for refunds
-    private String responseData; // Response data from payment gateway
-    private String requestData; // Request data sent to payment gateway
     private Timestamp createdAt;
-    private Timestamp updatedAt;
 
     // Additional information
     private String userName;
@@ -36,7 +33,6 @@ public class PaymentTransaction {
         this.transactionType = transactionType;
         this.provider = provider;
         this.createdAt = new Timestamp(System.currentTimeMillis());
-        this.updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
     // Getters and Setters
@@ -96,36 +92,12 @@ public class PaymentTransaction {
         this.bankAccountInfo = bankAccountInfo;
     }
 
-    public String getResponseData() {
-        return responseData;
-    }
-
-    public void setResponseData(String responseData) {
-        this.responseData = responseData;
-    }
-
-    public String getRequestData() {
-        return requestData;
-    }
-
-    public void setRequestData(String requestData) {
-        this.requestData = requestData;
-    }
-
     public Timestamp getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public Timestamp getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Timestamp updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     public String getUserName() {
@@ -155,10 +127,6 @@ public class PaymentTransaction {
 
     @Override
     public String toString() {
-        return "PaymentTransaction{" + "transactionID=" + transactionID + ", orderID=" + orderID + ", refundRequestID="
-                + refundRequestID + ", transactionType=" + transactionType + ", provider=" + provider
-                + ", providerTransactionID=" + providerTransactionID + ", bankAccountInfo=" + bankAccountInfo
-                + ", responseData=" + responseData + ", requestData=" + requestData + ", createdAt=" + createdAt
-                + ", updatedAt=" + updatedAt + ", userName=" + userName + ", courseName=" + courseName + '}';
+        return "PaymentTransaction{" + "transactionID=" + transactionID + ", orderID=" + orderID + ", refundRequestID=" + refundRequestID + ", transactionType=" + transactionType + ", provider=" + provider + ", providerTransactionID=" + providerTransactionID + ", bankAccountInfo=" + bankAccountInfo + ", createdAt=" + createdAt + ", userName=" + userName + ", courseName=" + courseName + '}';
     }
 }

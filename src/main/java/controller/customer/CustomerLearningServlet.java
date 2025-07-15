@@ -558,11 +558,12 @@ public class CustomerLearningServlet extends HttpServlet {
 
     /**
      * Checks if the customer has access to the course.
+     * The logic considers the most recent order for the course.
      */
     private void checkCourseAccess(Customer customer, Course course, HttpServletRequest request,
             HttpServletResponse response) throws IOException, AccessDeniedException {
 
-        // Check if customer has purchased this course
+        // Check if customer has purchased this course (based on most recent order)
         boolean hasPurchased = orderDAO.hasCustomerPurchasedCourse(customer.getCustomerID(), course.getCourseID());
         if (!hasPurchased) {
             response.sendRedirect(
@@ -570,19 +571,22 @@ public class CustomerLearningServlet extends HttpServlet {
             throw new AccessDeniedException("Customer hasn't purchased this course");
         }
 
-        // Check for pending refund requests
+        // Check for pending refund requests on the most recent order
         if (refundDAO.hasPendingRefundForCourse(customer.getCustomerID(), course.getCourseID())) {
             response.sendRedirect(
                     request.getContextPath() + "/course/" + course.getCourseID() + "?error=" + ERROR_REFUND_PENDING);
             throw new AccessDeniedException("Customer has a pending refund for this course");
         }
 
-        // Check for approved refund requests
+        // Check for approved refund requests on the most recent order
         if (refundDAO.hasApprovedRefundForCourse(customer.getCustomerID(), course.getCourseID())) {
             response.sendRedirect(
                     request.getContextPath() + "/course/" + course.getCourseID() + "?error=" + ERROR_REFUND_APPROVED);
             throw new AccessDeniedException("Customer has an approved refund for this course");
         }
+
+        // If we reach here, customer has a valid purchase with no pending or approved
+        // refunds
     }
 
     /**

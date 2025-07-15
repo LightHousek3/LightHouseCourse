@@ -26,11 +26,12 @@ public class RefundUtil {
      * 
      * @param orderDate            The date when the course was purchased
      * @param completionPercentage The percentage of course completion
-     * @param customerId               The user ID
+     * @param customerId           The user ID
      * @param courseId             The course ID
      * @return true if eligible for refund, false otherwise
      */
-    public static boolean isEligibleForRefund(Date orderDate, double completionPercentage, int customerId, int courseId) {
+    public static boolean isEligibleForRefund(Date orderDate, double completionPercentage, int customerId,
+            int courseId) {
         // Check if there's already a pending refund request for this course
         if (refundDAO.hasPendingRefundForCourse(customerId, courseId)) {
             return false;
@@ -90,7 +91,7 @@ public class RefundUtil {
      * All courses must be less than 20% completed and the order must be within 7
      * days
      * 
-     * @param order  The order to check
+     * @param order      The order to check
      * @param customerId The ID of the user
      * @return true if the entire order is eligible for refund, false otherwise
      */
@@ -102,7 +103,7 @@ public class RefundUtil {
 
         // Check if there's already a pending refund for this order
         if (refundDAO.hasPendingRefundForOrder(customerId, order.getOrderID())) {
-                        System.out.println("2");
+            System.out.println("2");
             return false;
         }
 
@@ -228,27 +229,14 @@ public class RefundUtil {
      * Gets the refund percentage for an order
      * 
      * @param order The order to get refund percentage for
-     * @return The refund percentage
+     * @return The refund percentage always 80%
      */
     public static int getRefundPercentage(Order order) {
         if (order == null) {
             return 0;
         }
 
-        // Get refund percentage from configuration
-        int defaultPercentage = 80;
-
-        // Calculate days since purchase
-        Date now = new Date();
-        long diffInMillies = Math.abs(now.getTime() - order.getOrderDate().getTime());
-        long daysSincePurchase = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-
-        // Adjust refund percentage based on days since purchase
-        // Example: 100% refund if within 1 day, default percentage if 2-7 days
-        if (daysSincePurchase <= 1) {
-            return 100;
-        }
-
-        return defaultPercentage;
+        // Always return 80% refund per requirement
+        return 80;
     }
 }

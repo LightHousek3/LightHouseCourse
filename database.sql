@@ -185,7 +185,7 @@ GO
 -- Table RefundRequests (depend on Orders and Customers)
 CREATE TABLE RefundRequests (
     RefundID INT IDENTITY(1,1) PRIMARY KEY,
-    OrderID INT NOT NULL,
+    OrderID INT,
     CustomerID INT NOT NULL,
     RequestDate DATETIME DEFAULT GETDATE(),
     Status NVARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
@@ -195,7 +195,7 @@ CREATE TABLE RefundRequests (
     AdminMessage NVARCHAR(500) NULL,
     RefundPercentage INT NOT NULL DEFAULT 80, -- Default refund percentage
     ProcessedBy INT NULL,
-    CONSTRAINT FK_RefundRequests_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    CONSTRAINT FK_RefundRequests_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE SET NULL,
     CONSTRAINT FK_RefundRequests_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE CASCADE,
     CONSTRAINT FK_RefundRequests_ProcessedBy FOREIGN KEY (ProcessedBy) REFERENCES SuperUsers(SuperUserID)
 );
@@ -277,8 +277,8 @@ CREATE TABLE PaymentTransactions (
     ProviderTransactionID NVARCHAR(100) NOT NULL,
     BankAccountInfo NVARCHAR(255) NULL,
     CreatedAt DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
-    FOREIGN KEY (RefundRequestID) REFERENCES RefundRequests(RefundID)
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
+    FOREIGN KEY (RefundRequestID) REFERENCES RefundRequests(RefundID) ON DELETE CASCADE
 );
 GO
 

@@ -6,7 +6,7 @@
 <html lang="en">
 
     <head>
-        <title>Order Details - CloneCoursera</title>
+        <title>Order Details - LightHouse</title>
         <!-- Include common header resources -->
         <jsp:include page="/WEB-INF/views/customer/common/head.jsp" />
         <style>
@@ -369,14 +369,6 @@
                                                 <p class="mb-0 fs-5 fw-bold">
                                                     <fmt:formatNumber value="${detail.price}" type="number" />đ
                                                 </p>
-                                            </div>
-                                            <div class="col-lg-2 col-6 col-md-12 text-end">
-                                                <c:if test="${order.status ne 'pending' and order.status ne 'cancelled'}">
-                                                    <a href="${pageContext.request.contextPath}/course/${detail.courseID}"
-                                                       class="btn btn-sm btn-primary">
-                                                        <i class="fas fa-play-circle me-1"></i>Start Learning
-                                                    </a>
-                                                </c:if>
                                             </div>
                                         </div>
                                     </div>

@@ -344,32 +344,29 @@ public class CustomerCourseServlet extends HttpServlet {
         boolean canRateCourse = false;
         Rating userRating = null;
 
-         if (user != null) {
-         alreadyPurchased = orderDAO.hasCustomerPurchasedCourse(user.getCustomerID(), courseId);
-        //
-        // // Check for pending and approved refund requests
-         if (alreadyPurchased) {
-         hasPendingRefund =
-         refundRequestDAO.hasPendingRefundForCourse(user.getCustomerID(), courseId);
-         hasApprovedRefund =
-         refundRequestDAO.hasApprovedRefundForCourse(user.getCustomerID(), courseId);
-        //
-        // // Check if user can rate the course (purchased and >80% complete)
-         CourseProgressDAO progressDAO = new CourseProgressDAO();
-         CourseProgress progress =
-         progressDAO.getByCustomerAndCourse(user.getCustomerID(), courseId);
-         if (progress != null && progress.getCompletionPercentage().compareTo(new
-         BigDecimal("80")) >= 0) {
-         canRateCourse = true;
-         }
-        
-         // Get user's rating if it exists
-         userRating = ratingDAO.getByCustomerAndCourse(user.getCustomerID(), courseId);
-         }
-         }
-//         Get course ratings
-         List<Rating> ratings = ratingDAO.getRatingsByCourseId(courseId);
-         List<Order> orders = orderDAO.getOrdersByUserId(user.getCustomerID());
+        if (user != null) {
+            // Check if user has purchased this course (based on most recent order)
+            alreadyPurchased = orderDAO.hasCustomerPurchasedCourse(user.getCustomerID(), courseId);
+
+            // Check for pending and approved refund requests on the most recent order
+            if (alreadyPurchased) {
+                hasPendingRefund = refundRequestDAO.hasPendingRefundForCourse(user.getCustomerID(), courseId);
+                hasApprovedRefund = refundRequestDAO.hasApprovedRefundForCourse(user.getCustomerID(), courseId);
+
+                // Check if user can rate the course (purchased and >80% complete)
+                CourseProgressDAO progressDAO = new CourseProgressDAO();
+                CourseProgress progress = progressDAO.getByCustomerAndCourse(user.getCustomerID(), courseId);
+                if (progress != null && progress.getCompletionPercentage().compareTo(new BigDecimal("80")) >= 0) {
+                    canRateCourse = true;
+                }
+
+                // Get user's rating if it exists
+                userRating = ratingDAO.getByCustomerAndCourse(user.getCustomerID(), courseId);
+            }
+        }
+        // Get course ratings
+        List<Rating> ratings = ratingDAO.getRatingsByCourseId(courseId);
+        List<Order> orders = orderDAO.getOrdersByUserId(user.getCustomerID());
         double averageRating = ratingDAO.getAverageRatingForCourse(courseId);
         int ratingCount = ratingDAO.getRatingCountForCourse(courseId);
 
@@ -420,7 +417,8 @@ public class CustomerCourseServlet extends HttpServlet {
         Customer customer = (Customer) session.getAttribute("user");
 
         try {
-            // Get user's purchased courses with order details
+            // Get user's purchased courses with order details - now only returns the most
+            // recent orders for each course
             List<Object[]> purchasedCoursesData = orderDAO
                     .getCustomerPurchasedCoursesWithOrderDetails(customer.getCustomerID());
             List<Course> purchasedCourses = new ArrayList<>();
@@ -436,17 +434,9 @@ public class CustomerCourseServlet extends HttpServlet {
                 Course course = (Course) data[0];
                 OrderDetail detail = (OrderDetail) data[1];
 
-                // Check if there's a pending or approved refund for this course
-                boolean hasPendingRefund = refundRequestDAO.hasPendingRefundForCourse(customer.getCustomerID(),
-                        course.getCourseID());
-                boolean hasApprovedRefund = refundRequestDAO.hasApprovedRefundForCourse(customer.getCustomerID(),
-                        course.getCourseID());
-
-                // Skip courses with pending or approved refunds
-                if (hasPendingRefund || hasApprovedRefund) {
-                    continue;
-                }
-
+                // The getCustomerPurchasedCoursesWithOrderDetails now only returns completed
+                // orders
+                // with no refund status on the most recent order
                 purchasedCourses.add(course);
                 orderDetails.add(detail);
 

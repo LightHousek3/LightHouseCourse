@@ -14,11 +14,14 @@ import model.Course;
 import model.Customer;
 import model.Order;
 import model.OrderDetail;
+import model.PaymentTransaction;
 import db.DBContext;
 import static db.DBContext.closeResources;
 import static db.DBContext.getConnection;
 import java.sql.Statement;
 import model.Instructor;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Data Access Object for Order entity.
@@ -51,7 +54,7 @@ public class OrderDAO extends DBContext {
             conn.setAutoCommit(false); // Start transaction
 
             String sql = "INSERT INTO Orders (CustomerID, OrderDate, TotalAmount, Status) "
-                    + "VALUES (?, ?, ?, ?, ?)";
+                    + "VALUES (?, ?, ?, ?)";
 
             ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, order.getCustomerID());
@@ -94,7 +97,7 @@ public class OrderDAO extends DBContext {
     /**
      * Insert order details into the database.
      *
-     * @param conn The database connection
+     * @param conn    The database connection
      * @param orderId The ID of the order
      * @param details The list of order details to insert
      * @throws SQLException If a database error occurs
@@ -174,7 +177,7 @@ public class OrderDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT * FROM Orders WHERE OrderID = ?";
+            String sql = "SELECT o.* FROM Orders o WHERE o.OrderID = ?";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, orderId);
@@ -192,6 +195,16 @@ public class OrderDAO extends DBContext {
                 if (customer != null) {
                     order.setUserName(customer.getFullName()); // Reuse userName for display
                     order.setCustomer(customer); // Optional: store full object
+                }
+
+                // Get payment transaction info
+                PaymentTransactionDAO transactionDAO = new PaymentTransactionDAO();
+                List<PaymentTransaction> transactions = transactionDAO.getByOrderId(orderId);
+                if (transactions != null && !transactions.isEmpty()) {
+                    PaymentTransaction latestTransaction = transactions.get(0); // Latest transaction
+                    order.setPaymentMethod(latestTransaction.getProvider());
+                    order.setPaymentTransactionID(latestTransaction.getProviderTransactionID());
+                    order.setAttribute("paymentTransaction", latestTransaction);
                 }
             }
         } catch (SQLException e) {
@@ -289,7 +302,7 @@ public class OrderDAO extends DBContext {
 
         return details;
     }
-    
+
     /**
      * Get all courses purchased by a customer with their order details.
      * Returns a list of Object arrays where each array contains:
@@ -304,14 +317,16 @@ public class OrderDAO extends DBContext {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<Object[]> purchasedCourses = new ArrayList<>();
+        Map<Integer, Object[]> latestCourseOrders = new HashMap<>(); // To store the latest order for each course
 
         try {
             conn = getConnection();
+            // Get all orders for the customer
             String sql = "SELECT c.CourseID, c.Name, c.Description, c.Price, c.ImageUrl, " +
-                    "c.Duration, c.Level, od.*, o.OrderDate FROM Orders o " +
+                    "c.Duration, c.Level, od.*, o.OrderDate, o.Status FROM Orders o " +
                     "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
                     "JOIN Courses c ON od.CourseID = c.CourseID " +
-                    "WHERE o.CustomerID = ? AND o.Status = 'completed' " +
+                    "WHERE o.CustomerID = ? " +
                     "ORDER BY o.OrderDate DESC";
 
             ps = conn.prepareStatement(sql);
@@ -320,9 +335,22 @@ public class OrderDAO extends DBContext {
             rs = ps.executeQuery();
 
             while (rs.next()) {
+                int courseId = rs.getInt("CourseID");
+                String orderStatus = rs.getString("Status");
+
+                // Skip this order if we already have a more recent order for this course
+                if (latestCourseOrders.containsKey(courseId)) {
+                    continue;
+                }
+
+                // Skip if the status is not completed
+                if (!"completed".equals(orderStatus)) {
+                    continue;
+                }
+
                 // Create basic Course object from the result set
                 Course course = new Course();
-                course.setCourseID(rs.getInt("CourseID"));
+                course.setCourseID(courseId);
                 course.setName(rs.getString("Name"));
                 course.setDescription(rs.getString("Description"));
                 course.setPrice(rs.getDouble("Price"));
@@ -331,7 +359,6 @@ public class OrderDAO extends DBContext {
                 course.setLevel(rs.getString("Level"));
 
                 // Get full course details including instructors using CourseDAO
-                int courseId = rs.getInt("CourseID");
                 Course fullCourseDetails = courseDAO.getCourseById(courseId);
                 if (fullCourseDetails != null && fullCourseDetails.getInstructors() != null) {
                     course.setInstructors(fullCourseDetails.getInstructors());
@@ -341,13 +368,17 @@ public class OrderDAO extends DBContext {
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.setOrderDetailID(rs.getInt("OrderDetailID"));
                 orderDetail.setOrderID(rs.getInt("OrderID"));
-                orderDetail.setCourseID(rs.getInt("CourseID"));
+                orderDetail.setCourseID(courseId);
                 orderDetail.setPrice(rs.getDouble("Price"));
 
-                // Add to list as Object array
+                // Add to map as the latest order for this course
                 Object[] data = { course, orderDetail };
-                purchasedCourses.add(data);
+                latestCourseOrders.put(courseId, data);
             }
+
+            // Convert map values to list
+            purchasedCourses.addAll(latestCourseOrders.values());
+
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -356,12 +387,12 @@ public class OrderDAO extends DBContext {
 
         return purchasedCourses;
     }
-    
+
     /**
      * Check if a user has purchased a course.
      * 
-     * @param customerId   The ID of the customer
-     * @param courseId The ID of the course
+     * @param customerId The ID of the customer
+     * @param courseId   The ID of the course
      * @return true if purchased, false otherwise
      */
     public boolean hasCustomerPurchasedCourse(int customerId, int courseId) {
@@ -371,17 +402,22 @@ public class OrderDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT COUNT(*) FROM Orders o "
+            // Get the most recent order for this customer and course
+            String sql = "SELECT TOP 1 o.Status FROM Orders o "
                     + "JOIN OrderDetails od ON o.OrderID = od.OrderID "
-                    + "WHERE o.CustomerID = ? AND od.CourseID = ? AND o.Status = 'completed'";
+                    + "WHERE o.CustomerID = ? AND od.CourseID = ? "
+                    + "ORDER BY o.OrderDate DESC";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, customerId);
             ps.setInt(2, courseId);
 
             rs = ps.executeQuery();
+            // If the most recent order for this customer and course is 'completed',
+            // then the customer has access to the course
             if (rs.next()) {
-                return rs.getInt(1) > 0;
+                String status = rs.getString("Status");
+                return "completed".equals(status);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -390,6 +426,56 @@ public class OrderDAO extends DBContext {
         }
 
         return false;
+    }
+
+    /**
+     * Update an existing order in the database.
+     * 
+     * @param order The order to update
+     * @return true if the update was successful, false otherwise
+     */
+    public boolean updateOrder(Order order) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = false;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Orders SET Status = ?, TotalAmount = ? WHERE OrderID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, order.getStatus());
+            ps.setDouble(2, order.getTotalAmount());
+            ps.setInt(3, order.getOrderID());
+
+            int rowsAffected = ps.executeUpdate();
+            success = (rowsAffected == 1);
+
+            // Update payment transaction if provided
+            if (success && order.getPaymentMethod() != null) {
+                PaymentTransactionDAO transactionDAO = new PaymentTransactionDAO();
+                List<PaymentTransaction> transactions = transactionDAO.getByOrderId(order.getOrderID());
+
+                if (transactions != null && !transactions.isEmpty()) {
+                    // Already has a transaction - no need to update the provider
+                    // If needed, could update other transaction details here
+                } else {
+                    // Create a new transaction
+                    PaymentTransaction transaction = new PaymentTransaction("payment", order.getPaymentMethod());
+                    transaction.setOrderID(order.getOrderID());
+                    if (order.getPaymentTransactionID() != null) {
+                        transaction.setProviderTransactionID(order.getPaymentTransactionID());
+                    }
+                    transactionDAO.insert(transaction);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(null, ps, conn);
+        }
+
+        return success;
     }
 
     /**
@@ -423,40 +509,5 @@ public class OrderDAO extends DBContext {
         detail.setCourseID(rs.getInt("CourseID"));
         detail.setPrice(rs.getDouble("Price"));
         return detail;
-    }
-
-    /**
-     * Check if a user has purchased a course.
-     *
-     * @param userId The ID of the user
-     * @param courseId The ID of the course
-     * @return true if purchased, false otherwise
-     */
-    public boolean hasUserPurchasedCourse(int customerId, int courseId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-
-        try {
-            conn = getConnection();
-            String sql = "SELECT COUNT(*) FROM Orders o "
-                    + "JOIN OrderDetails od ON o.OrderID = od.OrderID "
-                    + "WHERE o.CustomerID = ? AND od.CourseID = ? AND o.Status = 'completed'";
-
-            ps = conn.prepareStatement(sql);
-            ps.setInt(1, customerId);
-            ps.setInt(2, courseId);
-
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources(rs, ps, conn);
-        }
-
-        return false;
     }
 }
