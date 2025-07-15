@@ -356,7 +356,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Notification system */
 .custom-notification {
     position: fixed;
-    bottom: 30px;
+    top:100px;
     right: 30px;
     background-color: var(--bg-white);
     border-radius: var(--border-radius);

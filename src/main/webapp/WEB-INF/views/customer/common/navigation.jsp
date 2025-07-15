@@ -152,9 +152,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="${pageContext.request.contextPath}/cart">
                         <i class="fas fa-shopping-cart"></i> Cart
-                        <c:if test="${not empty sessionScope.cart and not empty sessionScope.cart.items}">
-                            <span class="badge bg-primary position-relative" style="top: -15px">${sessionScope.cart.itemCount}</span>
-                        </c:if>
+                        <span class="badge bg-primary position-relative" style="top: -15px">${sessionScope.cart.itemCount != null ? sessionScope.cart.itemCount : 0}  </span>
                     </a>
                 </li>
 
