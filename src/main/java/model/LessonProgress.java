@@ -73,6 +73,16 @@ public class LessonProgress {
         return isCompleted;
     }
 
+    // Add this method for Jakarta EL compatibility
+    public boolean getIsCompleted() {
+        return isCompleted;
+    }
+
+    // Add a standard Java boolean getter
+    public boolean isCompleted() {
+        return isCompleted;
+    }
+
     public void setIsCompleted(boolean isCompleted) {
         this.isCompleted = isCompleted;
     }

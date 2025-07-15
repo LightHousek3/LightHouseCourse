@@ -16,7 +16,7 @@ public class DBContext {
     private static final String DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=LightHouseCourse;encrypt=true;trustServerCertificate=true;characterEncoding=UTF-8";
     private static final String USER = "sa";
-    private static final String PASSWORD = "1234";
+    private static final String PASSWORD = "1";
 
     // Static block to load the driver
     static {

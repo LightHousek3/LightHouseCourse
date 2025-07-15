@@ -31,6 +31,13 @@ public class Video {
         this.duration = duration;
     }
 
+    public Video(int lessonID, String title, String description, int duration, String videoUrl) {
+        this.lessonID = lessonID;
+        this.title = title;
+        this.description = description;
+        this.duration = duration;
+        this.videoUrl = videoUrl;
+    }
     // Getters and setters
     public int getVideoID() {
         return videoID;

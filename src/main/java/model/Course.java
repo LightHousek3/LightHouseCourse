@@ -27,10 +27,14 @@ public class Course {
     private Timestamp approvalDate;
     private String rejectionReason;
 
+    // Form Edit Course cần phần số của trường duration
+    private int durationNumber;
+
     // Relationships
     private List<Instructor> instructors;
     private List<Category> categories;
     private List<Lesson> lessons;
+    private List<Video> videos;
 
     // Additional fields for display
     private double averageRating;
@@ -42,6 +46,35 @@ public class Course {
         this.instructors = new ArrayList<>();
         this.categories = new ArrayList<>();
         this.lessons = new ArrayList<>();
+        this.videos = new ArrayList<>();
+    }
+
+    public Course(String name, String description, double price, String imageUrl, String duration, String level, String approvalStatus, List<Instructor> instructors, List<Category> categories, List<Lesson> lessons, List<Video> videos) {
+        this.instructors = new ArrayList<>();
+        this.categories = new ArrayList<>();
+        this.lessons = new ArrayList<>();
+        this.videos = new ArrayList<>();
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.duration = duration;
+        this.level = level;
+        this.approvalStatus = approvalStatus;
+        this.instructors = instructors;
+        this.categories = categories;
+        this.lessons = lessons;
+        this.videos = videos;
+    }
+
+    public Course(String name, String description, double price, String imageUrl, String duration, String level, String approvalStatus) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.duration = duration;
+        this.level = level;
+        this.approvalStatus = approvalStatus;
     }
 
     // Getters and setters
@@ -141,9 +174,17 @@ public class Course {
         this.instructors = instructors;
     }
 
+    public List<Video> getVideos() {
+        return videos;
+    }
+
+    public void setVideos(List<Video> videos) {
+        this.videos = videos;
+    }
+
     /**
      * Add an instructor to this course
-     * 
+     *
      * @param instructor The instructor to add
      */
     public void addInstructor(Instructor instructor) {
@@ -155,7 +196,7 @@ public class Course {
 
     /**
      * Get the primary instructor (first in the list) for backward compatibility
-     * 
+     *
      * @return The primary instructor ID or 0 if no instructors
      */
     public int getInstructorId() {
@@ -216,6 +257,14 @@ public class Course {
 
     public void setEnrollmentCount(int enrollmentCount) {
         this.enrollmentCount = enrollmentCount;
+    }
+
+    public int getDurationNumber() {
+        return durationNumber;
+    }
+
+    public void setDurationNumber(int durationNumber) {
+        this.durationNumber = durationNumber;
     }
 
     @Override

@@ -257,7 +257,7 @@
                         </div>
                     </div>
                     <div class="col-lg-4">
-                        <div class="card">
+                        <div class="card course-card" data-course-id="${course.courseID}">
                             <c:choose>
                                 <c:when test="${not empty course.imageUrl}">
                                     <img src="${pageContext.request.contextPath}/${course.imageUrl}" class="card-img-top course-img" alt="${course.name}">
@@ -291,24 +291,22 @@
                                         </div>
                                     </c:when>
                                     <c:when test="${alreadyPurchased}">
-                                        <a href="${pageContext.request.contextPath}/learn/course/${course.courseID}"
+                                        <a href="${pageContext.request.contextPath}/learning/${course.courseID}"
                                            class="btn btn-success w-100 mb-3">
                                             <i class="fas fa-play-circle me-2"></i>Start Learning
                                         </a>
-                                        <a href="${pageContext.request.contextPath}/refund/request/${course.courseID}"
-                                           class="btn btn-outline-danger w-100">
-                                            <i class="fas fa-undo-alt me-2"></i>Request Refund
-                                        </a>
+                                        <c:if test="${order.getAttribute('eligibleForRefund') == true}">
+                                            <a href="${pageContext.request.contextPath}/refund/request/order/${order.orderID}"
+                                               class="btn btn-outline-danger mt-2">
+                                                Request Refund
+                                            </a>
+                                        </c:if>
                                     </c:when>
                                     <c:otherwise>
-                                        <form action="${pageContext.request.contextPath}/cart/add"
-                                              method="post">
-                                            <input type="hidden" name="courseId" value="${course.courseID}">
-                                            <button type="submit" class="btn btn-primary w-100 mb-3">
-                                                <i class="fas fa-shopping-cart me-2"></i>Add to Cart
-                                            </button>
-                                        </form>
-                                        <a href="${pageContext.request.contextPath}/checkout?courseId=${course.courseID}"
+                                        <button type="button" class="btn btn-primary add-to-cart-btn w-100 mb-3" data-course-id="${course.courseID}">
+                                            <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                        </button>
+                                        <a href="${ pageContext.request.contextPath}/order/checkout?courseId=${course.courseID}"
                                            class="btn btn-outline-primary w-100">
                                             <i class="fas fa-credit-card me-2"></i>Buy Now
                                         </a>
@@ -397,6 +395,232 @@
                                 </p>
                             </div>
                         </div>
+                        <!-- Course Ratings Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4 class="mb-0">Student Ratings</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="rating-header">
+                                    <div class="overall-rating">
+                                        <div class="rating-stars me-2">
+                                            <c:forEach begin="1" end="5" var="i">
+                                                <c:choose>
+                                                    <c:when test="${i <= Math.round(averageRating)}">
+                                                        <i class="fas fa-star"></i>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <i class="fas fa-star empty-star"></i>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </c:forEach>
+                                        </div>
+                                        <div>
+                                            <h3 class="mb-0">
+                                                <fmt:formatNumber value="${averageRating}" pattern="#0.0" />
+                                            </h3>
+                                        </div>
+                                    </div>
+                                    <div class="rating-count">
+                                        <c:choose>
+                                            <c:when test="${ratingCount == 0}">
+                                                No ratings yet
+                                            </c:when>
+                                            <c:when test="${ratingCount == 1}">
+                                                1 rating
+                                            </c:when>
+                                            <c:otherwise>
+                                                ${ratingCount} ratings
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+
+                                <!-- User's Rating Form (if eligible) -->
+                                <c:choose>
+                                    <c:when test="${alreadyPurchased && canRateCourse}">
+                                        <c:choose>
+                                            <c:when test="${userRating != null}">
+                                                <!-- Edit existing rating -->
+                                                <div class="rating-form">
+                                                    <h5 class="mb-3">Update Your Rating</h5>
+                                                    <form id="updateRatingForm"
+                                                          action="${pageContext.request.contextPath}/rating/update"
+                                                          method="post">
+                                                        <input type="hidden" name="ratingId"
+                                                               value="${userRating.ratingID}">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Your Rating:</label>
+                                                            <div class="star-rating">
+                                                                <input type="radio" id="star5-edit"
+                                                                       name="stars" value="5"
+                                                                       ${userRating.stars==5 ? 'checked' : ''
+                                                                       } />
+                                                                <label for="star5-edit"><i
+                                                                        class="fas fa-star"></i></label>
+                                                                <input type="radio" id="star4-edit"
+                                                                       name="stars" value="4"
+                                                                       ${userRating.stars==4 ? 'checked' : ''
+                                                                       } />
+                                                                <label for="star4-edit"><i
+                                                                        class="fas fa-star"></i></label>
+                                                                <input type="radio" id="star3-edit"
+                                                                       name="stars" value="3"
+                                                                       ${userRating.stars==3 ? 'checked' : ''
+                                                                       } />
+                                                                <label for="star3-edit"><i
+                                                                        class="fas fa-star"></i></label>
+                                                                <input type="radio" id="star2-edit"
+                                                                       name="stars" value="2"
+                                                                       ${userRating.stars==2 ? 'checked' : ''
+                                                                       } />
+                                                                <label for="star2-edit"><i
+                                                                        class="fas fa-star"></i></label>
+                                                                <input type="radio" id="star1-edit"
+                                                                       name="stars" value="1"
+                                                                       ${userRating.stars==1 ? 'checked' : ''
+                                                                       } />
+                                                                <label for="star1-edit"><i
+                                                                        class="fas fa-star"></i></label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="comment-edit"
+                                                                   class="form-label">Your Review:</label>
+                                                            <textarea class="form-control" id="comment-edit"
+                                                                      name="comment" rows="4"
+                                                                      required>${userRating.comment}</textarea>
+                                                        </div>
+                                                        <div class="d-flex">
+                                                            <button type="submit"
+                                                                    class="btn btn-primary me-2">Update
+                                                                Review</button>
+                                                            <a href="${pageContext.request.contextPath}/rating/delete/${userRating.ratingID}"
+                                                               class="btn btn-outline-danger btn-delete-rating"
+                                                               data-rating-id="${userRating.ratingID}">
+                                                                Delete Review
+                                                            </a>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <!-- Add new rating -->
+                                                <div class="rating-form">
+                                                    <h5 class="mb-3">Rate This Course</h5>
+                                                    <form id="addRatingForm"
+                                                          action="${pageContext.request.contextPath}/rating"
+                                                          method="post">
+                                                        <input type="hidden" name="courseId"
+                                                               value="${course.courseID}">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Your Rating:</label>
+                                                            <div class="star-rating">
+                                                                <input type="radio" id="star5" name="stars"
+                                                                       value="5" required />
+                                                                <label for="star5"><i
+                                                                        class="fas fa-star"></i></label>
+                                                                <input type="radio" id="star4" name="stars"
+                                                                       value="4" />
+                                                                <label for="star4"><i
+                                                                        class="fas fa-star"></i></label>
+                                                                <input type="radio" id="star3" name="stars"
+                                                                       value="3" />
+                                                                <label for="star3"><i
+                                                                        class="fas fa-star"></i></label>
+                                                                <input type="radio" id="star2" name="stars"
+                                                                       value="2" />
+                                                                <label for="star2"><i
+                                                                        class="fas fa-star"></i></label>
+                                                                <input type="radio" id="star1" name="stars"
+                                                                       value="1" />
+                                                                <label for="star1"><i
+                                                                        class="fas fa-star"></i></label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="comment" class="form-label">Your
+                                                                Review:</label>
+                                                            <textarea class="form-control" id="comment"
+                                                                      name="comment" rows="4" required></textarea>
+                                                        </div>
+                                                        <button type="submit" class="btn btn-primary">Submit
+                                                            Review</button>
+                                                    </form>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </c:when>
+                                    <c:when test="${alreadyPurchased && !canRateCourse}">
+                                        <div class="user-rating-prompt mb-4">
+                                            <i class="fas fa-info-circle fa-2x text-primary mb-3"></i>
+                                            <h5>Complete More Course Content to Rate</h5>
+                                            <p class="text-muted">You need to complete at least 80% of the
+                                                course content to leave a rating.</p>
+                                        </div>
+                                    </c:when>
+                                </c:choose>
+
+                                <!-- List of ratings -->
+                                <c:choose>
+                                    <c:when test="${empty ratings}">
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-star-half-alt fa-3x text-muted mb-3"></i>
+                                            <h5>No Ratings Yet</h5>
+                                            <p class="text-muted">Be the first to rate this course!</p>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="ratings-list">
+                                            <c:forEach var="rating" items="${ratings}">
+                                                <div class="rating-card">
+                                                    <div class="rating-content">
+                                                        <div class="rating-user">
+                                                            <div class="rating-avatar">
+                                                                ${fn:toUpperCase(fn:substring(rating.username,
+                                                                  0, 1))}
+                                                            </div>
+                                                            <div class="rating-user-details">
+                                                                <p class="rating-user-name">
+                                                                    ${rating.username}</p>
+                                                                <p class="rating-date">
+                                                                    <fmt:formatDate
+                                                                        value="${rating.createdAt}"
+                                                                        pattern="MMM dd, yyyy" />
+                                                                    <c:if
+                                                                        test="${rating.createdAt != rating.updatedAt}">
+                                                                        <span
+                                                                            class="text-muted">(edited)</span>
+                                                                    </c:if>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="rating-stars mb-2">
+                                                            <c:forEach begin="1" end="5" var="i">
+                                                                <c:choose>
+                                                                    <c:when test="${i <= rating.stars}">
+                                                                        <i class="fas fa-star"></i>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <i
+                                                                            class="fas fa-star empty-star"></i>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </c:forEach>
+                                                        </div>
+
+                                                        <div class="rating-comment">
+                                                            ${rating.comment}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="col-lg-4">
@@ -430,6 +654,12 @@
                                             Mobile & TV</span>
                                         <span><i class="fas fa-check text-success"></i></span>
                                     </li>
+                                    <li
+                                        class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-certificate text-primary me-2"></i>
+                                            Certificate of Completion</span>
+                                        <span><i class="fas fa-check text-success"></i></span>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -441,7 +671,7 @@
                             <div class="card-body">
                                 <p class="text-center">Explore similar courses to enhance your learning.</p>
                                 <div class="d-grid gap-2">
-                                    <a href="${pageContext.request.contextPath}/home"
+                                    <a href="${pageContext.request.contextPath}/courses"
                                        class="btn btn-outline-primary">Browse All Courses</a>
                                 </div>
                             </div>
@@ -450,6 +680,25 @@
                 </div>
             </div>
         </section>
+        <!-- Delete Confirm Modal -->
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="deleteConfirmLabel">Confirm Delete</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete your review?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Yes, Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Include footer -->
         <jsp:include page="/WEB-INF/views/customer/common/footer.jsp"/>
@@ -462,8 +711,25 @@
         <script src="${pageContext.request.contextPath}/assets/js/script.js"></script>
 
         <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+                addToCartButtons.forEach(button => {
+                    button.addEventListener('click', function () {
+                        const courseId = this.getAttribute('data-course-id');
+                        console.log("courseId: ", courseId);
+                        addToCart(courseId);
+                    });
+                });
+            });
             // Handle form submission via AJAX for ratings
             $(document).ready(function () {
+                const message = sessionStorage.getItem("notificationMessage");
+                const type = sessionStorage.getItem("notificationType");
+                if (message) {
+                    showNotification(message, type || 'info');
+                    sessionStorage.removeItem("notificationMessage");
+                    sessionStorage.removeItem("notificationType");
+                }
                 // Add Rating Form
                 $('#addRatingForm').submit(function (e) {
                     e.preventDefault();
@@ -475,14 +741,15 @@
                         dataType: "json",
                         success: function (response) {
                             if (response.success) {
-                                // Reload the page to show the new rating
+                                sessionStorage.setItem("notificationMessage", response.message);
+                                sessionStorage.setItem("notificationType", "success");
                                 location.reload();
                             } else {
-                                alert(response.message);
+                                showNotification(response.message, 'error');
                             }
                         },
                         error: function () {
-                            alert("An error occurred. Please try again.");
+                            showNotification("An error occurred, please try again later.", "error");
                         }
                     });
                 });
@@ -498,18 +765,61 @@
                         dataType: "json",
                         success: function (response) {
                             if (response.success) {
-                                // Reload the page to show the updated rating
+                                sessionStorage.setItem("notificationMessage", response.message);
+                                sessionStorage.setItem("notificationType", "success");
                                 location.reload();
                             } else {
-                                alert(response.message);
+                                showNotification(response.message, 'error');
                             }
                         },
                         error: function () {
-                            alert("An error occurred. Please try again.");
+                            showNotification("An error occurred, please try again later.", "error");
                         }
                     });
                 });
             });
+
+            let deleteUrl = "";
+
+            $(document).on("click", ".btn-delete-rating", function (e) {
+                e.preventDefault();
+                deleteUrl = $(this).attr("href");
+
+                // Open modal confirm
+                const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                modal.show();
+            });
+
+            // When press button "Yes, Delete"
+            $('#confirmDeleteBtn').on("click", function () {
+                // Close modal
+                const modalEl = document.getElementById('deleteConfirmModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                modalInstance.hide();
+
+                // Send AJAX delete
+                $.ajax({
+                    type: "GET",
+                    url: deleteUrl,
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            sessionStorage.setItem("notificationMessage", response.message);
+                            sessionStorage.setItem("notificationType", "success");
+                            location.reload();
+                        } else {
+                            showNotification(response.message, 'error');
+                        }
+                    },
+                    error: function () {
+                        showNotification("Unable to delete review. Please try again.", "error");
+                    }
+                });
+            });
+
         </script>
+
+
+
     </body>
 </html>

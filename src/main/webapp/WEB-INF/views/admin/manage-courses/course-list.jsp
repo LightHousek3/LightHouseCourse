@@ -20,7 +20,7 @@
     </head>
 
     <body>
-        
+
         <!-- Admin Sidebar -->
         <c:set var="activeMenu" value="courses" scope="request" />
         <jsp:include page="/WEB-INF/views/admin/common/sidebar.jsp" />
@@ -57,17 +57,19 @@
             </div>
 
             <!-- Success/Error Messages -->
-            <c:if test="${not empty message}">
+            <c:if test="${not empty sessionScope.message}">
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    ${message}
+                    ${sessionScope.message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+                <c:remove var="message" scope="session"/>
             </c:if>
-            <c:if test="${not empty error}">
+            <c:if test="${not empty sessionScope.error}">
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ${error}
+                    ${sessionScope.error}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+                <c:remove var="error" scope="session"/>
             </c:if>
 
             <c:if test="${not isPendingView}">
@@ -236,7 +238,7 @@
                                                     <c:when test="${isPendingView}">
                                                         No pending course approval requests found.
                                                     </c:when>
-                                                        <c:when test="${searchView}">
+                                                    <c:when test="${searchView}">
                                                         No courses found. Please adjust your keyword search.
                                                     </c:when>
                                                     <c:otherwise>
@@ -316,31 +318,10 @@
                 </div>
             </div>
         </div>
-        <c:set var="message" value="${param.message}" />
-        <c:set var="status" value="${param.status}" />
-        <c:if test="${not empty message and not empty status}">
-            <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
-                <div class="toast align-items-center text-bg-${status} border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            ${message}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                </div>
-            </div>
-        </c:if>
         <!-- Bootstrap Bundle with Popper -->
         <jsp:include page="../common/scripts.jsp" />
 
         <script>
-            // Enable tooltips
-            document.addEventListener('DOMContentLoaded', function () {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                });
-            });
             {
                 const searchInput = document.getElementById('searchKeyword');
                 const hiddenFilterInput = document.getElementById('filterKeyword');
@@ -351,12 +332,14 @@
                     });
                 }
             }
-            {
-                const toastEl = document.querySelector('.toast');
-                const bsToast = new bootstrap.Toast(toastEl);
-                bsToast.show();
-            }
 
+            // Auto dismiss alerts after 5 seconds
+            setTimeout(function () {
+                document.querySelectorAll('.alert').forEach(function (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
         </script>
 
     </body>

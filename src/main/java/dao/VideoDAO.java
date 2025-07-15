@@ -11,8 +11,8 @@ import model.Video;
 import db.DBContext;
 
 /**
- * Data Access Object for Video entity.
- * Handles database operations related to Video entities.
+ * Data Access Object for Video entity. Handles database operations related to
+ * Video entities.
  */
 public class VideoDAO extends DBContext {
 
@@ -47,12 +47,15 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -128,12 +131,15 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -173,10 +179,12 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (ps != null)
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -209,10 +217,12 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (ps != null)
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -249,12 +259,15 @@ public class VideoDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -277,6 +290,35 @@ public class VideoDAO extends DBContext {
         }
     }
 
+    public int insertWithConnection(Connection conn, Video video) throws SQLException {
+        String sql = "INSERT INTO Videos (LessonID, Title, Description, VideoUrl, Duration) VALUES (?, ?, ?, ?, ?)";
+        int videoId = -1;
+
+        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            // Setting the values for the prepared statement
+            ps.setInt(1, video.getLessonID());
+            ps.setString(2, video.getTitle());
+            ps.setString(3, video.getDescription());
+            ps.setString(4, video.getVideoUrl());
+            ps.setInt(5, video.getDuration()); // Assuming duration is stored in seconds
+
+            // Executing the update and getting the generated keys (i.e., the Video ID)
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 1) {
+                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        videoId = rs.getInt(1); // Get the generated Video ID
+                        video.setVideoID(videoId); // Assign the generated Video ID
+                    }
+                }
+            } else {
+                throw new SQLException("Video insert failed!");
+            }
+        }
+
+        return videoId;
+    }
+
     /**
      * Maps a ResultSet row to a Video object.
      *
@@ -294,4 +336,54 @@ public class VideoDAO extends DBContext {
         video.setDuration(rs.getInt("Duration"));
         return video;
     }
+
+    public boolean updateVideoItem(int videoID, Video video) {
+        String sql;
+        boolean hasNewFile = video.getVideoUrl() != null && !video.getVideoUrl().trim().isEmpty();
+        if (hasNewFile) {
+            sql = "UPDATE Videos SET Title = ?, Description = ?, VideoUrl = ?, Duration = ? WHERE VideoID = ?";
+        } else {
+            sql = "UPDATE Videos SET Title = ?, Description = ?, Duration = ? WHERE VideoID = ?";
+        }
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, video.getTitle());
+            ps.setString(2, video.getDescription());
+            if (hasNewFile) {
+                ps.setString(3, video.getVideoUrl());
+                ps.setInt(4, video.getDuration());
+                ps.setInt(5, videoID);
+            } else {
+                ps.setInt(3, video.getDuration());
+                ps.setInt(4, videoID);
+            }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            System.err.println("Update video failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteVideoItem(int videoID) {
+        String sqlDeleteLessonItem = "DELETE FROM LessonItems WHERE ItemType = 'video' AND ItemID = ?";
+        String sqlDeleteVideo = "DELETE FROM Videos WHERE VideoID = ?";
+        try ( Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try ( PreparedStatement ps1 = conn.prepareStatement(sqlDeleteLessonItem);  PreparedStatement ps2 = conn.prepareStatement(sqlDeleteVideo)) {
+                ps1.setInt(1, videoID);
+                ps1.executeUpdate();
+                ps2.setInt(1, videoID);
+                int affected = ps2.executeUpdate();
+                conn.commit();
+                return affected > 0;
+            } catch (SQLException ex) {
+                conn.rollback();
+                System.err.println("Delete video failed: " + ex.getMessage());
+                return false;
+            }
+        } catch (SQLException ex) {
+            System.err.println("Delete video failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
 }

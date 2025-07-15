@@ -14,6 +14,8 @@
 <!-- Custom CSS -->
 <link href="${pageContext.request.contextPath}/assets/css/instructor-dashboard.css?version=<%= System.currentTimeMillis() %>" rel="stylesheet">
 
+<!-- Bootstrap Font -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <script>
     // Set the context path for JavaScript use
     window.contextPath = '${pageContext.request.contextPath}';
