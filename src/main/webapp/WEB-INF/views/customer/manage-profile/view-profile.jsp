@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -182,8 +183,23 @@
             <div class="container">
                 <div class="row justify-content-center text-center">
                     <div class="col-lg-8">
-                        <img src="https://ui-avatars.com/api/?name=${user.fullName}&background=random" 
-                             alt="${user.username}" class="profile-avatar mb-3">
+                        <c:choose>
+                                    <c:when test="${not empty user.avatar}">
+                                        <c:choose>
+                                            <c:when test="${fn:startsWith(avatar, 'https')}">
+                                                <img src="${user.avatar}" alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <img src="${pageContext.request.contextPath}${user.avatar}" alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer">
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="profile-avatar mb-3" id="avatarPlaceholder">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
                         <h1 class="profile-name">${not empty user.fullName ? user.fullName : user.username}</h1>
                         <p class="text-white-50">Member since 2023</p>
                     </div>
