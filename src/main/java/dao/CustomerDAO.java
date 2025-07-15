@@ -404,4 +404,147 @@ public class CustomerDAO extends DBContext {
 
         return customer;
     }
+    
+    /**
+     * Authenticate a customer.
+     * 
+     * @param username The username
+     * @param password The encrypted password
+     * @return The authenticated user, or null if authentication failed
+     */
+    public Customer authenticate(String username, String password) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Customer user = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM Customers WHERE Username = ? AND Password = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, username);
+            ps.setString(2, password);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                user = mapCustomer(rs);
+
+                // Check if user is active
+                if (!user.isActive()) {
+                    return null; // User account is disabled
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return user;
+    }
+    
+    /**
+     * Find a customer by their social provider ID.
+     * 
+     * @param provider   The authentication provider (e.g., "google", "facebook")
+     * @param providerId The ID from the provider
+     * @return Customer object if found, null otherwise
+     */
+    public Customer findBySocialId(String provider, String providerId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Customer user = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM Customers WHERE AuthProvider = ? AND AuthProviderId = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, provider);
+            ps.setString(2, providerId);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                user = mapCustomer(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return user;
+    }
+
+    /**
+     * Process a social login - either find existing user or create new one.
+     * 
+     * @param customer The customer object from social authentication
+     * @return Customer object with database ID if successful, null otherwise
+     */
+    public Customer processocialLogin(Customer customer) {
+        // Check if user already exists with this social ID
+        Customer existingCustomer = findBySocialId(customer.getAuthProvider(), customer.getAuthProviderId());
+
+        if (existingCustomer != null) {
+            // User exists - return the existing user
+            return existingCustomer;
+        } else {
+            // Check if email exists but not linked to this social account
+            Customer emailUser = getCustomerByEmail(customer.getEmail());
+            if (emailUser != null) {
+                // Update existing user with social details
+                emailUser.setAuthProvider(customer.getAuthProvider());
+                emailUser.setAuthProviderId(customer.getAuthProviderId());
+
+                // Update in database
+                if (updateSocialDetails(emailUser)) {
+                    return emailUser;
+                } else {
+                    return null;
+                }
+            } else {
+                // New user - insert into database
+                int customerID = insertCustomer(customer);
+                if (customerID > 0) {
+                    customer.setCustomerID(customerID);
+                    return customer;
+                } else {
+                    return null;
+                }
+            }
+        }
+    }
+
+    /**
+     * Update a customer's social login details.
+     * 
+     * @param customer The customer to update customer
+     * @return true if update customer successful, false otherwise
+     */
+    public boolean updateSocialDetails(Customer customer) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Customers SET AuthProvider = ?, AuthProviderId = ? WHERE CustomerID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, customer.getAuthProvider());
+            ps.setString(2, customer.getAuthProviderId());
+            ps.setInt(3, customer.getCustomerID());
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
 }

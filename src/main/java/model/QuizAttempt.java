@@ -66,15 +66,6 @@ public class QuizAttempt {
         this.customerID = customerID;
     }
 
-    // For backward compatibility
-    public int getUserID() {
-        return customerID;
-    }
-
-    public void setUserID(int userID) {
-        this.customerID = userID;
-    }
-
     public Timestamp getStartTime() {
         return startTime;
     }

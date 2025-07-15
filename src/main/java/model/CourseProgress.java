@@ -1,20 +1,14 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
- * Represents a user's progress in a course.
- *
- * @author DangPH - CE180896
+ * Represents a customer's progress in a course.
  */
 public class CourseProgress {
     private int progressID;
-    private int userID;
+    private int customerID;
     private int courseID;
     private BigDecimal completionPercentage;
     private Timestamp lastAccessDate;
@@ -22,22 +16,22 @@ public class CourseProgress {
 
     // Non-DB fields for display
     private String courseName;
-    private String userName;
+    private String customerName;
 
     public CourseProgress() {
         this.completionPercentage = BigDecimal.ZERO;
     }
 
-    public CourseProgress(int userID, int courseID) {
-        this.userID = userID;
+    public CourseProgress(int customerID, int courseID) {
+        this.customerID = customerID;
         this.courseID = courseID;
         this.completionPercentage = BigDecimal.ZERO;
     }
 
-    public CourseProgress(int progressID, int userID, int courseID, BigDecimal completionPercentage,
-            Timestamp lastAccessDate, boolean isCompleted) {
+    public CourseProgress(int progressID, int customerID, int courseID, BigDecimal completionPercentage,
+                          Timestamp lastAccessDate, boolean isCompleted) {
         this.progressID = progressID;
-        this.userID = userID;
+        this.customerID = customerID;
         this.courseID = courseID;
         this.completionPercentage = completionPercentage;
         this.lastAccessDate = lastAccessDate;
@@ -52,12 +46,12 @@ public class CourseProgress {
         this.progressID = progressID;
     }
 
-    public int getUserID() {
-        return userID;
+    public int getCustomerID() {
+        return customerID;
     }
 
-    public void setUserID(int userID) {
-        this.userID = userID;
+    public void setCustomerID(int customerID) {
+        this.customerID = customerID;
     }
 
     public int getCourseID() {
@@ -89,7 +83,7 @@ public class CourseProgress {
     }
 
     public void setCompleted(boolean completed) {
-        this.isCompleted = completed;
+        isCompleted = completed;
     }
 
     public String getCourseName() {
@@ -100,32 +94,23 @@ public class CourseProgress {
         this.courseName = courseName;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getCustomerName() {
+        return customerName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-    
-    public boolean isIsCompleted() {
-        return isCompleted;
-    }
-
-    public void setIsCompleted(boolean isCompleted) {
-        this.isCompleted = isCompleted;
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
     @Override
     public String toString() {
         return "CourseProgress{" +
                 "progressID=" + progressID +
-                ", userID=" + userID +
+                ", customerID=" + customerID +
                 ", courseID=" + courseID +
                 ", completionPercentage=" + completionPercentage +
                 ", lastAccessDate=" + lastAccessDate +
                 ", isCompleted=" + isCompleted +
                 '}';
     }
-
 }

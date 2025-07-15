@@ -208,9 +208,9 @@ public class CourseDAO extends DBContext {
     /**
      * Get all courses with pagination.
      *
-     * @param offset The offset (for pagination)
-     * @param limit The limit (for pagination)
-     * @param sortBy The field to sort by (optional)
+     * @param offset    The offset (for pagination)
+     * @param limit     The limit (for pagination)
+     * @param sortBy    The field to sort by (optional)
      * @param sortOrder The sort order (ASC or DESC, optional)
      * @return List of courses
      */
@@ -306,14 +306,14 @@ public class CourseDAO extends DBContext {
     /**
      * Delete course instructors
      *
-     * @param conn The database connection
+     * @param conn     The database connection
      * @param courseId The course ID
      * @throws SQLException If a database error occurs
      */
     private void deleteCourseInstructors(Connection conn, int courseId) throws SQLException {
         String sql = "DELETE FROM CourseInstructors WHERE CourseID = ?";
 
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
             ps.executeUpdate();
         }
@@ -322,8 +322,8 @@ public class CourseDAO extends DBContext {
     /**
      * Insert course instructors
      *
-     * @param conn The database connection
-     * @param courseId The course ID
+     * @param conn        The database connection
+     * @param courseId    The course ID
      * @param instructors The list of instructors to insert
      * @throws SQLException If a database error occurs
      */
@@ -331,7 +331,7 @@ public class CourseDAO extends DBContext {
             throws SQLException {
         String sql = "INSERT INTO CourseInstructors (CourseID, InstructorID) VALUES (?, ?)";
 
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (Instructor instructor : instructors) {
                 ps.setInt(1, courseId);
                 ps.setInt(2, instructor.getInstructorID());
@@ -344,7 +344,7 @@ public class CourseDAO extends DBContext {
     private void insertCourseCategories(Connection conn, int courseId, List<Category> categories) throws SQLException {
         String sql = "INSERT INTO CourseCategory (CourseID, CategoryID) VALUES (?, ?)";
 
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (Category category : categories) {
                 ps.setInt(1, courseId);
                 ps.setInt(2, category.getCategoryID());
@@ -357,14 +357,14 @@ public class CourseDAO extends DBContext {
     /**
      * Delete course categories
      *
-     * @param conn The database connection
+     * @param conn     The database connection
      * @param courseId The course ID
      * @throws SQLException If a database error occurs
      */
     private void deleteCourseCategories(Connection conn, int courseId) throws SQLException {
         String sql = "DELETE FROM CourseCategory WHERE CourseID = ?";
 
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
             ps.executeUpdate();
         }
@@ -463,10 +463,12 @@ public class CourseDAO extends DBContext {
         String checkSql = "SELECT ApprovalStatus FROM Courses WHERE CourseID = ?";
         String updateSql = "UPDATE Courses SET ApprovalStatus = 'banned' WHERE CourseID = ?";
 
-        try ( Connection conn = getConnection();  PreparedStatement checkStmt = conn.prepareStatement(checkSql);  PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+                PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
 
             checkStmt.setInt(1, courseID);
-            try ( ResultSet rs = checkStmt.executeQuery()) {
+            try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next() && "approved".equalsIgnoreCase(rs.getString("ApprovalStatus"))) {
                     updateStmt.setInt(1, courseID);
                     return updateStmt.executeUpdate() == 1;
@@ -482,10 +484,12 @@ public class CourseDAO extends DBContext {
         String checkSql = "SELECT ApprovalStatus FROM Courses WHERE CourseID = ?";
         String updateSql = "UPDATE Courses SET ApprovalStatus = 'approved' WHERE CourseID = ?";
 
-        try ( Connection conn = getConnection();  PreparedStatement checkStmt = conn.prepareStatement(checkSql);  PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+                PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
 
             checkStmt.setInt(1, courseID);
-            try ( ResultSet rs = checkStmt.executeQuery()) {
+            try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next() && "banned".equalsIgnoreCase(rs.getString("ApprovalStatus"))) {
                     updateStmt.setInt(1, courseID);
                     return updateStmt.executeUpdate() == 1;
@@ -667,13 +671,13 @@ public class CourseDAO extends DBContext {
                 + "        LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID\n"
                 + "        WHERE c.Name LIKE ? OR su.FullName LIKE ?";
 
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             String likeKeyword = "%" + keyword + "%";
             ps.setString(1, likeKeyword);
             ps.setString(2, likeKeyword);
 
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
@@ -822,13 +826,13 @@ public class CourseDAO extends DBContext {
             params.add(approvalStatus);
         }
 
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
 
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
@@ -886,12 +890,12 @@ public class CourseDAO extends DBContext {
 
     public boolean isCourseStatus(int courseId, String status) {
         String sql = "SELECT 1 FROM Courses WHERE CourseID = ? AND ApprovalStatus = ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, courseId);
             stmt.setString(2, status);
 
-            try ( ResultSet rs = stmt.executeQuery()) {
+            try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next(); // true nếu tồn tại 1 record phù hợp
             }
 
@@ -1005,7 +1009,7 @@ public class CourseDAO extends DBContext {
      * Gets recent courses for an instructor
      *
      * @param instructorId The instructor ID
-     * @param limit The maximum number of courses to return
+     * @param limit        The maximum number of courses to return
      * @return List of recent courses
      */
     public List<Course> getRecentCoursesByInstructorId(int instructorId, int limit) {
@@ -1207,20 +1211,21 @@ public class CourseDAO extends DBContext {
                     if (course.getLessons() != null && !course.getLessons().isEmpty()) {
                         for (Lesson lesson : course.getLessons()) {
                             lesson.setCourseID(courseId);
-                            lessonDAO.insertFullLesson(conn, lesson); // Hàm này sẽ tự insert quizzes, materials, videos thuộc lesson
+                            lessonDAO.insertFullLesson(conn, lesson); // Hàm này sẽ tự insert quizzes, materials, videos
+                                                                      // thuộc lesson
                         }
                     }
 
                     conn.commit();
                 }
             } else {
-                if (!conn.getAutoCommit()) {  // Kiểm tra trước khi rollback
+                if (!conn.getAutoCommit()) { // Kiểm tra trước khi rollback
                     conn.rollback();
                 }
             }
         } catch (SQLException e) {
             try {
-                if (conn != null && !conn.getAutoCommit()) {  // Kiểm tra trước khi rollback
+                if (conn != null && !conn.getAutoCommit()) { // Kiểm tra trước khi rollback
                     conn.rollback();
                 }
             } catch (SQLException ex) {
@@ -1243,7 +1248,7 @@ public class CourseDAO extends DBContext {
 
     public int insertCourseFull(Course course, List<Integer> instructorIds, List<Integer> categoryIds) {
         int courseId = -1;
-        try ( Connection conn = getConnection()) {
+        try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try {
                 // Insert course trước
@@ -1270,7 +1275,7 @@ public class CourseDAO extends DBContext {
     public int insertCourse(Connection conn, Course course) throws SQLException {
         String sql = "INSERT INTO Courses (Name, Description, Price, ImageUrl, Duration, Level, ApprovalStatus, SubmissionDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         int courseId = -1;
-        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, course.getName());
             ps.setString(2, course.getDescription());
             ps.setDouble(3, course.getPrice());
@@ -1282,7 +1287,7 @@ public class CourseDAO extends DBContext {
 
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
-                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
                         courseId = rs.getInt(1);
                     }
@@ -1297,7 +1302,7 @@ public class CourseDAO extends DBContext {
             return;
         }
         String sql = "INSERT INTO CourseCategory (CourseID, CategoryID) VALUES (?, ?)";
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (Integer catId : categoryIds) {
                 ps.setInt(1, courseId);
                 ps.setInt(2, catId);
@@ -1312,7 +1317,7 @@ public class CourseDAO extends DBContext {
             return;
         }
         String sql = "INSERT INTO CourseInstructors (CourseID, InstructorID) VALUES (?, ?)";
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (Integer insId : instructorIds) {
                 ps.setInt(1, courseId);
                 ps.setInt(2, insId);
@@ -1324,7 +1329,7 @@ public class CourseDAO extends DBContext {
 
     public boolean updateCourseFull(Course course, List<Integer> instructorIds, List<Integer> categoryIds) {
         boolean success = false;
-        try ( Connection conn = getConnection()) {
+        try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try {
                 // 1. Cập nhật thông tin course chính
@@ -1354,7 +1359,7 @@ public class CourseDAO extends DBContext {
 
     public void updateCourse(Connection conn, Course course) throws SQLException {
         String sql = "UPDATE Courses SET Name=?, Description=?, Price=?, ImageUrl=?, Duration=?, Level=?, ApprovalStatus=? WHERE CourseID=?";
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, course.getName());
             ps.setString(2, course.getDescription());
             ps.setDouble(3, course.getPrice());
@@ -1369,10 +1374,10 @@ public class CourseDAO extends DBContext {
 
     public boolean isInstructorOwnerOfCourse(int instructorId, int courseId) {
         String sql = "SELECT 1 FROM CourseInstructors WHERE InstructorID = ? AND CourseID = ?";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, instructorId);
             ps.setInt(2, courseId);
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 return rs.next(); // Có record là instructor này sở hữu course này
             }
         } catch (SQLException e) {
@@ -1384,7 +1389,7 @@ public class CourseDAO extends DBContext {
     public boolean deleteCourseById(int courseId) {
         boolean deleted = false;
         String sql = "DELETE FROM Courses WHERE CourseID = ?";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
             int affected = ps.executeUpdate();
             deleted = affected > 0;
@@ -1399,10 +1404,10 @@ public class CourseDAO extends DBContext {
                 + "FROM Courses c "
                 + "INNER JOIN CourseInstructors ci ON c.CourseID = ci.CourseID "
                 + "WHERE c.CourseID = ? AND ci.InstructorID = ?";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
             ps.setInt(2, instructorId);
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Course course = new Course();
                     course.setCourseID(rs.getInt("CourseID"));
@@ -1431,9 +1436,9 @@ public class CourseDAO extends DBContext {
     public List<Integer> getCategoryIdsByCourseId(int courseId) {
         List<Integer> categoryIds = new ArrayList<>();
         String sql = "SELECT CategoryID FROM CourseCategory WHERE CourseID = ?";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     categoryIds.add(rs.getInt("CategoryID"));
                 }
@@ -1451,9 +1456,9 @@ public class CourseDAO extends DBContext {
     public List<Integer> getInstructorIdsByCourseId(int courseId) {
         List<Integer> instructorIds = new ArrayList<>();
         String sql = "SELECT InstructorID FROM CourseInstructors WHERE CourseID = ?";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     instructorIds.add(rs.getInt("InstructorID"));
                 }
@@ -1468,7 +1473,7 @@ public class CourseDAO extends DBContext {
 
     public boolean updateCourseApprovalStatus(int courseId, String approvalStatus) {
         String sql = "UPDATE Courses SET ApprovalStatus = ?, SubmissionDate = ?, RejectionReason = NULL WHERE CourseID = ?";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, approvalStatus);
             ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
             ps.setInt(3, courseId);
@@ -1480,4 +1485,152 @@ public class CourseDAO extends DBContext {
         }
     }
 
+    /**
+     * Search courses by name or category.
+     *
+     * @param keyword    The searchCourseByNameOrCategory keyword for course name
+     * @param categoryId The ID of the category to filter by (0 means all
+     *                   categories)
+     * @return List of matching courses
+     */
+    public List<Course> searchCourseByNameOrCategory(String keyword, int categoryId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Course> courses = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql;
+
+            if (categoryId > 0) {
+                // Search by name and category
+                sql = "SELECT c.* FROM Courses c "
+                        + "INNER JOIN CourseCategory cc ON c.CourseID = cc.CourseID "
+                        + "WHERE c.Name LIKE ? AND cc.CategoryID = ?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, "%" + keyword + "%");
+                ps.setInt(2, categoryId);
+            } else {
+                // Search by name only
+                sql = "SELECT * FROM Courses WHERE Name LIKE ?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, "%" + keyword + "%");
+            }
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Course course = mapCourse(rs);
+                courses.add(course);
+            }
+
+            // Get categories for each course
+            for (Course course : courses) {
+                List<Category> categories = getCourseCategories(course.getCourseID());
+                course.setCategories(categories);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return courses;
+    }
+
+    /**
+     * Get courses by category.
+     *
+     * @param categoryId The ID of the category
+     * @return List of courses in the category
+     */
+    public List<Course> getByCategory(int categoryId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Course> courses = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.* FROM Courses c "
+                    + "INNER JOIN CourseCategory cc ON c.CourseID = cc.CourseID "
+                    + "WHERE cc.CategoryID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, categoryId);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Course course = mapCourse(rs);
+                courses.add(course);
+            }
+
+            // Get categories for each course
+            for (Course course : courses) {
+                List<Category> categories = getCourseCategories(course.getCourseID());
+                course.setCategories(categories);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return courses;
+    }
+
+    /**
+     * Get all courses with pagination.
+     *
+     * @param offset The offset (for pagination)
+     * @param limit  The limit (for pagination)
+     * @return List of courses
+     */
+    public List<Course> getAllWithLimit(int offset, int limit) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Course> courses = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM Courses WHERE ApprovalStatus = 'approved' ORDER BY CourseID OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, offset);
+            ps.setInt(2, limit);
+
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Course course = mapCourse(rs);
+                courses.add(course);
+            }
+
+            // Lấy dữ liệu phụ cho mỗi course
+            for (Course course : courses) {
+                try {
+                    List<Category> categories = getCourseCategories(course.getCourseID());
+                    course.setCategories(categories);
+
+                    List<Instructor> instructors = getInstructorsForCourse(course.getCourseID());
+                    course.setInstructors(instructors);
+
+                    double avgRating = ratingDAO.getAverageRatingForCourse(course.getCourseID());
+                    int ratingCount = ratingDAO.getRatingCountForCourse(course.getCourseID());
+                    course.setAverageRating(avgRating);
+                    course.setRatingCount(ratingCount);
+
+                    List<Lesson> lessons = lessonDAO.getLessonsByCourseId(course.getCourseID());
+                    course.setLessons(lessons);
+
+                } catch (Exception e) {
+                    System.err.println("Error getting additional data for course ID " + course.getCourseID() + ": "
+                            + e.getMessage());
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error in getAllWithLimit: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return courses;
+    }
 }

@@ -489,14 +489,14 @@
                                                     <c:choose>
                                                         <c:when test="${not empty selectedUser.avatar}">
                                                             <c:choose>
-                                                                <c:when test="${fn:startsWith(selectedUser.avatar, 'data:image')}">
-                                                                    <img src="${selectedUser.avatar}"
-                                                                         alt="Super User Avatar" class="avatar-preview"
+                                                                <c:when test="${fn:startsWith(selectedUser.avatar, '/assets')}">
+                                                                    <img src="${pageContext.request.contextPath}${selectedUser.avatar}"
+                                                                         alt="Customer Avatar" class="avatar-preview"
                                                                          id="avatarPreview">
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <img src="${pageContext.request.contextPath}${selectedUser.avatar}"
-                                                                         alt="Super User Avatar" class="avatar-preview"
+                                                                    <img src="${selectedUser.avatar}"
+                                                                         alt="Customer Avatar" class="avatar-preview"
                                                                          id="avatarPreview">
                                                                 </c:otherwise>
                                                             </c:choose>

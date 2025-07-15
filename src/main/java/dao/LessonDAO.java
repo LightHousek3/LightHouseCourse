@@ -126,6 +126,33 @@ public class LessonDAO extends DBContext {
             return false;
         }
     }
+    
+    /**
+     * Get a lesson by ID.
+     *
+     * @param lessonId The lesson ID
+     * @return The lesson object, or null if not found
+     */
+    public Lesson getLessonById(int lessonId) {
+        String sql = "SELECT * FROM lessons WHERE LessonID = ?";
+
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, lessonId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapLesson(rs);
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     public void insertFullLesson(Connection conn, Lesson lesson) throws SQLException {
         // Insert the lesson itself
@@ -369,28 +396,6 @@ public class LessonDAO extends DBContext {
             Logger.getLogger(InstructorCourseServlet.class.getName()).log(Level.SEVERE, null, except);
         }
         return orderIndexes;
-    }
-
-    public Lesson getLessonById(int lessonId) {
-        String sql = "SELECT * FROM Lessons WHERE LessonID = ?";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, lessonId);
-            try ( ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Lesson lesson = new Lesson();
-                    lesson.setLessonID(rs.getInt("LessonID"));
-                    lesson.setCourseID(rs.getInt("CourseID"));
-                    lesson.setTitle(rs.getString("Title"));
-                    lesson.setOrderIndex(rs.getInt("OrderIndex"));
-                    return lesson;
-                }
-            } catch (SQLException exception) {
-                Logger.getLogger(InstructorCourseServlet.class.getName()).log(Level.SEVERE, null, exception);
-            }
-        } catch (SQLException except) {
-            Logger.getLogger(InstructorCourseServlet.class.getName()).log(Level.SEVERE, null, except);
-        }
-        return null;
     }
 
     public boolean updateLesson(Lesson lesson) {
