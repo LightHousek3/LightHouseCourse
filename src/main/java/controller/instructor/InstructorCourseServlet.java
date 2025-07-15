@@ -1253,10 +1253,12 @@ public class InstructorCourseServlet extends HttpServlet {
             } else {
                 try {
                     int passed = Integer.parseInt(timeLimitStr);
-                    if (passed <= 0) {
-                        errors.put("timeLimit", "Time limit must be a valid number.");
+                    if (passed < 0) {
+                        errors.put("timeLimit", "Time limit must be a number greater than or equal to 0.");
                     } else {
-                        timeLimit = passed;
+                        if (passed != 0) {
+                            timeLimit = passed;
+                        }
                     }
                 } catch (NumberFormatException ex) {
                     errors.put("timeLimit", "Time limit must be a valid number.");
@@ -1269,8 +1271,8 @@ public class InstructorCourseServlet extends HttpServlet {
         } else {
             try {
                 int passed = Integer.parseInt(passingScoreStr);
-                if (passed <= 0) {
-                    errors.put("passingScore", "Passing score must be a valid number.");
+                if (passed <= 0 || passed > 100) {
+                    errors.put("passingScore", "Passing score must be between 1 and 100.");
                 } else {
                     passingScore = passed;
                 }
@@ -1283,7 +1285,7 @@ public class InstructorCourseServlet extends HttpServlet {
             Quiz quiz = new Quiz();
             quiz.setTitle(titleQuiz);
             quiz.setDescription(descriptionQuiz);
-            quiz.setTimeLimit(timeLimit);
+            quiz.setTimeLimit(timeLimit != null ? timeLimit : 0);
             quiz.setPassingScore(passingScore);
             request.getSession().setAttribute("errors", errors);
             request.getSession().setAttribute("quiz", quiz);
@@ -1343,10 +1345,12 @@ public class InstructorCourseServlet extends HttpServlet {
             } else {
                 try {
                     int passed = Integer.parseInt(timeLimitStr);
-                    if (passed <= 0) {
-                        errors.put("timeLimit", "Time limit must be a valid number.");
+                    if (passed < 0) {
+                        errors.put("timeLimit", "Time limit must be a number greater than or equal to 0.");
                     } else {
-                        timeLimit = passed;
+                        if (passed != 0) {
+                            timeLimit = passed;
+                        }
                     }
                 } catch (NumberFormatException ex) {
                     errors.put("timeLimit", "Time limit must be a valid number.");
@@ -1359,8 +1363,8 @@ public class InstructorCourseServlet extends HttpServlet {
         } else {
             try {
                 int passed = Integer.parseInt(passingScoreStr);
-                if (passed <= 0) {
-                    errors.put("passingScore", "Passing score must be a valid number.");
+                if (passed <= 0 || passed > 100) {
+                    errors.put("passingScore", "Passing score must be between 1 and 100.");
                 } else {
                     passingScore = passed;
                 }
@@ -1374,7 +1378,7 @@ public class InstructorCourseServlet extends HttpServlet {
             quiz.setLessonID(lessonIdValid);
             quiz.setTitle(titleQuiz);
             quiz.setDescription(descriptionQuiz);
-            quiz.setTimeLimit(timeLimit);
+            quiz.setTimeLimit(timeLimit != null ? timeLimit : 0);
             quiz.setPassingScore(passingScore);
             request.getSession().setAttribute("editErrors", errors);
             request.getSession().setAttribute("editQuiz", quiz);
@@ -1493,10 +1497,10 @@ public class InstructorCourseServlet extends HttpServlet {
             errors.put("points", "Question point must be a valid number.");
         } else {
             int parsed = Integer.parseInt(pointsStr);
-            if (parsed <= 0) {
-                errors.put("points", "Question point must be a positive number.");
-            } else {
+            if (parsed > 0) {
                 points = parsed;
+            } else {
+                errors.put("points", "Question point must be a number geater than 0.");
             }
         }
 
@@ -1639,7 +1643,7 @@ public class InstructorCourseServlet extends HttpServlet {
             if (parsed > 0) {
                 pointValid = parsed;
             } else {
-                errors.put("points", "Question point must be a positive number.");
+                errors.put("points", "Question point must be a number geater than 0.");
             }
         } else {
             errors.put("points", "Question point must be a valid number.");
