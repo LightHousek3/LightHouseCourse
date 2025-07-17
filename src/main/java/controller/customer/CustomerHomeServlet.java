@@ -2,9 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-
 package controller.customer;
 
+import dao.CartItemDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,31 +17,35 @@ import dao.CategoryDAO;
 import jakarta.servlet.http.HttpSession;
 import model.Course;
 import model.Category;
+import model.Customer;
 import model.SuperUser;
+import util.CartUtil;
 
 /**
  * Home page controller that shows featured courses.
  */
-@WebServlet(name="CustomerHomeServlet", urlPatterns={ "/home", "" })
+@WebServlet(name = "CustomerHomeServlet", urlPatterns = {"/home", ""})
 public class CustomerHomeServlet extends HttpServlet {
-   
+
     private CourseDAO courseDAO;
     private CategoryDAO categoryDAO;
+    private CartItemDAO cartItemDAO;
 
     @Override
     public void init() throws ServletException {
         super.init();
         courseDAO = new CourseDAO();
         categoryDAO = new CategoryDAO();
+        cartItemDAO = new CartItemDAO();
     }
 
     /**
      * Handles the HTTP GET request - displaying the home page.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -66,10 +70,21 @@ public class CustomerHomeServlet extends HttpServlet {
 
         // Get cart
         HttpSession session = request.getSession();
-        SuperUser user = (SuperUser) session.getAttribute("user");
+        Customer user = (Customer) session.getAttribute("user");
 
+        // If user is logged in, load cart items from database
+        if (user != null) {
+            try {
+                CartUtil cart = new CartUtil();
+                cart.setItems(cartItemDAO.getCartItems(user.getCustomerID()));
+                session.setAttribute("cart", cart);
+            } catch (Exception e) {
+                System.err.println("Error loading cart: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
         // Forward to home page
-        request.getRequestDispatcher("/WEB-INF/views/customer/manage-courses/homepage.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/customer/homepage.jsp").forward(request, response);
     }
 
     /**

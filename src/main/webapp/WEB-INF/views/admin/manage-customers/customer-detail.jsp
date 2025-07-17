@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,7 +12,7 @@
             .fa-user-circle {
                 color: #0808f9;
             }
-            
+
             /* Customer Details Page Styles */
             .customer-profile {
                 background-color: #fff;
@@ -281,8 +282,25 @@
                             <!-- Customer Profile Card -->
                             <div class="customer-profile">
                                 <div class="profile-header">
-                                    <img src="${not empty selectedCustomer.avatar ? pageContext.request.contextPath.concat(selectedCustomer.avatar) : pageContext.request.contextPath.concat('/assets/imgs/avatars/default-user.png')}"
-                                         alt="${selectedCustomer.username}" class="profile-avatar">
+                                    <c:choose>
+                                        <c:when test="${not empty selectedCustomer.avatar}">
+                                            <c:choose>
+                                                <c:when test="${fn:startsWith(selectedCustomer.avatar, '/assets')}">
+                                                    <img src="${pageContext.request.contextPath}${selectedCustomer.avatar}"
+                                                         alt="Customer Avatar" class="profile-avatar" referrerpolicy="no-referrer">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <img src="${selectedCustomer.avatar}"
+                                                         alt="Customer Avatar" class="profile-avatar" referrerpolicy="no-referrer">
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="profile-avatar">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                        </c:otherwise>
+                                    </c:choose>
                                     <h3 class="profile-name">${selectedCustomer.fullName}</h3>
                                     <p class="profile-username">@${selectedCustomer.username}</p>
                                     <div class="profile-role">

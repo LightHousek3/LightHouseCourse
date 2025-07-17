@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -249,11 +249,22 @@
                                     <div class="avatar-container">
                                         <c:choose>
                                             <c:when test="${not empty selectedUser.avatar}">
-                                                <img src="${pageContext.request.contextPath.concat(selectedUser.avatar)}"
-                                                     alt="User Avatar" class="avatar">
+                                                <c:choose>
+                                                    <c:when test="${fn:startsWith(selectedUser.avatar, '/assets')}">
+                                                        <img src="${pageContext.request.contextPath}${selectedUser.avatar}"
+                                                             alt="Customer Avatar" class="avatar"
+                                                             id="avatarPreview" referrerpolicy="no-referrer">
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <img src="${selectedUser.avatar}"
+                                                             alt="Customer Avatar" class="avatar"
+                                                             id="avatarPreview" referrerpolicy="no-referrer">
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </c:when>
                                             <c:otherwise>
-                                                <div class="avatar-placeholder">
+                                                <div class="avatar-placeholder"
+                                                     id="avatarPlaceholder">
                                                     <i class="fas fa-user"></i>
                                                 </div>
                                             </c:otherwise>

@@ -16,21 +16,22 @@ import model.Discussion;
 
 /**
  * Data access object for discussions
- * 
+ *
  * @author DangPH - CE180896
  */
 public class DiscussionDAO extends DBContext {
+
     private Connection conn = null;
     private PreparedStatement ps = null;
     private ResultSet rs = null;
 
     /**
      * Count discussions for a list of courses with filtering
-     * 
-     * @param courseIds  List of course IDs to check
-     * @param courseId   Specific course ID to filter by (optional)
-     * @param lessonId   Specific lesson ID to filter by (optional)
-     * @param resolved   Filter by resolved status (optional)
+     *
+     * @param courseIds List of course IDs to check
+     * @param courseId Specific course ID to filter by (optional)
+     * @param lessonId Specific lesson ID to filter by (optional)
+     * @param resolved Filter by resolved status (optional)
      * @param searchTerm Search term to filter by (optional)
      * @return Count of discussions matching the criteria
      */
@@ -110,14 +111,14 @@ public class DiscussionDAO extends DBContext {
 
     /**
      * Get discussions for a list of courses with filtering and pagination
-     * 
-     * @param courseIds  List of course IDs to check
-     * @param courseId   Specific course ID to filter by (optional)
-     * @param lessonId   Specific lesson ID to filter by (optional)
-     * @param resolved   Filter by resolved status (optional)
+     *
+     * @param courseIds List of course IDs to check
+     * @param courseId Specific course ID to filter by (optional)
+     * @param lessonId Specific lesson ID to filter by (optional)
+     * @param resolved Filter by resolved status (optional)
      * @param searchTerm Search term to filter by (optional)
-     * @param page       Page number (1-based)
-     * @param pageSize   Number of discussions per page
+     * @param page Page number (1-based)
+     * @param pageSize Number of discussions per page
      * @return List of discussions matching the criteria
      */
     public List<Discussion> getDiscussionsForCourses(List<Integer> courseIds, Integer courseId, Integer lessonId,
@@ -215,7 +216,7 @@ public class DiscussionDAO extends DBContext {
 
     /**
      * Get a discussion by ID
-     * 
+     *
      * @param discussionId The discussion ID
      * @return The discussion or null if not found
      */
@@ -223,17 +224,17 @@ public class DiscussionDAO extends DBContext {
         Discussion discussion = null;
 
         try {
-            String query = "SELECT d.*, c.Name AS CourseName, l.Title AS LessonTitle, " +
-                    "CASE WHEN d.AuthorType = 'customer' THEN cu.FullName " +
-                    "     WHEN d.AuthorType = 'instructor' THEN su.FullName " +
-                    "     ELSE 'Unknown' END AS AuthorName, " +
-                    "(SELECT COUNT(*) FROM DiscussionReplies WHERE DiscussionID = d.DiscussionID) AS ReplyCount " +
-                    "FROM Discussions d " +
-                    "LEFT JOIN Courses c ON d.CourseID = c.CourseID " +
-                    "LEFT JOIN Lessons l ON d.LessonID = l.LessonID " +
-                    "LEFT JOIN Customers cu ON d.AuthorID = cu.CustomerID AND d.AuthorType = 'customer' " +
-                    "LEFT JOIN SuperUsers su ON d.AuthorID = su.SuperUserID AND d.AuthorType = 'instructor' " +
-                    "WHERE d.DiscussionID = ?";
+            String query = "SELECT d.*, c.Name AS CourseName, l.Title AS LessonTitle, "
+                    + "CASE WHEN d.AuthorType = 'customer' THEN cu.FullName "
+                    + "     WHEN d.AuthorType = 'instructor' THEN su.FullName "
+                    + "     ELSE 'Unknown' END AS AuthorName, "
+                    + "(SELECT COUNT(*) FROM DiscussionReplies WHERE DiscussionID = d.DiscussionID) AS ReplyCount "
+                    + "FROM Discussions d "
+                    + "LEFT JOIN Courses c ON d.CourseID = c.CourseID "
+                    + "LEFT JOIN Lessons l ON d.LessonID = l.LessonID "
+                    + "LEFT JOIN Customers cu ON d.AuthorID = cu.CustomerID AND d.AuthorType = 'customer' "
+                    + "LEFT JOIN SuperUsers su ON d.AuthorID = su.SuperUserID AND d.AuthorType = 'instructor' "
+                    + "WHERE d.DiscussionID = ?";
 
             conn = getConnection();
             ps = conn.prepareStatement(query);
@@ -254,9 +255,9 @@ public class DiscussionDAO extends DBContext {
 
     /**
      * Update a discussion's resolved status
-     * 
+     *
      * @param discussionId The discussion ID
-     * @param resolved     The new resolved status
+     * @param resolved The new resolved status
      * @return True if successful, false otherwise
      */
     public boolean updateDiscussionResolved(int discussionId, boolean resolved) {
@@ -284,7 +285,7 @@ public class DiscussionDAO extends DBContext {
 
     /**
      * Get all lessons for a specific course
-     * 
+     *
      * @param courseId The course ID
      * @return List of lesson IDs and titles
      */
@@ -316,7 +317,7 @@ public class DiscussionDAO extends DBContext {
 
     /**
      * Map a ResultSet row to a Discussion object
-     * 
+     *
      * @param rs The ResultSet
      * @return The Discussion object
      * @throws SQLException If an error occurs
@@ -365,7 +366,7 @@ public class DiscussionDAO extends DBContext {
 
     /**
      * Delete a discussion and all its replies
-     * 
+     *
      * @param discussionId The discussion ID
      * @return True if successful, false otherwise
      */
@@ -418,6 +419,91 @@ public class DiscussionDAO extends DBContext {
         }
 
         return success;
+    }
+
+    /**
+     * Get discussions for a specific lesson with user and course details
+     *
+     * @param lessonId The ID of the lesson
+     * @return List of discussions for the specified lesson
+     */
+    public List<Discussion> getDiscussionsByLessonId(int lessonId) {
+        List<Discussion> discussions = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+
+            String sql = "SELECT d.*, c.Name as CourseName, u.FullName as UserName \n"
+                    + "                    FROM Discussions d  \n"
+                    + "                    JOIN Courses c ON d.CourseID = c.CourseID \n"
+                    + "                    JOIN Customers u ON d.AuthorID = u.CustomerID \n"
+                    + "                    WHERE d.LessonID = ? \n"
+                    + "                    ORDER BY d.CreatedAt DESC";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, lessonId);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Discussion discussion = mapDiscussion(rs);
+                discussion.setCourseName(rs.getString("CourseName"));
+                discussion.setUserName(rs.getString("UserName"));
+                discussions.add(discussion);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(null, ps, conn);
+        }
+
+        return discussions;
+    }
+
+    /**
+     * Creates a new discussion and returns the generated ID
+     *
+     * @param discussion Discussion object to create
+     * @return The ID of the newly created discussion, or -1 if failed
+     */
+    public int createDiscussion(Discussion discussion) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int discussionId = -1;
+
+        try {
+            conn = getConnection();
+            String sql = "INSERT INTO Discussions (CourseID, LessonID, AuthorID, AuthorType, Content, CreatedAt, UpdatedAt, IsResolved) "
+                    + "VALUES (?, ?, ?, ?, ?, GETDATE(), GETDATE(), ?)";
+
+            ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, discussion.getCourseID());
+            ps.setInt(2, discussion.getLessonID());
+            ps.setInt(3, discussion.getAuthorID());
+            ps.setString(4, discussion.getAuthorType());
+            ps.setString(5, discussion.getContent());
+            ps.setBoolean(6, discussion.isResolved());
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                rs = ps.getGeneratedKeys();
+                if (rs.next()) {
+                    discussionId = rs.getInt(1);
+                    discussion.setDiscussionID(discussionId);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(null, ps, conn);
+        }
+
+        return discussionId;
     }
 
 }

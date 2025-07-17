@@ -658,5 +658,39 @@ public class SuperUserDAO extends DBContext {
             closeResources(null, ps, conn);
         }
     }
+
+    /**
+     * Authenticate a SuperUser.
+     * 
+     * @param username The username
+     * @param password The encrypted password
+     * @return The authenticated SuperUser, or null if authentication failed
+     */
+    public SuperUser authenticate(String username, String password) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        SuperUser user = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM SuperUsers WHERE Username = ? AND Password = ? AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, username);
+            ps.setString(2, password);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                user = mapSuperUser(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return user;
+    }
 }
 

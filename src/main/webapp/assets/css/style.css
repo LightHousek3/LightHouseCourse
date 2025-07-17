@@ -140,7 +140,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Form styling */
 .form-control {
     border-radius: var(--border-radius);
-    padding: 0.8rem 1rem;
+    padding: 0.5rem 1rem;
     border: 2px solid #f8c4d9;
     transition: all var(--transition-speed);
     font-size: 1rem;
@@ -356,7 +356,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Notification system */
 .custom-notification {
     position: fixed;
-    bottom: 30px;
+    top:100px;
     right: 30px;
     background-color: var(--bg-white);
     border-radius: var(--border-radius);

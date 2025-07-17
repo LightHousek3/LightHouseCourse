@@ -60,46 +60,45 @@ public class InstructorDAO extends DBContext {
      * @param superUserId The ID of the super user who is an instructor
      * @return Instructor object or null if not found
      */
-   public Instructor getInstructorBySuperUserId(int superUserId) {
-    try {
-        String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
-                + "i.ApprovalDate, su.FullName, su.Email, su.Username, su.Phone, su.Address, su.Password, su.Avatar "
-                + "FROM Instructors i "
-                + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
-                + "WHERE i.SuperUserID = ?";
-        conn = getConnection();
-        ps = conn.prepareStatement(query);
-        ps.setInt(1, superUserId);
-        rs = ps.executeQuery();
-        if (rs.next()) {
-            Instructor instructor = new Instructor();
-            instructor.setInstructorID(rs.getInt("InstructorID"));
-            instructor.setSuperUserID(rs.getInt("SuperUserID"));
-            instructor.setBiography(rs.getString("Biography"));
-            instructor.setSpecialization(rs.getString("Specialization"));
-            instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
-            instructor.setName(rs.getString("FullName"));
-            instructor.setFullName(rs.getString("FullName"));
-            instructor.setEmail(rs.getString("Email"));
-            instructor.setUsername(rs.getString("Username"));
-            instructor.setPhone(rs.getString("Phone"));
-            instructor.setAddress(rs.getString("Address"));
-            instructor.setPassword(rs.getString("Password")); 
-            instructor.setAvatar(rs.getString("Avatar"));
-            // Get statistical info
-            instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
-            instructor.setTotalStudents(countStudentsForInstructor(instructor.getInstructorID()));
+    public Instructor getInstructorBySuperUserId(int superUserId) {
+        try {
+            String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
+                    + "i.ApprovalDate, su.FullName, su.Email, su.Username, su.Phone, su.Address, su.Password, su.Avatar "
+                    + "FROM Instructors i "
+                    + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
+                    + "WHERE i.SuperUserID = ?";
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, superUserId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Instructor instructor = new Instructor();
+                instructor.setInstructorID(rs.getInt("InstructorID"));
+                instructor.setSuperUserID(rs.getInt("SuperUserID"));
+                instructor.setBiography(rs.getString("Biography"));
+                instructor.setSpecialization(rs.getString("Specialization"));
+                instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
+                instructor.setName(rs.getString("FullName"));
+                instructor.setFullName(rs.getString("FullName"));
+                instructor.setEmail(rs.getString("Email"));
+                instructor.setUsername(rs.getString("Username"));
+                instructor.setPhone(rs.getString("Phone"));
+                instructor.setAddress(rs.getString("Address"));
+                instructor.setPassword(rs.getString("Password"));
+                instructor.setAvatar(rs.getString("Avatar"));
+                // Get statistical info
+                instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
+                instructor.setTotalStudents(countStudentsForInstructor(instructor.getInstructorID()));
 
-            return instructor;
+                return instructor;
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error finding instructor by user ID: " + ex.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
         }
-    } catch (SQLException ex) {
-        System.out.println("Error finding instructor by user ID: " + ex.getMessage());
-    } finally {
-        closeResources(rs, ps, conn);
+        return null;
     }
-    return null;
-}
-
 
     /**
      * Get all instructors from the database
@@ -140,7 +139,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Update instructor information in the database
-     * 
+     *
      * @param instructor The instructor to updateInstructor
      * @return True if successful, false otherwise
      */
@@ -226,7 +225,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Insert a new instructor into the database
-     * 
+     *
      * @param instructor The instructor to insert
      * @return The inserted instructor with ID or null if failed
      */
@@ -258,10 +257,10 @@ public class InstructorDAO extends DBContext {
             closeResources(rs, ps, conn);
         }
     }
-    
+
     /**
      * Delete an instructor from the database by Super User ID
-     * 
+     *
      * @param superUserId The ID of the super user who is an instructor
      * @return True if successful, false otherwise
      */
@@ -338,11 +337,52 @@ public class InstructorDAO extends DBContext {
     }
 
     public boolean usernameExists(String username) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from
+                                                                       // nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     public boolean emailExists(String email) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        // Implementation would go here
+        return false;
+    }
+
+    /**
+     * Find an instructor by their user ID (alias for getInstructorBySuperUserId)
+     *
+     * @param superUserId The ID of the super user who is an instructor
+     * @return Instructor object or null if not found
+     */
+    public Instructor findByUserId(int superUserId) {
+        return getInstructorBySuperUserId(superUserId);
+    }
+
+    public List<Instructor> getAllInstructorsExcept(int exceptInstructorId) {
+        List<Instructor> instructors = new ArrayList<>();
+        String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
+                + "i.ApprovalDate, su.FullName, su.Email "
+                + "FROM Instructors i "
+                + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
+                + "WHERE i.InstructorID <> ?";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, exceptInstructorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Instructor instructor = new Instructor();
+                    instructor.setInstructorID(rs.getInt("InstructorID"));
+                    instructor.setSuperUserID(rs.getInt("SuperUserID"));
+                    instructor.setBiography(rs.getString("Biography"));
+                    instructor.setSpecialization(rs.getString("Specialization"));
+                    instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
+                    instructor.setName(rs.getString("FullName"));
+                    instructor.setEmail(rs.getString("Email"));
+                    instructors.add(instructor);
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error getting instructors except id " + exceptInstructorId + ": " + ex.getMessage());
+        }
+        return instructors;
     }
 
 }

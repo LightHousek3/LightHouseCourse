@@ -185,7 +185,7 @@ GO
 -- Table RefundRequests (depend on Orders and Customers)
 CREATE TABLE RefundRequests (
     RefundID INT IDENTITY(1,1) PRIMARY KEY,
-    OrderID INT NOT NULL,
+    OrderID INT,
     CustomerID INT NOT NULL,
     RequestDate DATETIME DEFAULT GETDATE(),
     Status NVARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
@@ -195,7 +195,7 @@ CREATE TABLE RefundRequests (
     AdminMessage NVARCHAR(500) NULL,
     RefundPercentage INT NOT NULL DEFAULT 80, -- Default refund percentage
     ProcessedBy INT NULL,
-    CONSTRAINT FK_RefundRequests_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    CONSTRAINT FK_RefundRequests_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE SET NULL,
     CONSTRAINT FK_RefundRequests_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE CASCADE,
     CONSTRAINT FK_RefundRequests_ProcessedBy FOREIGN KEY (ProcessedBy) REFERENCES SuperUsers(SuperUserID)
 );
@@ -277,8 +277,8 @@ CREATE TABLE PaymentTransactions (
     ProviderTransactionID NVARCHAR(100) NOT NULL,
     BankAccountInfo NVARCHAR(255) NULL,
     CreatedAt DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
-    FOREIGN KEY (RefundRequestID) REFERENCES RefundRequests(RefundID)
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
+    FOREIGN KEY (RefundRequestID) REFERENCES RefundRequests(RefundID) ON DELETE CASCADE
 );
 GO
 
@@ -472,7 +472,6 @@ INSERT INTO Orders (CustomerID, OrderDate, TotalAmount, Status)
 VALUES 
 (1, DATEADD(day, -60, GETDATE()), 2700000, 'completed'),
 (1, DATEADD(day, -45, GETDATE()), 1100050, 'completed'),
-(1, DATEADD(day, -30, GETDATE()), 1500000, 'completed'),
 (2, DATEADD(day, -55, GETDATE()), 1500000, 'completed'),
 (3, DATEADD(day, -50, GETDATE()), 2800000, 'completed'),
 (4, DATEADD(day, -40, GETDATE()), 1700000, 'completed'),
@@ -482,17 +481,17 @@ VALUES
 (8, DATEADD(day, -20, GETDATE()), 1750000, 'completed'),
 (9, DATEADD(day, -15, GETDATE()), 2290000, 'completed'),
 (10, DATEADD(day, -10, GETDATE()), 1500000, 'completed'),
-(11, DATEADD(day, -5, GETDATE()), 3100000, 'completed'),
+(11, DATEADD(day, -5, GETDATE()), 1400000, 'completed'),
 (12, DATEADD(day, -4, GETDATE()), 1000050, 'pending'),
 (13, DATEADD(day, -3, GETDATE()), 890000, 'pending'),
-(14, DATEADD(day, -2, GETDATE()), 2350000, 'pending');
+(14, DATEADD(day, -2, GETDATE()), 2900000, 'pending');
 
 -- Insert OrderDetails
 INSERT INTO OrderDetails (OrderID, CourseID, Price)
 VALUES 
-(1, 1, 1500000), (1, 2, 1200000), (2, 3, 1100050), (3, 1, 1500000), (4, 1, 1500000), (5, 1, 1500000), 
-(5, 6, 1300000), (6, 4, 1700000), (7, 5, 1000050), (7, 10, 1500000), (8, 6, 1300000), (9, 7, 1400000), 
-(10, 11, 1750000), (11, 9, 890000), (11, 12, 1400000), (12, 1, 1500000), (12, 7, 1400000), (13, 5, 1000050), 
+(1, 1, 1500000), (1, 2, 1200000), (2, 3, 1100050), (3, 1, 1500000), (4, 1, 1500000), 
+(4, 6, 1300000), (5, 4, 1700000), (6, 5, 1000050), (6, 10, 1500000), (7, 6, 1300000), (8, 7, 1400000), 
+(9, 11, 1750000), (10, 9, 890000), (10, 12, 1400000), (11, 1, 1500000), (12, 7, 1400000), (13, 5, 1000050), 
 (14, 9, 890000), (15, 6, 1300000), (15, 10, 1600000);
 
 -- Insert CartItems
@@ -740,16 +739,16 @@ VALUES
 (19, 'Working with REST APIs', 'Fetching and processing data from APIs', '/assets/videos/python-apis.mp4', 2200),
 (20, 'Processing Large Datasets', 'Techniques for handling big data in Python', '/assets/videos/big-data-python.mp4', 2600),
 -- React Native Mobile Apps (CourseID 3)
-(21, 'Setting Up React Native Environment', 'Guide to setting up React Native development environment', '/assets/videos/react-native-setup.mp4', 2000),
-(22, 'Building Your First React Native App', 'Step-by-step app creation tutorial', '/assets/videos/react-native-first-app.mp4', 2800),
-(23, 'Navigation in React Native', 'Implementing navigation using React Navigation', '/assets/videos/react-native-navigation.mp4', 2500),
-(24, 'State Management with Redux', 'Managing app state with Redux', '/assets/videos/react-native-redux.mp4', 2700),
-(25, 'Using Native Components', 'Integrating device-native features', '/assets/videos/react-native-native-components.mp4', 2400),
-(26, 'Handling User Input', 'Managing forms and user interactions', '/assets/videos/react-native-user-input.mp4', 2200),
-(27, 'Networking with APIs', 'Connecting to REST APIs in React Native', '/assets/videos/react-native-networking.mp4', 2600),
-(28, 'Deploying to App Stores', 'Publishing apps to Google Play and App Store', '/assets/videos/react-native-deployment.mp4', 3000),
-(29, 'Performance Optimization', 'Optimizing React Native apps for performance', '/assets/videos/react-native-performance.mp4', 2300),
-(30, 'Final Project Walkthrough', 'Building a complete React Native app', '/assets/videos/react-native-final-project.mp4', 3600),
+(21, 'Setting Up React Native Environment', 'Guide to setting up React Native development environment', '/assets/videos/react-native-setup.mp4', 179),
+(22, 'Building Your First React Native App', 'Step-by-step app creation tutorial', '/assets/videos/react-native-first-app.mp4', 350),
+(23, 'Navigation in React Native', 'Implementing navigation using React Navigation', '/assets/videos/react-native-navigation.mp4', 175),
+(24, 'State Management with Redux', 'Managing app state with Redux', '/assets/videos/react-native-redux.mp4', 173),
+(25, 'Using Native Components', 'Integrating device-native features', '/assets/videos/react-native-native-components.mp4', 178),
+(26, 'Handling User Input', 'Managing forms and user interactions', '/assets/videos/react-native-user-input.mp4', 131),
+(27, 'Networking with APIs', 'Connecting to REST APIs in React Native', '/assets/videos/react-native-networking.mp4', 169),
+(28, 'Deploying to App Stores', 'Publishing apps to Google Play and App Store', '/assets/videos/react-native-deployment.mp4', 179),
+(29, 'Performance Optimization', 'Optimizing React Native apps for performance', '/assets/videos/react-native-performance.mp4', 164),
+(30, 'Final Project Walkthrough', 'Building a complete React Native app', '/assets/videos/react-native-final-project.mp4', 167),
 -- Game Development with Unity (CourseID 4)
 (31, 'Unity Interface Overview', 'Introduction to Unity editor and tools', '/assets/videos/unity-intro.mp4', 2000),
 (32, 'Game Objects and Components', 'Working with Unity game objects', '/assets/videos/unity-game-objects.mp4', 2200),
@@ -1513,7 +1512,7 @@ VALUES
 (23, 'What does createStackNavigator do in React Navigation?', 'multiple_choice', 1, 2),
 (24, 'Which hook manages state in a functional React Native component?', 'multiple_choice', 1, 1),
 (24, 'What is the purpose of the useEffect hook in React Native?', 'multiple_choice', 1, 2),
-(25, 'Which React Native API accesses the device�s geolocation?', 'multiple_choice', 1, 1),
+(25, 'Which React Native API accesses the device''s geolocation?', 'multiple_choice', 1, 1),
 (25, 'What does the PermissionsAndroid.request method do?', 'multiple_choice', 1, 2),
 (26, 'Which component handles user text input in React Native?', 'multiple_choice', 1, 1),
 (26, 'What prop of TextInput triggers on text change?', 'multiple_choice', 1, 2),
@@ -1529,7 +1528,7 @@ VALUES
 (31, 'Which Unity window allows scene editing?', 'multiple_choice', 1, 1),
 (31, 'What is the purpose of the Project window in Unity?', 'multiple_choice', 1, 2),
 (32, 'What is the core building block of a Unity scene?', 'multiple_choice', 1, 1),
-(32, 'Which Unity component defines an object�s position?', 'multiple_choice', 1, 2),
+(32, 'Which Unity component defines an object''s position?', 'multiple_choice', 1, 2),
 (33, 'Which method in MonoBehaviour runs once at startup?', 'multiple_choice', 1, 1),
 (33, 'What is the purpose of the Update method in Unity?', 'multiple_choice', 1, 2),
 (34, 'Which Unity component detects physical collisions?', 'multiple_choice', 1, 1),
@@ -1564,7 +1563,7 @@ VALUES
 (48, 'What is the principle of mobile-first design?', 'multiple_choice', 1, 1),
 (48, 'Why is responsive design essential for mobile apps?', 'multiple_choice', 1, 2),
 -- Advanced JavaScript (CourseID 6, LessonIDs 49-58, QuizIDs 49-58, QuestionIDs 97-116)
-(49, 'What determines a variable�s scope in JavaScript?', 'multiple_choice', 1, 1),
+(49, 'What determines a variable''s scope in JavaScript?', 'multiple_choice', 1, 1),
 (49, 'What is a common use of closures in event handlers?', 'multiple_choice', 1, 2),
 (50, 'What is a closure in JavaScript?', 'multiple_choice', 1, 1),
 (50, 'How does the "this" keyword behave in a closure?', 'multiple_choice', 1, 2),
@@ -1613,7 +1612,7 @@ VALUES
 (70, 'What is the role of the Controller in MVC?', 'multiple_choice', 1, 2),
 (71, 'Which framework builds traditional iOS UIs?', 'multiple_choice', 1, 1),
 (71, 'What is a UITableView used for in UIKit?', 'multiple_choice', 1, 2),
-(72, 'What is the benefit of SwiftUI�s declarative syntax?', 'multiple_choice', 1, 1),
+(72, 'What is the benefit of SwiftUI''s declarative syntax?', 'multiple_choice', 1, 1),
 (72, 'What does the @State property wrapper do in SwiftUI?', 'multiple_choice', 1, 2),
 (73, 'Which iOS framework stores persistent data?', 'multiple_choice', 1, 1),
 (73, 'What is the purpose of UserDefaults in iOS?', 'multiple_choice', 1, 2),
@@ -1669,7 +1668,7 @@ VALUES
 (97, 'Why is version control critical in DevOps?', 'multiple_choice', 1, 2),
 -- Ethical Hacking (CourseID 11, LessonIDs 98-109, QuizIDs 98-109, QuestionIDs 195-218)
 (98, 'What is the purpose of ethical hacking?', 'multiple_choice', 1, 1),
-(98, 'What is a penetration test�s primary goal?', 'multiple_choice', 1, 2),
+(98, 'What is a penetration test''s primary goal?', 'multiple_choice', 1, 2),
 (99, 'Which reconnaissance technique gathers public data?', 'multiple_choice', 1, 1),
 (99, 'What does OSINT stand for in ethical hacking?', 'multiple_choice', 1, 2),
 (100, 'Which tool scans network ports?', 'multiple_choice', 1, 1),
@@ -1677,7 +1676,7 @@ VALUES
 (101, 'What does enumeration identify in a network?', 'multiple_choice', 1, 1),
 (101, 'Which protocol is used in SMB enumeration?', 'multiple_choice', 1, 2),
 (102, 'Which tool assesses system vulnerabilities?', 'multiple_choice', 1, 1),
-(102, 'What is a vulnerability scanner�s output?', 'multiple_choice', 1, 2),
+(102, 'What is a vulnerability scanner''s output?', 'multiple_choice', 1, 2),
 (103, 'What is privilege escalation in system hacking?', 'multiple_choice', 1, 1),
 (103, 'Which technique exploits weak passwords?', 'multiple_choice', 1, 2),
 (104, 'What is a keylogger in malware attacks?', 'multiple_choice', 1, 1),
@@ -1686,7 +1685,7 @@ VALUES
 (105, 'What is the purpose of packet sniffing?', 'multiple_choice', 1, 2),
 (106, 'What is phishing in social engineering?', 'multiple_choice', 1, 1),
 (106, 'What is the goal of pretexting?', 'multiple_choice', 1, 2),
-(107, 'What is a DoS attack�s objective?', 'multiple_choice', 1, 1),
+(107, 'What is a DoS attack''s objective?', 'multiple_choice', 1, 1),
 (107, 'What distinguishes a DDoS attack?', 'multiple_choice', 1, 2),
 (108, 'What is session hijacking in web security?', 'multiple_choice', 1, 1),
 (108, 'How are session cookies exploited?', 'multiple_choice', 1, 2),
@@ -1754,16 +1753,16 @@ VALUES
 (138, 'What integrates devices in an IoT system?', 'multiple_choice', 1, 1),
 (138, 'What is the role of an IoT gateway?', 'multiple_choice', 1, 2),
 (139, 'Which protocol is common in smart home devices?', 'multiple_choice', 1, 1),
-(139, 'What is a smart home hub�s function?', 'multiple_choice', 1, 2),
+(139, 'What is a smart home hub''s function?', 'multiple_choice', 1, 2),
 -- Vue.js for Frontend Development (CourseID 15, LessonIDs 140-149, QuizIDs 140-149, QuestionIDs 279-298)
 (140, 'What is the core feature of Vue.js?', 'multiple_choice', 1, 1),
 (140, 'What does the data property do in a Vue instance?', 'multiple_choice', 1, 2),
-(141, 'What is a Vue component�s structure?', 'multiple_choice', 1, 1),
+(141, 'What is a Vue component''s structure?', 'multiple_choice', 1, 1),
 (141, 'What is the purpose of props in Vue.js?', 'multiple_choice', 1, 2),
 (142, 'Which Vue directive binds data to HTML attributes?', 'multiple_choice', 1, 1),
 (142, 'What does the v-if directive control?', 'multiple_choice', 1, 2),
-(143, 'What powers Vue.js�s reactivity system?', 'multiple_choice', 1, 1),
-(143, 'What is a computed property�s benefit?', 'multiple_choice', 1, 2),
+(143, 'What powers Vue.js''s reactivity system?', 'multiple_choice', 1, 1),
+(143, 'What is a computed property''s benefit?', 'multiple_choice', 1, 2),
 (144, 'What does Vue Router manage in a Vue app?', 'multiple_choice', 1, 1),
 (144, 'What is a dynamic route in Vue Router?', 'multiple_choice', 1, 2),
 (145, 'What is the purpose of Vuex in Vue.js?', 'multiple_choice', 1, 1),
@@ -1784,18 +1783,18 @@ VALUES
 (152, 'What does a Django view handle?', 'multiple_choice', 1, 1),
 (152, 'What is the role of a Django template?', 'multiple_choice', 1, 2),
 (153, 'What does a Django form validate?', 'multiple_choice', 1, 1),
-(153, 'What is a ModelForm�s advantage?', 'multiple_choice', 1, 2),
+(153, 'What is a ModelForm''s advantage?', 'multiple_choice', 1, 2),
 (154, 'What is the Django admin interface used for?', 'multiple_choice', 1, 1),
 (154, 'How do you create a Django superuser?', 'multiple_choice', 1, 2),
 (155, 'Which Django module handles user authentication?', 'multiple_choice', 1, 1),
 (155, 'What does the login_required decorator do?', 'multiple_choice', 1, 2),
 (156, 'What does Django REST Framework build?', 'multiple_choice', 1, 1),
-(156, 'What is a serializer�s role in Django REST?', 'multiple_choice', 1, 2),
+(156, 'What is a serializer''s role in Django REST?', 'multiple_choice', 1, 2),
 (157, 'Which Django class tests views?', 'multiple_choice', 1, 1),
 (157, 'What does the Django test client simulate?', 'multiple_choice', 1, 2),
 (158, 'What does Gunicorn do in Django deployment?', 'multiple_choice', 1, 1),
 (158, 'What is the role of Nginx in Django?', 'multiple_choice', 1, 2),
-(159, 'What is a Django app�s structure?', 'multiple_choice', 1, 1),
+(159, 'What is a Django app''s structure?', 'multiple_choice', 1, 1),
 (159, 'What does the manage.py file execute?', 'multiple_choice', 1, 2);
 
 -- Insert Answers
