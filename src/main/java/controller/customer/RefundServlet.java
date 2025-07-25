@@ -18,11 +18,12 @@ import util.RefundUtil;
 import model.OrderDetail;
 
 /**
- * Servlet handling refund-related operations.
- * Manages user refund requests and admin processing of those requests.
+ * Servlet handling refund-related operations. Manages user refund requests and
+ * admin processing of those requests.
  */
 @WebServlet("/refund/*")
 public class RefundServlet extends HttpServlet {
+
     private static final long serialVersionUID = 1L;
 
     private RefundRequestDAO refundDAO;
@@ -43,7 +44,7 @@ public class RefundServlet extends HttpServlet {
 
     /**
      * Handles GET requests for refund operations
-     * 
+     *
      * @param request
      * @param response
      */
@@ -67,7 +68,11 @@ public class RefundServlet extends HttpServlet {
             try {
                 int orderId = Integer.parseInt(pathInfo.substring("/request/order/".length()));
                 Order order = orderDAO.getOrderById(orderId);
-
+                boolean isEligibleForRefund = RefundUtil.isEntireOrderEligibleForRefund(order, customer.getCustomerID());
+                if (!isEligibleForRefund) {
+                    response.sendRedirect(request.getContextPath() + "/order/history");
+                    return;
+                }
                 if (order == null) {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Order not found");
                     return;
@@ -132,7 +137,11 @@ public class RefundServlet extends HttpServlet {
             try {
                 int orderId = Integer.parseInt(pathInfo.substring("/request/order/".length()));
                 Order order = orderDAO.getOrderById(orderId);
-
+                boolean isEligibleForRefund = RefundUtil.isEntireOrderEligibleForRefund(order, customer.getCustomerID());
+                if (!isEligibleForRefund) {
+                    response.sendRedirect(request.getContextPath() + "/order/history");
+                    return;
+                }
                 if (order == null) {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Order not found");
                     return;
