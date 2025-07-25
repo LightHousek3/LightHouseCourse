@@ -279,6 +279,7 @@ public class LessonDAO extends DBContext {
                 progress.setCustomerID(rs.getInt("CustomerID"));
                 progress.setLessonID(rs.getInt("LessonID"));
                 progress.setIsCompleted(rs.getBoolean("IsCompleted"));
+                progress.setCompletionPercentage(rs.getBigDecimal("CompletionPercentage"));
                 progress.setCompletionDate(rs.getTimestamp("CompletionDate"));
                 progress.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
             }

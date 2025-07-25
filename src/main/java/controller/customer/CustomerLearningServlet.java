@@ -8,11 +8,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.math.BigDecimal;
-
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal;
 
 import dao.CourseDAO;
 import dao.OrderDAO;
@@ -35,6 +34,7 @@ import model.Customer;
 import util.Validator;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import model.LessonProgress;
 
 /**
  * Learning controller for handling course learning pages.
@@ -364,9 +364,8 @@ public class CustomerLearningServlet extends HttpServlet {
      */
     private void handleMarkComplete(HttpServletRequest request, HttpServletResponse response, Customer customer)
             throws IOException {
-
+        // Parse JSON request
         JsonObject requestData = parseJsonRequest(request);
-
         if (!requestData.has("type") || !requestData.has("id") || !requestData.has("lessonId")) {
             sendJsonResponse(response, false, "Missing required parameters");
             return;
@@ -382,7 +381,7 @@ public class CustomerLearningServlet extends HttpServlet {
             Course course = getCourse(lesson.getCourseID());
             LessonItem lessonItem = getLessonItem(type, itemId);
 
-            // Mark as complete
+            // Mark as complete - this will update lesson and course progress automatically
             boolean success = lessonItemProgressDAO.markItemComplete(
                     customer.getCustomerID(), lessonItem.getLessonItemID());
 
@@ -391,11 +390,16 @@ public class CustomerLearningServlet extends HttpServlet {
                 return;
             }
 
-            // Recalculate progress
-            progressDAO.recalculateProgress(customer.getCustomerID(), course.getCourseID());
-
             // Check if lesson is complete
             boolean lessonComplete = isLessonComplete(lesson, customer.getCustomerID());
+
+            // Get lesson progress percentage
+            LessonProgress lessonProgress = lessonDAO.getLessonProgress(customer.getCustomerID(), lessonId);
+            BigDecimal lessonCompletionPercentage = lessonProgress != null ? lessonProgress.getCompletionPercentage()
+                    : BigDecimal.ZERO;
+
+            CourseProgress courseProgress = progressDAO.getByCustomerAndCourse(
+                    customer.getCustomerID(), course.getCourseID());
 
             // Get next navigation item
             Map<String, Object> nextItem = findNextNavigationItem(course, lesson, lessonItem);
@@ -405,9 +409,9 @@ public class CustomerLearningServlet extends HttpServlet {
             responseObj.addProperty("success", true);
             responseObj.addProperty("message", "Content marked as complete");
             responseObj.addProperty("lessonComplete", lessonComplete);
+            responseObj.addProperty("lessonCompletionPercentage", lessonCompletionPercentage.doubleValue());
             responseObj.addProperty("newCompletionPercentage",
-                    progressDAO.getByCustomerAndCourse(customer.getCustomerID(), course.getCourseID())
-                            .getCompletionPercentage().doubleValue());
+                    courseProgress != null ? courseProgress.getCompletionPercentage().doubleValue() : 0);
 
             if (nextItem != null) {
                 responseObj.addProperty("nextType", (String) nextItem.get("type"));
@@ -1044,7 +1048,6 @@ public class CustomerLearningServlet extends HttpServlet {
             // Find the first incomplete item in this lesson
             for (LessonItem item : lesson.getLessonItems()) {
                 boolean isCompleted = lessonItemProgressDAO.isItemCompleted(customerId, item.getLessonItemID());
-
                 if (!isCompleted) {
                     // This is the next item to complete
                     Map<String, Object> progressPoint = new HashMap<>();

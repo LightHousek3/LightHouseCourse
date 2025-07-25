@@ -77,8 +77,13 @@ public class RefundUtil {
         // Check time condition
         boolean isWithinTimeLimit = daysSincePurchase <= 7;
 
-        // Check order status
+        // Check order status - orders with "refund_pending" status are not eligible
         boolean hasValidStatus = "completed".equals(order.getStatus()) || "paid".equals(order.getStatus());
+        boolean hasInvalidStatus = "refund_pending".equals(order.getStatus()) || "refunded".equals(order.getStatus());
+
+        if (hasInvalidStatus) {
+            return false;
+        }
 
         // Check payment method (can add more conditions if needed)
         boolean hasValidPaymentMethod = order.getPaymentMethod() != null && !order.getPaymentMethod().isEmpty();
@@ -122,9 +127,11 @@ public class RefundUtil {
             return false;
         }
 
-        // Check order status
+        // Check order status - orders with "refund_pending" status are not eligible
         boolean hasValidStatus = "completed".equals(order.getStatus()) || "paid".equals(order.getStatus());
-        if (!hasValidStatus) {
+        boolean hasInvalidStatus = "refund_pending".equals(order.getStatus()) || "refunded".equals(order.getStatus());
+
+        if (!hasValidStatus || hasInvalidStatus) {
             return false;
         }
 

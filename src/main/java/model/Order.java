@@ -12,7 +12,7 @@ public class Order {
     private int customerID;
     private Timestamp orderDate;
     private double totalAmount;
-    private String status; // 'pending', 'completed', 'cancelled', 'refunded'
+    private String status; // 'pending', 'completed', 'refunded', 'refund_pending'
     private String paymentMethod; // 'VNPAY' hoặc 'MOMO'
     private String paymentTransactionID;
     private String paymentData;
@@ -39,7 +39,6 @@ public class Order {
         this.orderDetails = new ArrayList<>();
         this.attributes = new HashMap<>();
     }
-
 
     public int getOrderID() {
         return orderID;

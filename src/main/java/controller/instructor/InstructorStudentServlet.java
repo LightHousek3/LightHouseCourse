@@ -6,7 +6,6 @@ import dao.InstructorDAO;
 import dao.LessonDAO;
 import dao.LessonItemDAO;
 import dao.OrderDAO;
-import dao.OrderDetailDAO;
 import dao.VideoDAO;
 import dao.MaterialDAO;
 import dao.QuizDAO;
@@ -67,10 +66,17 @@ public class InstructorStudentServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession();
-        SuperUser user = (SuperUser) session.getAttribute("user");
+        SuperUser user;
+        
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
         if (user == null) {
-            response.sendRedirect(request.getContextPath() + "/auth/login");
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 

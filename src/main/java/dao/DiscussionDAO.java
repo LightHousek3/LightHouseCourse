@@ -28,10 +28,10 @@ public class DiscussionDAO extends DBContext {
     /**
      * Count discussions for a list of courses with filtering
      *
-     * @param courseIds List of course IDs to check
-     * @param courseId Specific course ID to filter by (optional)
-     * @param lessonId Specific lesson ID to filter by (optional)
-     * @param resolved Filter by resolved status (optional)
+     * @param courseIds  List of course IDs to check
+     * @param courseId   Specific course ID to filter by (optional)
+     * @param lessonId   Specific lesson ID to filter by (optional)
+     * @param resolved   Filter by resolved status (optional)
      * @param searchTerm Search term to filter by (optional)
      * @return Count of discussions matching the criteria
      */
@@ -112,13 +112,13 @@ public class DiscussionDAO extends DBContext {
     /**
      * Get discussions for a list of courses with filtering and pagination
      *
-     * @param courseIds List of course IDs to check
-     * @param courseId Specific course ID to filter by (optional)
-     * @param lessonId Specific lesson ID to filter by (optional)
-     * @param resolved Filter by resolved status (optional)
+     * @param courseIds  List of course IDs to check
+     * @param courseId   Specific course ID to filter by (optional)
+     * @param lessonId   Specific lesson ID to filter by (optional)
+     * @param resolved   Filter by resolved status (optional)
      * @param searchTerm Search term to filter by (optional)
-     * @param page Page number (1-based)
-     * @param pageSize Number of discussions per page
+     * @param page       Page number (1-based)
+     * @param pageSize   Number of discussions per page
      * @return List of discussions matching the criteria
      */
     public List<Discussion> getDiscussionsForCourses(List<Integer> courseIds, Integer courseId, Integer lessonId,
@@ -257,7 +257,7 @@ public class DiscussionDAO extends DBContext {
      * Update a discussion's resolved status
      *
      * @param discussionId The discussion ID
-     * @param resolved The new resolved status
+     * @param resolved     The new resolved status
      * @return True if successful, false otherwise
      */
     public boolean updateDiscussionResolved(int discussionId, boolean resolved) {
@@ -278,6 +278,121 @@ public class DiscussionDAO extends DBContext {
             System.out.println("Error updating discussion resolved status: " + ex.getMessage());
         } finally {
             closeResources(rs, ps, conn);
+        }
+
+        return success;
+    }
+
+    /**
+     * Update a discussion's content
+     *
+     * @param discussionId The discussion ID
+     * @param authorId     The author ID (for security check)
+     * @param content      The new content
+     * @return True if successful, false otherwise
+     */
+    public boolean updateDiscussion(int discussionId, int authorId, String content) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = false;
+
+        try {
+            conn = getConnection();
+
+            // First check if the user is the author
+            String checkQuery = "SELECT AuthorID FROM Discussions WHERE DiscussionID = ? AND AuthorID = ? AND AuthorType = 'customer'";
+            ps = conn.prepareStatement(checkQuery);
+            ps.setInt(1, discussionId);
+            ps.setInt(2, authorId);
+
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                // User is not the author or discussion doesn't exist
+                return false;
+            }
+
+            rs.close();
+            ps.close();
+
+            // Update the discussion
+            String updateQuery = "UPDATE Discussions SET Content = ?, UpdatedAt = GETDATE() WHERE DiscussionID = ?";
+            ps = conn.prepareStatement(updateQuery);
+            ps.setString(1, content);
+            ps.setInt(2, discussionId);
+
+            int rowsAffected = ps.executeUpdate();
+            success = rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(null, ps, conn);
+        }
+
+        return success;
+    }
+
+    /**
+     * Delete a discussion and all its replies
+     *
+     * @param discussionId The discussion ID
+     * @param authorId     The author ID (for security check)
+     * @return True if successful, false otherwise
+     */
+    public boolean deleteDiscussion(int discussionId, int authorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = false;
+
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false); // Start transaction
+
+            // First check if the user is the author
+            String checkQuery = "SELECT AuthorID FROM Discussions WHERE DiscussionID = ? AND AuthorID = ? AND AuthorType = 'customer'";
+            ps = conn.prepareStatement(checkQuery);
+            ps.setInt(1, discussionId);
+            ps.setInt(2, authorId);
+
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                // User is not the author or discussion doesn't exist
+                conn.rollback();
+                return false;
+            }
+
+            rs.close();
+            ps.close();
+
+            // Delete the discussion (replies will be deleted by CASCADE constraint)
+            String deleteQuery = "DELETE FROM Discussions WHERE DiscussionID = ?";
+            ps = conn.prepareStatement(deleteQuery);
+            ps.setInt(1, discussionId);
+
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                conn.commit();
+                success = true;
+            } else {
+                conn.rollback();
+            }
+        } catch (SQLException e) {
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            closeResources(null, ps, conn);
         }
 
         return success;
@@ -362,63 +477,6 @@ public class DiscussionDAO extends DBContext {
         }
 
         return discussion;
-    }
-
-    /**
-     * Delete a discussion and all its replies
-     *
-     * @param discussionId The discussion ID
-     * @return True if successful, false otherwise
-     */
-    public boolean deleteDiscussion(int discussionId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        boolean success = false;
-
-        try {
-            conn = getConnection();
-            conn.setAutoCommit(false); // Start transaction
-
-            // First delete all replies
-            String deleteRepliesQuery = "DELETE FROM DiscussionReplies WHERE DiscussionID = ?";
-            ps = conn.prepareStatement(deleteRepliesQuery);
-            ps.setInt(1, discussionId);
-            ps.executeUpdate();
-            ps.close();
-
-            // Then delete the discussion
-            String deleteDiscussionQuery = "DELETE FROM Discussions WHERE DiscussionID = ?";
-            ps = conn.prepareStatement(deleteDiscussionQuery);
-            ps.setInt(1, discussionId);
-            int rowsAffected = ps.executeUpdate();
-
-            if (rowsAffected > 0) {
-                conn.commit();
-                success = true;
-            } else {
-                conn.rollback();
-            }
-        } catch (SQLException ex) {
-            System.out.println("Error deleting discussion: " + ex.getMessage());
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException e) {
-                    System.out.println("Error rolling back transaction: " + e.getMessage());
-                }
-            }
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException e) {
-                    System.out.println("Error resetting auto-commit: " + e.getMessage());
-                }
-            }
-            closeResources(null, ps, conn);
-        }
-
-        return success;
     }
 
     /**

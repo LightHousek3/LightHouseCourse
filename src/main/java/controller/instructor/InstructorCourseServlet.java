@@ -118,13 +118,18 @@ public class InstructorCourseServlet extends HttpServlet {
 
         // Check if user is logged in
         HttpSession session = request.getSession();
-        // Test account exist
-        SuperUser superUser = new SuperUser();
-        superUser.setSuperUserID(4);
-        superUser.setAvatar("/assets/imgs/avatars/instructor1.png");
-        session.setAttribute("user", superUser);
-        // End test
-        SuperUser user = (SuperUser) session.getAttribute("user");
+        SuperUser user;
+        
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
         // Get instructor information using getInstructorBySuperUserId
         Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
         // Add instructor to request attributes
@@ -171,13 +176,14 @@ public class InstructorCourseServlet extends HttpServlet {
         String pathInfo = request.getPathInfo();
         // Check if user is logged in
         HttpSession session = request.getSession();
-        // Test account exist
-        SuperUser superUser = new SuperUser();
-        superUser.setSuperUserID(4);
-        superUser.setAvatar("/assets/imgs/avatars/instructor1.png");
-        session.setAttribute("user", superUser);
-        // End test
-        SuperUser user = (SuperUser) session.getAttribute("user");
+        SuperUser user;
+        
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         // Get instructor information using getInstructorBySuperUserId
         Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
         // Add instructor to request attributes

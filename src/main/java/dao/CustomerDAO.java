@@ -501,7 +501,7 @@ public class CustomerDAO extends DBContext {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<LessonProgress> progressList = new ArrayList<>();
-        String query = "SELECT [ProgressID], [CustomerID], [LessonID], [IsCompleted], [CompletionDate], [LastAccessDate] "
+        String query = "SELECT [ProgressID], [CustomerID], [LessonID], [IsCompleted], [CompletionPercentage], [CompletionDate], [LastAccessDate] "
                 + "FROM [LightHouseCourse].[dbo].[LessonProgress] WHERE [CustomerID] = ?";
         try {
             conn = getConnection();
@@ -514,6 +514,7 @@ public class CustomerDAO extends DBContext {
                 lp.setCustomerID(rs.getInt("CustomerID"));
                 lp.setLessonID(rs.getInt("LessonID"));
                 lp.setIsCompleted(rs.getBoolean("IsCompleted"));
+                lp.setCompletionPercentage(rs.getBigDecimal("CompletionPercentage"));
                 lp.setCompletionDate(rs.getTimestamp("CompletionDate"));
                 lp.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
                 progressList.add(lp);
@@ -568,7 +569,7 @@ public class CustomerDAO extends DBContext {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<LessonProgress> progressList = new ArrayList<>();
-        String query = "SELECT lp.[ProgressID], lp.[CustomerID], lp.[LessonID], lp.[IsCompleted], lp.[CompletionDate], lp.[LastAccessDate] "
+        String query = "SELECT lp.[ProgressID], lp.[CustomerID], lp.[LessonID], lp.[IsCompleted], lp.[CompletionPercentage], lp.[CompletionDate], lp.[LastAccessDate] "
                 + "FROM [LightHouseCourse].[dbo].[LessonProgress] lp "
                 + "JOIN [LightHouseCourse].[dbo].[Lessons] l ON lp.LessonID = l.LessonID "
                 + "WHERE lp.[CustomerID] = ? AND l.[CourseID] = ?";
@@ -585,6 +586,7 @@ public class CustomerDAO extends DBContext {
                 lp.setCustomerID(rs.getInt("CustomerID"));
                 lp.setLessonID(rs.getInt("LessonID"));
                 lp.setIsCompleted(rs.getBoolean("IsCompleted"));
+                lp.setCompletionPercentage(rs.getBigDecimal("CompletionPercentage"));
                 lp.setCompletionDate(rs.getTimestamp("CompletionDate"));
                 lp.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
                 progressList.add(lp);

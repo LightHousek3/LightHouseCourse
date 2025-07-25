@@ -53,8 +53,18 @@ public class InstructorDiscussionServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        SuperUser user = (SuperUser) session.getAttribute("user");
-
+        SuperUser user;
+        
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
         // Get instructor information using getInstructorBySuperUserId
         Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
         if (instructor == null) {
@@ -90,7 +100,14 @@ public class InstructorDiscussionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        SuperUser user = (SuperUser) session.getAttribute("user");
+        SuperUser user;
+        
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
         // Get instructor information
         Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
@@ -521,7 +538,7 @@ public class InstructorDiscussionServlet extends HttpServlet {
             int discussionId = Integer.parseInt(discussionIdParam);
 
             // Update the reply (only if it belongs to this instructor)
-            boolean success = replyDAO.updateReply(replyId, content, instructor.getInstructorID(), "instructor");
+            boolean success = replyDAO.updateReply(replyId, instructor.getInstructorID(), "instructor", content);
 
             if (success) {
                 response.sendRedirect(request.getContextPath()

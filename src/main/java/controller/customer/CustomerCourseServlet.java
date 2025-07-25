@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import model.Course;
 import model.Category;
-import model.Customer;
 import util.Validator;
 import java.util.Collections;
 import model.Rating;
@@ -26,13 +25,11 @@ import java.util.Comparator;
 import model.CourseProgress;
 import model.Customer;
 import model.OrderDetail;
-import model.Order;
-import util.RefundUtil;
 
 /**
  * Course controller for listing courses and showing course details.
  */
-@WebServlet(name = "CustomerCourseServlet", urlPatterns = { "/courses", "/course/*", "/my-courses" })
+@WebServlet(name = "CustomerCourseServlet", urlPatterns = {"/courses", "/course/*", "/my-courses"})
 public class CustomerCourseServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
@@ -56,10 +53,10 @@ public class CustomerCourseServlet extends HttpServlet {
     /**
      * Handles the HTTP GET request - listing courses or showing details.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -93,10 +90,10 @@ public class CustomerCourseServlet extends HttpServlet {
     /**
      * Show the list of courses with optional filtering.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     private void listCourses(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -115,12 +112,12 @@ public class CustomerCourseServlet extends HttpServlet {
         if (keyword != null && !isValidKeyword(keyword)) {
             request.setAttribute("errorMessage",
                     "Invalid keyword. Requirements:"
-                            + "<ul>"
-                            + "<li>Length 2-50 characters</li>"
-                            + "<li>Must not contain special characters</li>"
-                            + "<li>Maximum 5 words</li>"
-                            + "<li>Must not repeat any word or phrase more than 3 times</li>"
-                            + "</ul>");
+                    + "<ul>"
+                    + "<li>Length 2-50 characters</li>"
+                    + "<li>Must not contain special characters</li>"
+                    + "<li>Maximum 5 words</li>"
+                    + "<li>Must not repeat any word or phrase more than 3 times</li>"
+                    + "</ul>");
             request.setAttribute("keyword", keyword);
             keyword = null;
         }
@@ -301,10 +298,10 @@ public class CustomerCourseServlet extends HttpServlet {
     /**
      * Show the details of a specific course.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     private void showCourseDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -320,16 +317,6 @@ public class CustomerCourseServlet extends HttpServlet {
 
         int courseId = Integer.parseInt(pathParts[1]);
         Course course = courseDAO.getCourseById(courseId);
-        System.out.println("Course: " + course);
-        if (course != null) {
-            System.out.println("Course Image URL: " + course.getImageUrl());
-
-            // Generate full image path for debugging
-            String fullImagePath = request.getContextPath() + "/" + course.getImageUrl();
-            System.out.println("Full image path: " + fullImagePath);
-        } else {
-            System.out.println("Course is null");
-        }
 
         if (course == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -366,7 +353,6 @@ public class CustomerCourseServlet extends HttpServlet {
         }
         // Get course ratings
         List<Rating> ratings = ratingDAO.getRatingsByCourseId(courseId);
-        List<Order> orders = orderDAO.getOrdersByUserId(user.getCustomerID());
         double averageRating = ratingDAO.getAverageRatingForCourse(courseId);
         int ratingCount = ratingDAO.getRatingCountForCourse(courseId);
 
@@ -380,10 +366,6 @@ public class CustomerCourseServlet extends HttpServlet {
         request.setAttribute("ratings", ratings);
         request.setAttribute("averageRating", averageRating);
         request.setAttribute("ratingCount", ratingCount);
-        for (Order order : orders) {
-            boolean isEligibleForRefund = RefundUtil.isEntireOrderEligibleForRefund(order, user.getCustomerID());
-            order.setAttribute("eligibleForRefund", isEligibleForRefund);
-        }
 
         // Set error message if applicable
         String error = request.getParameter("error");
@@ -413,8 +395,10 @@ public class CustomerCourseServlet extends HttpServlet {
 
     private void showPurchasedCourses(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
+        HttpSession session = request.getSession();
         Customer customer = (Customer) session.getAttribute("user");
+        
+        if(customer == null) return;
 
         try {
             // Get user's purchased courses with order details - now only returns the most

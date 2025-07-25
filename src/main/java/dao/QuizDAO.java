@@ -30,25 +30,40 @@ public class QuizDAO extends DBContext {
      * @return The quiz object, or null if not found
      */
     public Quiz getQuizById(int quizId) {
+        Quiz quiz = null;
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
-        Quiz quiz = null;
 
         try {
             conn = getConnection();
             String sql = "SELECT * FROM Quizzes WHERE QuizID = ?";
+
             ps = conn.prepareStatement(sql);
             ps.setInt(1, quizId);
             rs = ps.executeQuery();
 
             if (rs.next()) {
-                quiz = mapQuiz(rs);
+                quiz = mapRow(rs);
+                // Load questions for the quiz
+                loadQuestionsForQuiz(quiz);
             }
         } catch (SQLException e) {
-            System.err.println("Error getting quiz by ID: " + e.getMessage());
+            e.printStackTrace();
         } finally {
-            closeResources(rs, ps, conn);
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
 
         return quiz;
@@ -61,25 +76,44 @@ public class QuizDAO extends DBContext {
      * @return List of quizzes for the lesson
      */
     public List<Quiz> getQuizzesByLessonId(int lessonId) {
+        List<Quiz> quizzes = new ArrayList<>();
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
-        List<Quiz> quizzes = new ArrayList<>();
 
         try {
             conn = getConnection();
-            String sql = "SELECT * FROM Quizzes WHERE LessonID = ?";
+            String sql = "SELECT * FROM Quizzes WHERE LessonID = ? ORDER BY QuizID";
+
             ps = conn.prepareStatement(sql);
             ps.setInt(1, lessonId);
             rs = ps.executeQuery();
 
             while (rs.next()) {
-                quizzes.add(mapQuiz(rs));
+                Quiz quiz = mapRow(rs);
+                quizzes.add(quiz);
+            }
+
+            // Load questions for each quiz
+            for (Quiz quiz : quizzes) {
+                loadQuestionsForQuiz(quiz);
             }
         } catch (SQLException e) {
-            System.err.println("Error getting quizzes by lesson ID: " + e.getMessage());
+            e.printStackTrace();
         } finally {
-            closeResources(rs, ps, conn);
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
 
         return quizzes;
@@ -361,22 +395,19 @@ public class QuizDAO extends DBContext {
      * @return A Quiz object
      * @throws SQLException If a database error occurs
      */
-    private Quiz mapQuiz(ResultSet rs) throws SQLException {
+    private Quiz mapRow(ResultSet rs) throws SQLException {
         Quiz quiz = new Quiz();
         quiz.setQuizID(rs.getInt("QuizID"));
         quiz.setLessonID(rs.getInt("LessonID"));
         quiz.setTitle(rs.getString("Title"));
         quiz.setDescription(rs.getString("Description"));
-        quiz.setTimeLimit(rs.getObject("TimeLimit", Integer.class));
-        quiz.setPassingScore(rs.getInt("PassingScore"));
-        
-        // Check if the IsActive column exists in the ResultSet
-        try {
-            quiz.setIsActive(rs.getBoolean("IsActive"));
-        } catch (SQLException e) {
-            // If the column doesn't exist, default to true
-            quiz.setIsActive(true);
+
+        int timeLimit = rs.getInt("TimeLimit");
+        if (!rs.wasNull()) {
+            quiz.setTimeLimit(timeLimit);
         }
+
+        quiz.setPassingScore(rs.getInt("PassingScore"));
 
         // Calculate total questions
         Connection conn = null;
@@ -809,7 +840,7 @@ public class QuizDAO extends DBContext {
         String sql = "INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore) VALUES (?, ?, ?, ?, ?)";
         int quizId = -1;
 
-        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             // Set values for the quiz
             ps.setInt(1, quiz.getLessonID());
             ps.setString(2, quiz.getTitle());
@@ -820,7 +851,7 @@ public class QuizDAO extends DBContext {
             // Execute the insert for the quiz
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 1) {
-                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
                         quizId = rs.getInt(1); // Get the generated quiz ID
                         quiz.setQuizID(quizId); // Set the generated quiz ID
@@ -845,7 +876,7 @@ public class QuizDAO extends DBContext {
 
     private void insertQuestionWithConnection(Connection conn, int quizId, Question question) throws SQLException {
         String sql = "INSERT INTO Questions (QuizID, Content, Type, Points, OrderIndex) VALUES (?, ?, ?, ?, ?)";
-        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, quizId);
             ps.setString(2, question.getContent());
             ps.setString(3, "multiple_choice");
@@ -853,7 +884,7 @@ public class QuizDAO extends DBContext {
             ps.setInt(5, question.getOrderIndex());
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 1) {
-                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
                         int questionId = rs.getInt(1);
                         question.setQuestionID(questionId);
@@ -874,7 +905,7 @@ public class QuizDAO extends DBContext {
 
     private void insertAnswerWithConnection(Connection conn, int questionId, Answer answer) throws SQLException {
         String sql = "INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex) VALUES (?, ?, ?, ?)";
-        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, questionId);
             ps.setString(2, answer.getContent());
             ps.setBoolean(3, answer.isCorrect());
@@ -888,7 +919,7 @@ public class QuizDAO extends DBContext {
 
     public boolean updateQuizItem(int quizID, Quiz quiz) {
         String sql = "UPDATE Quizzes SET Title = ?, Description = ?, TimeLimit = ?, PassingScore = ? WHERE QuizID = ?";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, quiz.getTitle());
             ps.setString(2, quiz.getDescription());
             // TimeLimit có thể null
@@ -909,9 +940,10 @@ public class QuizDAO extends DBContext {
     public boolean deleteQuizItem(int quizID) {
         String sqlDeleteLessonItem = "DELETE FROM LessonItems WHERE ItemType = 'quiz' AND ItemID = ?";
         String sqlDeleteQuiz = "DELETE FROM Quizzes WHERE QuizID = ?";
-        try ( Connection conn = getConnection()) {
+        try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
-            try ( PreparedStatement ps1 = conn.prepareStatement(sqlDeleteLessonItem);  PreparedStatement ps2 = conn.prepareStatement(sqlDeleteQuiz)) {
+            try (PreparedStatement ps1 = conn.prepareStatement(sqlDeleteLessonItem);
+                    PreparedStatement ps2 = conn.prepareStatement(sqlDeleteQuiz)) {
                 ps1.setInt(1, quizID);
                 ps1.executeUpdate();
                 ps2.setInt(1, quizID);
@@ -928,16 +960,16 @@ public class QuizDAO extends DBContext {
             return false;
         }
     }
-    
+
     public List<Question> getQuestionsByQuizId(int quizId) {
         List<Question> questions = new ArrayList<>();
         String sql = "SELECT q.QuestionID, q.Content AS QuestionContent, q.Type, q.Points, q.OrderIndex, "
                 + "a.AnswerID, a.Content AS AnswerContent, a.IsCorrect, a.OrderIndex AS AnswerOrder "
                 + "FROM Questions q LEFT JOIN Answers a ON q.QuestionID = a.QuestionID "
                 + "WHERE q.QuizID = ? ORDER BY q.OrderIndex, a.OrderIndex";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, quizId);
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 Map<Integer, Question> questionMap = new LinkedHashMap<>();
                 while (rs.next()) {
                     int questionId = rs.getInt("QuestionID");
@@ -968,14 +1000,15 @@ public class QuizDAO extends DBContext {
         }
         return questions;
     }
-    
+
     public boolean isDuplicateQuestionOrderIndex(int quizId, int orderIndex) {
         String sql = "SELECT 1 FROM Questions WHERE QuizID = ? AND OrderIndex = ?";
         try (
-                 Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+                Connection conn = getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, quizId);
             ps.setInt(2, orderIndex);
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 return rs.next(); // Nếu có bản ghi => trùng
             }
         } catch (SQLException ex) {
@@ -984,17 +1017,17 @@ public class QuizDAO extends DBContext {
         }
         return false;
     }
-    
+
     public List<Integer> getQuestionOrderIndexes(int quizId, int exceptQuestionId) {
         List<Integer> orderIndexes = new ArrayList<>();
         String sql = "SELECT OrderIndex FROM Questions WHERE QuizID = ?"
                 + (exceptQuestionId > 0 ? " AND QuestionID <> ?" : "");
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, quizId);
             if (exceptQuestionId > 0) {
                 ps.setInt(2, exceptQuestionId);
             }
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     orderIndexes.add(rs.getInt("OrderIndex"));
                 }
@@ -1015,14 +1048,14 @@ public class QuizDAO extends DBContext {
 
             // Insert Question
             String sqlQ = "INSERT INTO Questions (QuizID, Content, Type, Points, OrderIndex) VALUES (?, ?, ?, ?, ?)";
-            try ( PreparedStatement psQ = conn.prepareStatement(sqlQ, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement psQ = conn.prepareStatement(sqlQ, Statement.RETURN_GENERATED_KEYS)) {
                 psQ.setInt(1, quizId);
                 psQ.setString(2, question.getContent());
                 psQ.setString(3, question.getType());
                 psQ.setInt(4, question.getPoints());
                 psQ.setInt(5, question.getOrderIndex());
                 if (psQ.executeUpdate() > 0) {
-                    try ( ResultSet rs = psQ.getGeneratedKeys()) {
+                    try (ResultSet rs = psQ.getGeneratedKeys()) {
                         if (rs.next()) {
                             questionId = rs.getInt(1);
                         }
@@ -1032,7 +1065,7 @@ public class QuizDAO extends DBContext {
 
             // Insert Answers
             String sqlA = "INSERT INTO Answers (QuestionID, Content, IsCorrect, OrderIndex) VALUES (?, ?, ?, ?)";
-            try ( PreparedStatement psA = conn.prepareStatement(sqlA)) {
+            try (PreparedStatement psA = conn.prepareStatement(sqlA)) {
                 for (Answer answer : answers) {
                     psA.setInt(1, questionId);
                     psA.setString(2, answer.getContent());
@@ -1045,18 +1078,20 @@ public class QuizDAO extends DBContext {
 
             conn.commit();
         } catch (SQLException ex) {
-            if (conn != null) try {
-                conn.rollback();
-            } catch (SQLException e2) {
-            }
+            if (conn != null)
+                try {
+                    conn.rollback();
+                } catch (SQLException e2) {
+                }
             ex.printStackTrace();
             questionId = -1;
         } finally {
-            if (conn != null) try {
-                conn.setAutoCommit(true);
-                conn.close();
-            } catch (SQLException ex) {
-            }
+            if (conn != null)
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ex) {
+                }
         }
         return questionId;
     }
@@ -1070,9 +1105,9 @@ public class QuizDAO extends DBContext {
                 + "WHERE q.QuestionID = ? "
                 + "ORDER BY a.OrderIndex ASC";
 
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, questionId);
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     if (question == null) {
                         question = new Question();
@@ -1107,11 +1142,11 @@ public class QuizDAO extends DBContext {
         String updateQuestionSql = "UPDATE Questions SET Content=?, Type=?, Points=?, OrderIndex=? WHERE QuestionID=?";
         String updateAnswerSql = "UPDATE Answers SET Content=?, IsCorrect=?, OrderIndex=? WHERE AnswerID=?";
 
-        try ( Connection conn = getConnection()) {
+        try (Connection conn = getConnection()) {
             conn.setAutoCommit(false); // Start transaction
 
             // 1. Update Question
-            try ( PreparedStatement psQuestion = conn.prepareStatement(updateQuestionSql)) {
+            try (PreparedStatement psQuestion = conn.prepareStatement(updateQuestionSql)) {
                 psQuestion.setString(1, question.getContent());
                 psQuestion.setString(2, question.getType());
                 psQuestion.setInt(3, question.getPoints());
@@ -1124,7 +1159,7 @@ public class QuizDAO extends DBContext {
             }
 
             // 2. Update Answers
-            try ( PreparedStatement psAnswer = conn.prepareStatement(updateAnswerSql)) {
+            try (PreparedStatement psAnswer = conn.prepareStatement(updateAnswerSql)) {
                 for (Answer answer : answers) {
                     psAnswer.setString(1, answer.getContent());
                     psAnswer.setBoolean(2, answer.isCorrect());
@@ -1155,13 +1190,57 @@ public class QuizDAO extends DBContext {
 
     public boolean deleteQuestion(int questionId) {
         String sql = "DELETE FROM Questions WHERE QuestionID = ?";
-        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, questionId);
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Get the course ID associated with a lesson
+     *
+     * @param lessonId The lesson ID
+     * @return The course ID, or -1 if not found
+     */
+    public int getCourseIdByLessonId(int lessonId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int courseId = -1;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT CourseID FROM Lessons WHERE LessonID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, lessonId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                courseId = rs.getInt("CourseID");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return courseId;
     }
 
 }

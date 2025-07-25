@@ -146,6 +146,11 @@ public class CartServlet extends HttpServlet {
         HttpSession session = request.getSession();
         CartUtil cart = (CartUtil) session.getAttribute("cart");
         Customer user = (Customer) session.getAttribute("user");
+        
+        if(user == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
         if (cart == null) {
             cart = new CartUtil();
@@ -154,7 +159,6 @@ public class CartServlet extends HttpServlet {
 
         // Add course to cart
         boolean added = cart.addItem(course);
-        System.out.println(added);
         // If user is logged in, also add to database
         if (added && user != null) {
             cartItemDAO.addToCart(user.getCustomerID(), courseId, course.getPrice());

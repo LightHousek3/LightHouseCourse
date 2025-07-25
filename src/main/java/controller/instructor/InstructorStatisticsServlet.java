@@ -61,14 +61,19 @@ public class InstructorStatisticsServlet extends HttpServlet {
             throws ServletException, IOException {
         // Check if user is logged in
         HttpSession session = request.getSession();
-        // Test account si exist
-        SuperUser superUser = new SuperUser();
-        superUser.setSuperUserID(4);
-        superUser.setAvatar("/assets/imgs/avatars/instructor1.png");
-        session.setAttribute("user", superUser);
-        // End test
-        SuperUser user = (SuperUser) session.getAttribute("user");
-
+        SuperUser user;
+        
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
         // Get instructor information using getInstructorBySuperUserId
         Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
         if (instructor == null) {
@@ -133,8 +138,7 @@ public class InstructorStatisticsServlet extends HttpServlet {
 
             try ( PrintWriter out = response.getWriter()) {
                 System.out.println("=== Purchase Statistics ===");
-                Map<String, Integer> data = orderDetailDAO.getCoursePurchaseCountsByYearForInstructor(year, instructor.getSuperUserID());
-    System.out.println("InstructorID = " + instructor.getSuperUserID());
+                Map<String, Integer> data = orderDetailDAO.getCoursePurchaseCountsByYearForInstructor(year, instructor.getInstructorID());
                 Map<String, Object> result = new HashMap<>();
                 result.put("labels", data.keySet().toArray());
                 result.put("data", data.values().toArray());
@@ -152,7 +156,7 @@ public class InstructorStatisticsServlet extends HttpServlet {
 
         try {
             int year = getCurrentYear(request);
-            Map<String, int[]> data = orderDetailDAO.getCoursePurchaseCountsByMonthForInstructor(year, instructor.getSuperUserID());
+            Map<String, int[]> data = orderDetailDAO.getCoursePurchaseCountsByMonthForInstructor(year, instructor.getInstructorID());
 
             List<String> months = getMonthNames();
             List<Map<String, Object>> datasets = new ArrayList<>();
@@ -188,7 +192,7 @@ public class InstructorStatisticsServlet extends HttpServlet {
 
         try {
             int year = getCurrentYear(request);
-            Map<String, Double> data = ratingDAO.getAverageRatingsByYearForInstructor(year, instructor.getSuperUserID());
+            Map<String, Double> data = ratingDAO.getAverageRatingsByYearForInstructor(year, instructor.getInstructorID());
 
             Map<String, String> formatted = new HashMap<>();
             for (Map.Entry<String, Double> entry : data.entrySet()) {
@@ -217,7 +221,7 @@ public class InstructorStatisticsServlet extends HttpServlet {
             // Get year parameter, default to current year
             int year = getCurrentYear(request);
 
-            Map<String, double[]> monthlyRatings = ratingDAO.getAverageRatingsByMonthByInstructor(instructor.getSuperUserID(), year);
+            Map<String, double[]> monthlyRatings = ratingDAO.getAverageRatingsByMonthByInstructor(instructor.getInstructorID(), year);
 
             // Get list of month names
             List<String> months = getMonthNames();

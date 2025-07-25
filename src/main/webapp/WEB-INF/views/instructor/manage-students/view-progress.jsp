@@ -235,17 +235,8 @@
                                                         <div class="progress me-2" style="width: 100px;">
                                                             <c:set var="lessonProgress" value="0" />
                                                             <c:if test="${lessonData.progress != null}">
-                                                                <c:set var="completedItems" value="0" />
-                                                                <c:forEach items="${lessonData.items}" var="itemData">
-                                                                    <c:if test="${itemData.progress.isCompleted}">
-                                                                        <c:set var="completedItems"
-                                                                            value="${completedItems + 1}" />
-                                                                    </c:if>
-                                                                </c:forEach>
-                                                                <c:if test="${not empty lessonData.items}">
-                                                                    <c:set var="lessonProgress"
-                                                                        value="${(completedItems / lessonData.items.size()) * 100}" />
-                                                                </c:if>
+                                                                <c:set var="lessonProgress"
+                                                                    value="${lessonData.progress.completionPercentage}" />
                                                             </c:if>
                                                             <div class="progress-bar ${lessonProgress == 100 ? 'bg-success' : 'bg-primary'}"
                                                                 role="progressbar" style="width: ${lessonProgress}%"

@@ -451,6 +451,7 @@ function addToCart(courseId) {
             }
         })
                 .then(response => {
+                    console.log(response.status);
                     if (response.status === 401) {
                         // If status is 401 (not login), redirect to login
                         window.location.href = "login";

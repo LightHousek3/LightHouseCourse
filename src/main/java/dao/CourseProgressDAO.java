@@ -229,192 +229,6 @@ public class CourseProgressDAO extends DBContext {
     }
 
     /**
-     * Recalculate and update the course completion percentage based on completed
-     * lesson items.
-     * 
-     * @param customerId The customer ID
-     * @param courseId   The course ID
-     * @return true if successful, false otherwise
-     */
-    public boolean recalculateProgress(int customerId, int courseId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        boolean success = false;
-
-        try {
-            conn = getConnection();
-
-            // Get the total count of lesson items in the course
-            String sqlTotalItems = "SELECT COUNT(*) FROM LessonItems li " +
-                    "JOIN Lessons l ON li.LessonID = l.LessonID " +
-                    "WHERE l.CourseID = ?";
-            ps = conn.prepareStatement(sqlTotalItems);
-            ps.setInt(1, courseId);
-            rs = ps.executeQuery();
-
-            int totalItems = 0;
-            if (rs.next()) {
-                totalItems = rs.getInt(1);
-            }
-
-            if (totalItems == 0) {
-                return false; // No items to calculate progress
-            }
-
-            // Get the count of completed lesson items
-            String sqlCompletedItems = "SELECT COUNT(*) FROM LessonItemProgress lip " +
-                    "JOIN LessonItems li ON lip.LessonItemID = li.LessonItemID " +
-                    "JOIN Lessons l ON li.LessonID = l.LessonID " +
-                    "WHERE lip.CustomerID = ? AND l.CourseID = ? AND lip.IsCompleted = 1";
-            ps = conn.prepareStatement(sqlCompletedItems);
-            ps.setInt(1, customerId);
-            ps.setInt(2, courseId);
-            rs = ps.executeQuery();
-
-            int completedItems = 0;
-            if (rs.next()) {
-                completedItems = rs.getInt(1);
-            }
-
-            // Calculate completion percentage
-            double completionPercentage = (double) completedItems / totalItems * 100;
-
-            // Fix potential rounding issues - ensure 100% when all items are completed
-            if (completedItems == totalItems) {
-                completionPercentage = 100.0;
-            }
-
-            // Round to 2 decimal places to avoid floating point precision issues
-            completionPercentage = Math.round(completionPercentage * 100) / 100.0;
-
-            boolean isCompleted = (completedItems == totalItems);
-
-            // Update course progress
-            CourseProgress progress = getByCustomerAndCourse(customerId, courseId);
-
-            if (progress == null) {
-                // Create new progress record
-                progress = new CourseProgress();
-                progress.setCustomerID(customerId);
-                progress.setCourseID(courseId);
-                progress.setCompletionPercentage(BigDecimal.valueOf(completionPercentage));
-                progress.setLastAccessDate(new Timestamp(System.currentTimeMillis()));
-                progress.setCompleted(isCompleted);
-
-                success = (insertCourseProgress(progress) > 0);
-            } else {
-                // Update existing progress record
-                progress.setCompletionPercentage(BigDecimal.valueOf(completionPercentage));
-                progress.setLastAccessDate(new Timestamp(System.currentTimeMillis()));
-                progress.setCompleted(isCompleted);
-
-                success = updateCourseProgress(progress);
-            }
-
-            // Update lesson completion status based on lesson items
-            if (success) {
-                updateLessonCompletionStatus(customerId, courseId, conn);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources(rs, ps, conn);
-        }
-
-        return success;
-    }
-
-    /**
-     * Update lesson completion status based on completed lesson items.
-     * 
-     * @param customerId The customer ID
-     * @param courseId   The course ID
-     * @param conn       The database connection
-     * @return true if successful, false otherwise
-     */
-    private boolean updateLessonCompletionStatus(int customerId, int courseId, Connection conn) {
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        boolean success = true;
-
-        try {
-            // Get all lessons in the course
-            String sqlLessons = "SELECT LessonID FROM Lessons WHERE CourseID = ?";
-            ps = conn.prepareStatement(sqlLessons);
-            ps.setInt(1, courseId);
-            rs = ps.executeQuery();
-
-            while (rs.next() && success) {
-                int lessonId = rs.getInt("LessonID");
-
-                // Check if all lesson items are completed
-                String sqlCheckItems = "SELECT " +
-                        "COUNT(*) AS totalItems, " +
-                        "SUM(CASE WHEN lip.IsCompleted = 1 THEN 1 ELSE 0 END) AS completedItems " +
-                        "FROM LessonItems li " +
-                        "LEFT JOIN LessonItemProgress lip ON li.LessonItemID = lip.LessonItemID AND lip.CustomerID = ? "
-                        +
-                        "WHERE li.LessonID = ?";
-
-                PreparedStatement psItems = conn.prepareStatement(sqlCheckItems);
-                psItems.setInt(1, customerId);
-                psItems.setInt(2, lessonId);
-                ResultSet rsItems = psItems.executeQuery();
-
-                if (rsItems.next()) {
-                    int totalItems = rsItems.getInt("totalItems");
-                    int completedItems = rsItems.getInt("completedItems");
-                    boolean isLessonCompleted = (totalItems > 0 && completedItems == totalItems);
-
-                    // Update lesson progress
-                    String sqlUpdateLesson = "SELECT * FROM LessonProgress WHERE CustomerID = ? AND LessonID = ?";
-                    PreparedStatement psCheckLesson = conn.prepareStatement(sqlUpdateLesson);
-                    psCheckLesson.setInt(1, customerId);
-                    psCheckLesson.setInt(2, lessonId);
-                    ResultSet rsLesson = psCheckLesson.executeQuery();
-
-                    if (rsLesson.next()) {
-                        // Update existing record
-                        String sqlUpdate = "UPDATE LessonProgress SET IsCompleted = ?, LastAccessDate = ? WHERE CustomerID = ? AND LessonID = ?";
-                        PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate);
-                        psUpdate.setBoolean(1, isLessonCompleted);
-                        psUpdate.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-                        psUpdate.setInt(3, customerId);
-                        psUpdate.setInt(4, lessonId);
-                        psUpdate.executeUpdate();
-                        psUpdate.close();
-                    } else {
-                        // Insert new record
-                        String sqlInsert = "INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, LastAccessDate) VALUES (?, ?, ?, ?)";
-                        PreparedStatement psInsert = conn.prepareStatement(sqlInsert);
-                        psInsert.setInt(1, customerId);
-                        psInsert.setInt(2, lessonId);
-                        psInsert.setBoolean(3, isLessonCompleted);
-                        psInsert.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
-                        psInsert.executeUpdate();
-                        psInsert.close();
-                    }
-
-                    rsLesson.close();
-                    psCheckLesson.close();
-                }
-
-                rsItems.close();
-                psItems.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            success = false;
-        } finally {
-            closeResources(rs, ps, conn);
-        }
-
-        return success;
-    }
-
-    /**
      * Map a ResultSet row to a CourseProgress object.
      *
      * @param rs The ResultSet to map
@@ -432,14 +246,10 @@ public class CourseProgressDAO extends DBContext {
         return progress;
     }
 
-
-
-
-
     /**
      * Get course progress for a specific user and course.
      *
-     * @param userId The user ID
+     * @param userId   The user ID
      * @param courseId The course ID
      * @return The course progress object, or null if not found
      */
@@ -478,20 +288,14 @@ public class CourseProgressDAO extends DBContext {
                 e.printStackTrace();
             }
         }
-        System.out.println("=================");
-        
+
         return progress;
     }
-
-    
-    
-
-    
 
     /**
      * Check if a lesson is completed by a user.
      *
-     * @param userId The user ID
+     * @param customerId   The user ID
      * @param lessonId The lesson ID
      * @return true if the lesson is completed, false otherwise
      */
@@ -516,19 +320,7 @@ public class CourseProgressDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return completed;
@@ -537,7 +329,7 @@ public class CourseProgressDAO extends DBContext {
     /**
      * Mark a lesson as completed by a user.
      *
-     * @param userId The user ID
+     * @param userId   The user ID
      * @param lessonId The lesson ID
      * @return true if successful, false otherwise
      */
@@ -626,7 +418,7 @@ public class CourseProgressDAO extends DBContext {
     /**
      * Calculate and update course completion percentage.
      *
-     * @param userId The user ID
+     * @param customerId   The customer ID
      * @param courseId The course ID
      * @return true if successful, false otherwise
      */
@@ -726,10 +518,10 @@ public class CourseProgressDAO extends DBContext {
     /**
      * Get all course progress records for a user
      *
-     * @param userId The user ID
+     * @param customerId The customerId ID
      * @return List of course progress records
      */
-    public List<CourseProgress> getAllByUser(int customerId) {
+    public List<CourseProgress> getAllByCustomer(int customerId) {
         List<CourseProgress> progressList = new ArrayList<>();
         Connection conn = null;
         PreparedStatement ps = null;
@@ -757,30 +549,16 @@ public class CourseProgressDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return progressList;
     }
 
-    
-
     /**
      * Get the list of completed lessons for a user in a course.
      *
-     * @param userId The user ID
+     * @param customerId   The customer ID
      * @param courseId The course ID
      * @return List of completed lessons
      */
@@ -812,19 +590,7 @@ public class CourseProgressDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return completedLessons;
@@ -833,7 +599,7 @@ public class CourseProgressDAO extends DBContext {
     /**
      * Check if a video has been completed by a user
      *
-     * @param userId The user ID
+     * @param customerId  The customer ID
      * @param videoId The video ID
      * @return true if completed, false otherwise
      */
@@ -871,19 +637,7 @@ public class CourseProgressDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return completed;
@@ -892,7 +646,7 @@ public class CourseProgressDAO extends DBContext {
     /**
      * Check if a material has been completed by a user
      *
-     * @param userId The user ID
+     * @param customerId The customer ID
      * @param materialId The material ID
      * @return true if completed, false otherwise
      */
@@ -930,19 +684,7 @@ public class CourseProgressDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return completed;
@@ -951,7 +693,7 @@ public class CourseProgressDAO extends DBContext {
     /**
      * Mark a video as completed for a user
      *
-     * @param userId The user ID
+     * @param customerId  The customer ID
      * @param videoId The video ID
      * @return true if successful, false otherwise
      */
@@ -1022,19 +764,7 @@ public class CourseProgressDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return success;
@@ -1043,7 +773,7 @@ public class CourseProgressDAO extends DBContext {
     /**
      * Mark a material as completed for a user
      *
-     * @param userId The user ID
+     * @param customerId  The customer ID
      * @param materialId The material ID
      * @return true if successful, false otherwise
      */
@@ -1114,19 +844,7 @@ public class CourseProgressDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return success;
@@ -1135,7 +853,7 @@ public class CourseProgressDAO extends DBContext {
     /**
      * Check if a quiz has been completed by a user
      *
-     * @param userId The user ID
+     * @param customerId The customer ID
      * @param quizId The quiz ID
      * @return true if completed, false otherwise
      */
@@ -1173,19 +891,7 @@ public class CourseProgressDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return completed;
@@ -1194,9 +900,9 @@ public class CourseProgressDAO extends DBContext {
     /**
      * Mark a quiz as completed for a user
      *
-     * @param userId The user ID
+     * @param customerId The customer ID
      * @param quizId The quiz ID
-     * @param score The score achieved
+     * @param score  The score achieved
      * @return true if successful, false otherwise
      */
     public boolean markQuizCompleted(int customerId, int quizId, int score) {
@@ -1266,19 +972,7 @@ public class CourseProgressDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(rs, ps, conn);
         }
 
         return success;
@@ -1320,14 +1014,17 @@ public class CourseProgressDAO extends DBContext {
                     ps.setInt(2, lessonId);
                     rs = ps.executeQuery();
 
+                    Timestamp now = new Timestamp(System.currentTimeMillis());
+
                     if (rs.next()) {
                         // Update existing lesson progress
                         ps.close();
-                        String updateLessonSql = "UPDATE LessonProgress SET IsCompleted = 1, CompletionDate = ? WHERE CustomerID = ? AND LessonID = ?";
+                        String updateLessonSql = "UPDATE LessonProgress SET IsCompleted = 1, CompletionDate = ?, LastAccessDate = ? WHERE CustomerID = ? AND LessonID = ?";
                         ps = conn.prepareStatement(updateLessonSql);
-                        ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-                        ps.setInt(2, customerId);
-                        ps.setInt(3, lessonId);
+                        ps.setTimestamp(1, now);
+                        ps.setTimestamp(2, now);
+                        ps.setInt(3, customerId);
+                        ps.setInt(4, lessonId);
                         ps.executeUpdate();
                     } else {
                         // Insert new lesson progress
@@ -1336,8 +1033,8 @@ public class CourseProgressDAO extends DBContext {
                         ps = conn.prepareStatement(insertLessonSql);
                         ps.setInt(1, customerId);
                         ps.setInt(2, lessonId);
-                        ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
-                        ps.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+                        ps.setTimestamp(3, now);
+                        ps.setTimestamp(4, now);
                         ps.executeUpdate();
                     }
 
@@ -1350,7 +1047,9 @@ public class CourseProgressDAO extends DBContext {
 
                     if (rs.next()) {
                         int courseId = rs.getInt("CourseID");
-                        updateCourseCompletion(customerId, courseId);
+                        // Since we're already in a transaction, don't start another one
+                        // Just call updateCourseCompletion directly with the current connection
+                        updateCourseCompletionWithConnection(conn, customerId, courseId);
                     }
                 }
             }
@@ -1364,12 +1063,109 @@ public class CourseProgressDAO extends DBContext {
         }
     }
 
+    /**
+     * Calculate and update course completion percentage using an existing
+     * connection. This method is for internal use within transactions.
+     *
+     * @param conn       The database connection
+     * @param customerId The customer ID
+     * @param courseId   The course ID
+     * @throws SQLException If a database error occurs
+     */
+    private void updateCourseCompletionWithConnection(Connection conn, int customerId, int courseId)
+            throws SQLException {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
 
+        try {
+            // Get total number of lessons in the course
+            String totalLessonsSql = "SELECT COUNT(*) AS TotalLessons FROM Lessons WHERE CourseID = ?";
+            ps = conn.prepareStatement(totalLessonsSql);
+            ps.setInt(1, courseId);
+            rs = ps.executeQuery();
+
+            int totalLessons = 0;
+            if (rs.next()) {
+                totalLessons = rs.getInt("TotalLessons");
+            }
+
+            if (totalLessons == 0) {
+                return;
+            }
+
+            // Get number of completed lessons
+            ps.close();
+            rs.close();
+            String completedLessonsSql = "SELECT COUNT(*) AS CompletedLessons FROM LessonProgress LP "
+                    + "JOIN Lessons L ON LP.LessonID = L.LessonID "
+                    + "WHERE LP.CustomerID = ? AND L.CourseID = ? AND LP.IsCompleted = 1";
+            ps = conn.prepareStatement(completedLessonsSql);
+            ps.setInt(1, customerId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+
+            int completedLessons = 0;
+            if (rs.next()) {
+                completedLessons = rs.getInt("CompletedLessons");
+            }
+
+            // Calculate completion percentage using BigDecimal
+            BigDecimal completionPercentage = BigDecimal.ZERO;
+            if (totalLessons > 0) {
+                completionPercentage = new BigDecimal(completedLessons)
+                        .multiply(new BigDecimal(100))
+                        .divide(new BigDecimal(totalLessons), 2, BigDecimal.ROUND_HALF_UP);
+            }
+
+            boolean isCompleted = (completedLessons == totalLessons && totalLessons > 0);
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+
+            // Check if there's an existing course progress record
+            ps.close();
+            rs.close();
+            String checkProgressSql = "SELECT ProgressID FROM CourseProgress WHERE CustomerID = ? AND CourseID = ?";
+            ps = conn.prepareStatement(checkProgressSql);
+            ps.setInt(1, customerId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                // Update existing record
+                ps.close();
+                String updateSql = "UPDATE CourseProgress SET CompletionPercentage = ?, IsCompleted = ?, LastAccessDate = ? WHERE CustomerID = ? AND CourseID = ?";
+                ps = conn.prepareStatement(updateSql);
+                ps.setBigDecimal(1, completionPercentage);
+                ps.setBoolean(2, isCompleted);
+                ps.setTimestamp(3, now);
+                ps.setInt(4, customerId);
+                ps.setInt(5, courseId);
+                ps.executeUpdate();
+            } else {
+                // Insert new record
+                ps.close();
+                String insertSql = "INSERT INTO CourseProgress (CustomerID, CourseID, CompletionPercentage, IsCompleted, LastAccessDate) VALUES (?, ?, ?, ?, ?)";
+                ps = conn.prepareStatement(insertSql);
+                ps.setInt(1, customerId);
+                ps.setInt(2, courseId);
+                ps.setBigDecimal(3, completionPercentage);
+                ps.setBoolean(4, isCompleted);
+                ps.setTimestamp(5, now);
+                ps.executeUpdate();
+            }
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            if (ps != null) {
+                ps.close();
+            }
+        }
+    }
 
     /**
      * Update the course progress for a user based on their completed lessons.
      *
-     * @param userId The user ID
+     * @param userId   The user ID
      * @param courseId The course ID
      * @return True if successful, false otherwise
      */
@@ -1439,7 +1235,7 @@ public class CourseProgressDAO extends DBContext {
      * Calculate the completion percentage for a course based on completed
      * lessons.
      *
-     * @param userId The user ID
+     * @param userId   The user ID
      * @param courseId The course ID
      * @return The completion percentage (0-100)
      */

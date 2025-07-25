@@ -289,95 +289,98 @@ public class DiscussionReplyDAO extends DBContext {
     }
 
     /**
-     * Delete a reply
+     * Update a reply's content
      * 
-     * @param replyId    The reply ID
-     * @param authorId   The author ID (for security check)
-     * @param authorType The author type (for security check)
+     * @param replyId  The reply ID
+     * @param authorId The author ID (for security check)
+     * @param authorType The author type (customer or instructor)
+     * @param content  The new content
      * @return True if successful, false otherwise
      */
-    public boolean deleteReply(int replyId, int authorId, String authorType) {
-        boolean success = false;
+    public boolean updateReply(int replyId, int authorId, String authorType, String content) {
         Connection conn = null;
         PreparedStatement ps = null;
-        ResultSet rs = null;
+        boolean success = false;
 
         try {
             conn = getConnection();
 
-            // First check if the reply exists and belongs to the author
-            String checkQuery = "SELECT ReplyID FROM DiscussionReplies WHERE ReplyID = ? AND AuthorID = ? AND AuthorType = ?";
+            // First check if the user is the author
+            String checkQuery = "SELECT AuthorID FROM DiscussionReplies WHERE ReplyID = ? AND AuthorID = ? AND AuthorType = ?";
             ps = conn.prepareStatement(checkQuery);
             ps.setInt(1, replyId);
             ps.setInt(2, authorId);
             ps.setString(3, authorType);
-            rs = ps.executeQuery();
 
-            if (rs.next()) {
-                // Reply exists and belongs to the author, delete it
-                ps.close();
-                rs.close();
-
-                String deleteQuery = "DELETE FROM DiscussionReplies WHERE ReplyID = ?";
-                ps = conn.prepareStatement(deleteQuery);
-                ps.setInt(1, replyId);
-
-                int rowsAffected = ps.executeUpdate();
-                success = rowsAffected > 0;
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                // User is not the author or reply doesn't exist
+                return false;
             }
-        } catch (SQLException ex) {
-            System.out.println("Error deleting reply: " + ex.getMessage());
+
+            rs.close();
+            ps.close();
+
+            // Update the reply
+            String updateQuery = "UPDATE DiscussionReplies SET Content = ?, UpdatedAt = GETDATE() WHERE ReplyID = ?";
+            ps = conn.prepareStatement(updateQuery);
+            ps.setString(1, content);
+            ps.setInt(2, replyId);
+
+            int rowsAffected = ps.executeUpdate();
+            success = rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
         } finally {
-            closeResources(rs, ps, conn);
+            closeResources(null, ps, conn);
         }
 
         return success;
     }
 
     /**
-     * Update a reply's content
+     * Delete a reply
      * 
-     * @param replyId    The reply ID
-     * @param content    The new content
-     * @param authorId   The author ID (for security check)
-     * @param authorType The author type (for security check)
+     * @param replyId  The reply ID
+     * @param authorId The author ID (for security check)
+     * @param authorType The author type (customer or instructor)
      * @return True if successful, false otherwise
      */
-    public boolean updateReply(int replyId, String content, int authorId, String authorType) {
-        boolean success = false;
+    public boolean deleteReply(int replyId, int authorId, String authorType) {
         Connection conn = null;
         PreparedStatement ps = null;
-        ResultSet rs = null;
+        boolean success = false;
 
         try {
             conn = getConnection();
 
-            // First check if the reply exists and belongs to the author
-            String checkQuery = "SELECT ReplyID FROM DiscussionReplies WHERE ReplyID = ? AND AuthorID = ? AND AuthorType = ?";
+            // First check if the user is the author
+            String checkQuery = "SELECT AuthorID FROM DiscussionReplies WHERE ReplyID = ? AND AuthorID = ? AND AuthorType = ?";
             ps = conn.prepareStatement(checkQuery);
             ps.setInt(1, replyId);
             ps.setInt(2, authorId);
             ps.setString(3, authorType);
-            rs = ps.executeQuery();
 
-            if (rs.next()) {
-                // Reply exists and belongs to the author, update it
-                ps.close();
-                rs.close();
-
-                String updateQuery = "UPDATE DiscussionReplies SET Content = ?, UpdatedAt = ? WHERE ReplyID = ?";
-                ps = conn.prepareStatement(updateQuery);
-                ps.setString(1, content);
-                ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-                ps.setInt(3, replyId);
-
-                int rowsAffected = ps.executeUpdate();
-                success = rowsAffected > 0;
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                // User is not the author or reply doesn't exist
+                return false;
             }
-        } catch (SQLException ex) {
-            System.out.println("Error updating reply: " + ex.getMessage());
+
+            rs.close();
+            ps.close();
+
+            // Delete the reply
+            String deleteQuery = "DELETE FROM DiscussionReplies WHERE ReplyID = ?";
+            ps = conn.prepareStatement(deleteQuery);
+            ps.setInt(1, replyId);
+
+            int rowsAffected = ps.executeUpdate();
+            success = rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
         } finally {
-            closeResources(rs, ps, conn);
+            closeResources(null, ps, conn);
         }
 
         return success;

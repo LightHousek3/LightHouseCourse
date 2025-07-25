@@ -190,6 +190,15 @@ public class RefundServlet extends HttpServlet {
                 int refundId = refundDAO.insertRefundRequests(refundRequest);
 
                 if (refundId > 0) {
+                    // Update order status to refund_pending
+                    order.setStatus("refund_pending");
+                    boolean orderUpdated = orderDAO.updateOrder(order);
+
+                    if (!orderUpdated) {
+                        // Log the error but still proceed since the refund request was created
+                        System.err.println("Failed to update order status to refund_pending for order ID: " + orderId);
+                    }
+
                     // Success
                     response.sendRedirect(request.getContextPath() + "/order/history?success=true");
                 } else {

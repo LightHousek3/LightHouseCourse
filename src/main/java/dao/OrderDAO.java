@@ -413,11 +413,12 @@ public class OrderDAO extends DBContext {
             ps.setInt(2, courseId);
 
             rs = ps.executeQuery();
-            // If the most recent order for this customer and course is 'completed',
+            // If the most recent order for this customer and course is 'completed' or
+            // 'refund_pending',
             // then the customer has access to the course
             if (rs.next()) {
                 String status = rs.getString("Status");
-                return "completed".equals(status);
+                return "completed".equals(status) || "refund_pending".equals(status);
             }
         } catch (SQLException e) {
             e.printStackTrace();

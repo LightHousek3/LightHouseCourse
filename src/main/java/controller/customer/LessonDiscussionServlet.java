@@ -1,6 +1,5 @@
 package controller.customer;
 
-
 import dao.DiscussionDAO;
 import dao.DiscussionReplyDAO;
 import dao.LessonDAO;
@@ -22,9 +21,13 @@ import com.google.gson.JsonObject;
 import model.Customer;
 
 @WebServlet(urlPatterns = {
-    "/lesson/discussions/*", // GET: Get discussions for a lesson
-    "/lesson/discussion/create", // POST: Create a new discussion
-    "/lesson/discussion/reply" // POST: Add a reply to a discussion
+        "/lesson/discussions/*", // GET: Get discussions for a lesson
+        "/lesson/discussion/create", // POST: Create a new discussion
+        "/lesson/discussion/reply", // POST: Add a reply to a discussion
+        "/lesson/discussion/update", // POST: Update a discussion
+        "/lesson/discussion/delete", // POST: Delete a discussion
+        "/lesson/discussion/reply/update", // POST: Update a reply
+        "/lesson/discussion/reply/delete" // POST: Delete a reply
 })
 public class LessonDiscussionServlet extends HttpServlet {
 
@@ -45,7 +48,7 @@ public class LessonDiscussionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         Customer currentUser = getCustomerFromSession(request);
         if (currentUser == null) {
             redirectToLogin(request, response);
@@ -68,7 +71,7 @@ public class LessonDiscussionServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         Customer currentUser = getCustomerFromSession(request);
         if (currentUser == null) {
             redirectToLogin(request, response);
@@ -78,18 +81,30 @@ public class LessonDiscussionServlet extends HttpServlet {
         String servletPath = request.getServletPath();
         if (null == servletPath) {
             sendJsonError(response, HttpServletResponse.SC_NOT_FOUND, "Unknown endpoint.");
-        } else switch (servletPath) {
-            case "/lesson/discussion/create":
-                
-                handleCreateDiscussion(request, response, currentUser);
-                break;
-            case "/lesson/discussion/reply":
-                handleCreateReply(request, response, currentUser);
-                break;
-            default:
-                sendJsonError(response, HttpServletResponse.SC_NOT_FOUND, "Unknown endpoint.");
-                break;
-        }
+        } else
+            switch (servletPath) {
+                case "/lesson/discussion/create":
+                    handleCreateDiscussion(request, response, currentUser);
+                    break;
+                case "/lesson/discussion/reply":
+                    handleCreateReply(request, response, currentUser);
+                    break;
+                case "/lesson/discussion/update":
+                    handleUpdateDiscussion(request, response, currentUser);
+                    break;
+                case "/lesson/discussion/delete":
+                    handleDeleteDiscussion(request, response, currentUser);
+                    break;
+                case "/lesson/discussion/reply/update":
+                    handleUpdateReply(request, response, currentUser);
+                    break;
+                case "/lesson/discussion/reply/delete":
+                    handleDeleteReply(request, response, currentUser);
+                    break;
+                default:
+                    sendJsonError(response, HttpServletResponse.SC_NOT_FOUND, "Unknown endpoint.");
+                    break;
+            }
     }
 
     /**
@@ -195,8 +210,6 @@ public class LessonDiscussionServlet extends HttpServlet {
                 return;
             }
 
-            
-
             // Create and save the reply
             DiscussionReply reply = new DiscussionReply(discussionId, currentUser.getCustomerID(),
                     content);
@@ -211,7 +224,7 @@ public class LessonDiscussionServlet extends HttpServlet {
                 JsonObject jsonResponse = new JsonObject();
                 jsonResponse.addProperty("success", true);
                 jsonResponse.addProperty("message", "Reply added successfully.");
-                jsonResponse.add("reply", createReplyJson(reply));
+                jsonResponse.add("reply", createReplyJson(reply, currentUser));
 
                 sendJsonResponse(response, jsonResponse);
             } else {
@@ -220,92 +233,275 @@ public class LessonDiscussionServlet extends HttpServlet {
 
         } catch (NumberFormatException e) {
             sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid discussionId format.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendJsonError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "An error occurred: " + e.getMessage());
         }
     }
 
     /**
-     * Create JSON representation of discussions list
+     * Update an existing discussion
+     */
+    private void handleUpdateDiscussion(HttpServletRequest request, HttpServletResponse response, Customer currentUser)
+            throws IOException {
+
+        try {
+            int discussionId = Integer.parseInt(request.getParameter("discussionId"));
+            String content = request.getParameter("content");
+
+            // Basic validation
+            if (content == null || content.trim().isEmpty()) {
+                sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST, "Discussion content is required.");
+                return;
+            }
+
+            // Update the discussion
+            boolean success = discussionDAO.updateDiscussion(discussionId, currentUser.getCustomerID(), content);
+
+            if (success) {
+                // Get the updated discussion
+                Discussion discussion = discussionDAO.getDiscussionById(discussionId);
+
+                JsonObject jsonResponse = new JsonObject();
+                jsonResponse.addProperty("success", true);
+                jsonResponse.addProperty("message", "Discussion updated successfully.");
+                jsonResponse.add("discussion", createDiscussionJson(discussion, currentUser));
+
+                sendJsonResponse(response, jsonResponse);
+            } else {
+                sendJsonError(response, HttpServletResponse.SC_FORBIDDEN,
+                        "Failed to update discussion. You may not have permission to edit this discussion.");
+            }
+
+        } catch (NumberFormatException e) {
+            sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid discussion ID format.");
+        }
+    }
+
+    /**
+     * Delete a discussion
+     */
+    private void handleDeleteDiscussion(HttpServletRequest request, HttpServletResponse response, Customer currentUser)
+            throws IOException {
+
+        try {
+            int discussionId = Integer.parseInt(request.getParameter("discussionId"));
+
+            // Delete the discussion
+            boolean success = discussionDAO.deleteDiscussion(discussionId, currentUser.getCustomerID());
+
+            if (success) {
+                JsonObject jsonResponse = new JsonObject();
+                jsonResponse.addProperty("success", true);
+                jsonResponse.addProperty("message", "Discussion deleted successfully.");
+                jsonResponse.addProperty("discussionId", discussionId);
+
+                sendJsonResponse(response, jsonResponse);
+            } else {
+                sendJsonError(response, HttpServletResponse.SC_FORBIDDEN,
+                        "Failed to delete discussion. You may not have permission to delete this discussion.");
+            }
+
+        } catch (NumberFormatException e) {
+            sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid discussion ID format.");
+        }
+    }
+
+    /**
+     * Update an existing reply
+     */
+    private void handleUpdateReply(HttpServletRequest request, HttpServletResponse response, Customer currentUser)
+            throws IOException {
+
+        try {
+            int replyId = Integer.parseInt(request.getParameter("replyId"));
+            String content = request.getParameter("content");
+
+            // Basic validation
+            if (content == null || content.trim().isEmpty()) {
+                sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST, "Reply content is required.");
+                return;
+            }
+
+            // Update the reply
+            boolean success = replyDAO.updateReply(replyId, currentUser.getCustomerID(), "customer", content);
+
+            if (success) {
+                // Get the updated reply
+                DiscussionReply reply = replyDAO.getReplyById(replyId);
+                reply.setUserName(currentUser.getFullName());
+
+                JsonObject jsonResponse = new JsonObject();
+                jsonResponse.addProperty("success", true);
+                jsonResponse.addProperty("message", "Reply updated successfully.");
+                jsonResponse.add("reply", createReplyJson(reply));
+
+                sendJsonResponse(response, jsonResponse);
+            } else {
+                sendJsonError(response, HttpServletResponse.SC_FORBIDDEN,
+                        "Failed to update reply. You may not have permission to edit this reply.");
+            }
+
+        } catch (NumberFormatException e) {
+            sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid reply ID format.");
+        }
+    }
+
+    /**
+     * Delete a reply
+     */
+    private void handleDeleteReply(HttpServletRequest request, HttpServletResponse response, Customer currentUser)
+            throws IOException {
+
+        try {
+            int replyId = Integer.parseInt(request.getParameter("replyId"));
+
+            // Delete the reply
+            boolean success = replyDAO.deleteReply(replyId, currentUser.getCustomerID(), "customer");
+
+            if (success) {
+                JsonObject jsonResponse = new JsonObject();
+                jsonResponse.addProperty("success", true);
+                jsonResponse.addProperty("message", "Reply deleted successfully.");
+                jsonResponse.addProperty("replyId", replyId);
+
+                sendJsonResponse(response, jsonResponse);
+            } else {
+                sendJsonError(response, HttpServletResponse.SC_FORBIDDEN,
+                        "Failed to delete reply. You may not have permission to delete this reply.");
+            }
+
+        } catch (NumberFormatException e) {
+            sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid reply ID format.");
+        }
+    }
+
+    /**
+     * Create a JSON object for a discussion
+     * 
+     * @param discussion  The discussion
+     * @param currentUser The current user
+     * @return A JSON object
+     */
+    private JsonObject createDiscussionJson(Discussion discussion, Customer currentUser) {
+        JsonObject json = new JsonObject();
+        json.addProperty("id", discussion.getDiscussionID());
+        json.addProperty("courseId", discussion.getCourseID());
+        json.addProperty("lessonId", discussion.getLessonID());
+        json.addProperty("authorId", discussion.getAuthorID());
+        json.addProperty("authorType", discussion.getAuthorType());
+        json.addProperty("content", discussion.getContent());
+        json.addProperty("createdAt", discussion.getCreatedAt() != null ? discussion.getCreatedAt().toString() : null);
+        json.addProperty("updatedAt", discussion.getUpdatedAt() != null ? discussion.getUpdatedAt().toString() : null);
+        json.addProperty("isResolved", discussion.isResolved());
+        json.addProperty("userName", discussion.getAuthorName() != null ? discussion.getAuthorName() : "Unknown");
+        json.addProperty("replyCount", discussion.getReplyCount());
+
+        // Add isAuthor flag to indicate if the current user is the author
+        boolean isAuthor = currentUser != null &&
+                discussion.getAuthorID() == currentUser.getCustomerID() &&
+                "customer".equals(discussion.getAuthorType());
+        json.addProperty("isAuthor", isAuthor);
+
+        // Add replies if available
+        if (discussion.getReplies() != null && !discussion.getReplies().isEmpty()) {
+            JsonArray repliesJson = new JsonArray();
+            for (DiscussionReply reply : discussion.getReplies()) {
+                repliesJson.add(createReplyJson(reply, currentUser));
+            }
+            json.add("replies", repliesJson);
+        }
+
+        return json;
+    }
+
+    /**
+     * Create a JSON array for a list of discussions
+     * 
+     * @param discussions The list of discussions
+     * @param currentUser The current user
+     * @return A JSON object with the discussions array
      */
     private JsonObject createDiscussionsJson(List<Discussion> discussions, Customer currentUser) {
-        JsonObject result = new JsonObject();
+        JsonObject json = new JsonObject();
         JsonArray discussionsArray = new JsonArray();
 
         for (Discussion discussion : discussions) {
             discussionsArray.add(createDiscussionJson(discussion, currentUser));
         }
 
-        result.addProperty("success", true);
-        result.addProperty("count", discussions.size());
-        result.add("discussions", discussionsArray);
-
-        return result;
-    }
-
-    /**
-     * Create JSON representation of a single discussion
-     */
-    private JsonObject createDiscussionJson(Discussion discussion, Customer currentUser) {
-        JsonObject json = new JsonObject();
-
-        json.addProperty("id", discussion.getDiscussionID());
-        json.addProperty("content", discussion.getContent());
-        json.addProperty("createdAt", discussion.getCreatedAt() != null ? discussion.getCreatedAt().toString() : "");
-        json.addProperty("updatedAt", discussion.getUpdatedAt() != null ? discussion.getUpdatedAt().toString() : "");
-        json.addProperty("isResolved", discussion.isResolved());
-        json.addProperty("userName", discussion.getUserName());
-        json.addProperty("courseName", discussion.getCourseName());
-        json.addProperty("lessonTitle", discussion.getLessonTitle() != null ? discussion.getLessonTitle() : "");
-        json.addProperty("replyCount", discussion.getReplyCount());
-        json.addProperty("isOwner", discussion.getAuthorID()== currentUser.getCustomerID());
-
-        // Include replies if available
-        if (discussion.getReplies() != null) {
-            JsonArray repliesArray = new JsonArray();
-
-            for (DiscussionReply reply : discussion.getReplies()) {
-                repliesArray.add(createReplyJson(reply));
-            }
-            
-            json.add("replies", repliesArray);
-        }
-
+        json.addProperty("success", true);
+        json.add("discussions", discussionsArray);
         return json;
     }
 
     /**
-     * Create JSON representation of a discussion reply
+     * Create a JSON object for a reply
+     * 
+     * @param reply The reply
+     * @return A JSON object
      */
     private JsonObject createReplyJson(DiscussionReply reply) {
-        JsonObject json = new JsonObject();
+        return createReplyJson(reply, null);
+    }
 
+    /**
+     * Create a JSON object for a reply
+     * 
+     * @param reply       The reply
+     * @param currentUser The current user
+     * @return A JSON object
+     */
+    private JsonObject createReplyJson(DiscussionReply reply, Customer currentUser) {
+        JsonObject json = new JsonObject();
         json.addProperty("id", reply.getReplyID());
         json.addProperty("discussionId", reply.getDiscussionID());
+        json.addProperty("authorId", reply.getAuthorID());
+        json.addProperty("authorType", reply.getAuthorType());
         json.addProperty("content", reply.getContent());
-        json.addProperty("createdAt", reply.getCreatedAt() != null ? reply.getCreatedAt().toString() : "");
-        json.addProperty("updatedAt", reply.getUpdatedAt() != null ? reply.getUpdatedAt().toString() : "");
-        json.addProperty("userName", reply.getUserName());
+        json.addProperty("createdAt", reply.getCreatedAt() != null ? reply.getCreatedAt().toString() : null);
+        json.addProperty("updatedAt", reply.getUpdatedAt() != null ? reply.getUpdatedAt().toString() : null);
+        json.addProperty("userName", reply.getAuthorName() != null ? reply.getAuthorName() : "Unknown");
+        json.addProperty("isInstructorReply", "instructor".equals(reply.getAuthorType()));
+
+        // Add isAuthor flag to indicate if the current user is the author
+        boolean isAuthor = currentUser != null &&
+                reply.getAuthorID() == currentUser.getCustomerID() &&
+                "customer".equals(reply.getAuthorType());
+        json.addProperty("isAuthor", isAuthor);
+
         return json;
     }
 
     /**
-     * Send JSON error response
+     * Send a JSON error response
+     * 
+     * @param response The HTTP response
+     * @param status   The HTTP status code
+     * @param message  The error message
+     * @throws IOException If an I/O error occurs
      */
-    private void sendJsonError(HttpServletResponse response, int statusCode, String message) throws IOException {
-        response.setStatus(statusCode);
+    private void sendJsonError(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        JsonObject error = new JsonObject();
-        error.addProperty("success", false);
-        error.addProperty("message", message);
+        JsonObject json = new JsonObject();
+        json.addProperty("success", false);
+        json.addProperty("message", message);
 
         PrintWriter out = response.getWriter();
-        out.print(error.toString());
+        out.print(json.toString());
         out.flush();
     }
 
     /**
-     * Send JSON success response
+     * Send a JSON response
+     * 
+     * @param response The HTTP response
+     * @param json     The JSON object to send
+     * @throws IOException If an I/O error occurs
      */
     private void sendJsonResponse(HttpServletResponse response, JsonObject json) throws IOException {
         response.setContentType("application/json");
@@ -315,17 +511,27 @@ public class LessonDiscussionServlet extends HttpServlet {
         out.print(json.toString());
         out.flush();
     }
-    
+
     /**
-     * Gets the customer from the session.
+     * Get the customer from the session
+     * 
+     * @param request The HTTP request
+     * @return The customer, or null if not logged in
      */
     private Customer getCustomerFromSession(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        return session != null ? (Customer) session.getAttribute("user") : null;
+        if (session != null) {
+            return (Customer) session.getAttribute("user");
+        }
+        return null;
     }
 
     /**
-     * Redirects to the login page.
+     * Redirect to the login page
+     * 
+     * @param request  The HTTP request
+     * @param response The HTTP response
+     * @throws IOException If an I/O error occurs
      */
     private void redirectToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.sendRedirect(request.getContextPath() + "/login");

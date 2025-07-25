@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import dao.OrderDAO;
+import dao.CartItemDAO;
 import dao.CourseDAO;
 import dao.CourseProgressDAO;
 import dao.PaymentTransactionDAO;
@@ -38,6 +39,7 @@ public class OrderServlet extends HttpServlet {
     private CourseDAO courseDAO;
     private CourseProgressDAO progressDAO;
     private RefundRequestDAO refundDAO;
+    private CartItemDAO cartItemDAO;
 
     @Override
     public void init() throws ServletException {
@@ -46,6 +48,7 @@ public class OrderServlet extends HttpServlet {
         courseDAO = new CourseDAO();
         progressDAO = new CourseProgressDAO();
         refundDAO = new RefundRequestDAO();
+        cartItemDAO = new CartItemDAO();
     }
 
     @Override
@@ -288,6 +291,16 @@ public class OrderServlet extends HttpServlet {
             // Store orderId in session to associate with VNPay payment
             session.setAttribute("pendingOrderId", orderId);
 
+            if (courseIdParam == null) {
+                // If this was a cart checkout, clear the cart
+                CartUtil cart = (CartUtil) session.getAttribute("cart");
+                if (cart != null) {
+                    cart.clear();
+                    // Clear cart items from the database for this user
+                    cartItemDAO.clearCart(customer.getCustomerID());
+                }
+            }
+
             // If payment method is VNPAY, redirect to VNPay payment gateway
             if ("VNPAY".equals(paymentMethod)) {
                 // Create VNPay payment URL with the order information
@@ -361,12 +374,6 @@ public class OrderServlet extends HttpServlet {
                 boolean updated = orderDAO.updateOrder(order);
 
                 if (updated) {
-                    // If this was a cart checkout, clear the cart
-                    CartUtil cart = (CartUtil) session.getAttribute("cart");
-                    if (cart != null) {
-                        cart.clear();
-                    }
-
                     // Redirect to order detail page with success message
                     response.sendRedirect(request.getContextPath() + "/order/detail/" + orderId + "?success=payment");
                     return;
