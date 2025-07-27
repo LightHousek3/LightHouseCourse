@@ -41,7 +41,7 @@ public class OrderDAO extends DBContext {
     /**
      * Insert a new order into the database.
      *
-     * @param order The order to insert
+     * @param order The order to insertPaymentTransaction
      * @return The generated order ID, or -1 if insertion failed
      */
     public int insertOrder(Order order) {
@@ -99,7 +99,7 @@ public class OrderDAO extends DBContext {
      *
      * @param conn    The database connection
      * @param orderId The ID of the order
-     * @param details The list of order details to insert
+     * @param details The list of order details to insertPaymentTransaction
      * @throws SQLException If a database error occurs
      */
     private void insertOrderDetails(Connection conn, int orderId, List<OrderDetail> details) throws SQLException {
@@ -467,7 +467,7 @@ public class OrderDAO extends DBContext {
                     if (order.getPaymentTransactionID() != null) {
                         transaction.setProviderTransactionID(order.getPaymentTransactionID());
                     }
-                    transactionDAO.insert(transaction);
+                    transactionDAO.insertPaymentTransaction(transaction);
                 }
             }
         } catch (SQLException e) {

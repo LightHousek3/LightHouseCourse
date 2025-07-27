@@ -404,12 +404,14 @@ function toggleVisibility(elementId) {
 function addToCart(courseId) {
     // Create a flying element for animation
     const courseCard = document.querySelector(`.course-card[data-course-id="${courseId}"]`);
-    const imgCard = courseCard.querySelector('.card-img-top');
+    const imgCard = courseCard ? courseCard.querySelector('.card-img-top') : null;
     const cartBtn = document.querySelector(`.add-to-cart-btn[data-course-id="${courseId}"]`);
 
+    // Create flying element if UI elements exist
+    let flyingElement = null;
     if (cartBtn && courseCard && imgCard) {
         // Create flying element
-        const flyingElement = document.createElement('div');
+        flyingElement = document.createElement('div');
         const img = document.createElement('img');
         img.src = imgCard.src;
         flyingElement.classList.add('flying-item');
@@ -428,73 +430,90 @@ function addToCart(courseId) {
 
         // Add the flying element to the DOM
         document.body.appendChild(flyingElement);
+    }
 
-        // Get cart position (ending point)
-        const cart = document.querySelector('.fa-shopping-cart');
-        if (!cart) {
-            flyingElement.remove();
-            return;
-        }
-
+    // Get cart position (ending point) if animation is possible
+    let endX = 0, endY = 0;
+    const cart = document.querySelector('.fa-shopping-cart');
+    if (cart && flyingElement) {
         const cartRect = cart.getBoundingClientRect();
-        const endX = cartRect.left + (cartRect.width / 2);
-        const endY = cartRect.top + (cartRect.height / 2);
+        endX = cartRect.left + (cartRect.width / 2);
+        endY = cartRect.top + (cartRect.height / 2);
+    }
 
-        // Start animation after a small delay
+    // Make actual AJAX request to add item
+    fetch(`${window.contextPath || ''}/cart/add?id=${courseId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // If status is 401 (not login), redirect to login
+                    window.location.href = "login";
+                    throw new Error("Please log in to add courses to cart");
+                } else if (response.status === 404) {
+                    throw new Error("Course not found");
+                } else if (response.status === 400) {
+                    throw new Error("Invalid course ID");
+                }
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data.success) {
+                // Display the specific message from the server
+                showNotification(data.message || 'Failed to add course to cart', 'error');
 
+                // Remove flying element if it exists
+                if (flyingElement) {
+                    flyingElement.remove();
+                }
+            } else {
+                // Update cart badge count
+                const cartBadge = document.querySelector('.badge.bg-primary');
+                if (cartBadge) {
+                    cartBadge.textContent = data.count;
+                    cartBadge.classList.add('pulse-animation');
+                    setTimeout(() => {
+                        cartBadge.classList.remove('pulse-animation');
+                    }, 1000);
+                }
 
-        // Make actual AJAX request to add item
-        fetch(`${window.contextPath}/cart/add?id=${courseId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                // If we have animation elements, do the animation
+                if (flyingElement && cart) {
+                    flyingElement.style.visibility = 'visible';
+                    setTimeout(() => {
+                        // Apply animation
+                        flyingElement.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                        flyingElement.style.left = `${endX}px`;
+                        flyingElement.style.top = `${endY}px`;
+
+                        // Remove the element after animation completes
+                        setTimeout(() => {
+                            flyingElement.remove();
+                            // Notify user of success
+                            showNotification('Course added to cart!', 'success');
+                        }, 2100);
+                    }, 100);
+                } else {
+                    // No animation, just show notification
+                    showNotification('Course added to cart!', 'success');
+                }
             }
         })
-                .then(response => {
-                    console.log(response.status);
-                    if (response.status === 401) {
-                        // If status is 401 (not login), redirect to login
-                        window.location.href = "login";
-                        throw new Error("User not logged in");
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (!data.success) {
-                        showNotification(data.message || 'Error adding to cart', 'error');
-                    } else {
-                        flyingElement.style.visibility = 'visible';
-                        setTimeout(() => {
-                            // Apply animation
-                            flyingElement.style.transform = 'translate(-50%, -50%) scale(0.5)';
-                            flyingElement.style.left = `${endX}px`;
-                            flyingElement.style.top = `${endY}px`;
+        .catch(error => {
+            showNotification(error.message || 'Error adding to cart', 'error');
+            console.error('Error:', error);
 
-                            // Remove the element after animation completes
-                            setTimeout(() => {
-                                flyingElement.remove();
-                                // Notify user of success
-                                showNotification('Course added to cart!', 'success');
-
-                                // Update cart badge count if needed
-                                const cartBadge = document.querySelector('.fa-shopping-cart + .badge');
-                                if (cartBadge) {
-                                    const currentCount = parseInt(cartBadge.textContent) || 0;
-                                    cartBadge.textContent = currentCount + 1;
-                                    cartBadge.classList.add('pulse-animation');
-                                    setTimeout(() => {
-                                        cartBadge.classList.remove('pulse-animation');
-                                    }, 1000);
-                                }
-                            }, 2100);
-                        }, 100);
-                    }
-                })
-                .catch(error => {
-                    showNotification('Error adding to cart', 'error');
-                    console.error('Error:', error);
-                });
-    }
+            // Remove flying element if it exists
+            if (flyingElement) {
+                flyingElement.remove();
+            }
+        });
 }
 
 /**
@@ -509,7 +528,7 @@ function showNotification(message, type = 'info') {
         <div class="notification-icon">
             ${type === 'success' ? '<i class="fas fa-check-circle"></i>' :
             type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' :
-            '<i class="fas fa-info-circle"></i>'}
+                '<i class="fas fa-info-circle"></i>'}
         </div>
         <div class="notification-message">${message}</div>
     `;

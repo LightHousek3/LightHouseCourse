@@ -369,7 +369,7 @@ public class OrderServlet extends HttpServlet {
 
                 // Save payment transaction
                 PaymentTransactionDAO transactionDAO = new PaymentTransactionDAO();
-                transactionDAO.insert(transaction);
+                transactionDAO.insertPaymentTransaction(transaction);
 
                 boolean updated = orderDAO.updateOrder(order);
 

@@ -20,7 +20,7 @@ import util.Validator;
 /**
  * Shopping cart controller for handling cart operations.
  */
-@WebServlet(name = "CartServlet", urlPatterns = {"/cart", "/cart/add", "/cart/remove", "/cart/clear"})
+@WebServlet(name = "CartServlet", urlPatterns = { "/cart", "/cart/add", "/cart/remove", "/cart/clear" })
 public class CartServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
@@ -38,10 +38,10 @@ public class CartServlet extends HttpServlet {
     /**
      * Handles the HTTP GET request - displaying the cart.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -71,10 +71,10 @@ public class CartServlet extends HttpServlet {
     /**
      * Handles the HTTP POST request.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -86,10 +86,10 @@ public class CartServlet extends HttpServlet {
     /**
      * Show the shopping cart.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     private void showCart(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -117,10 +117,10 @@ public class CartServlet extends HttpServlet {
     /**
      * Add a course to the cart.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -146,9 +146,13 @@ public class CartServlet extends HttpServlet {
         HttpSession session = request.getSession();
         CartUtil cart = (CartUtil) session.getAttribute("cart");
         Customer user = (Customer) session.getAttribute("user");
-        
-        if(user == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+
+        if (user == null) {
+            // Return JSON with error message instead of status code
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            String errorJson = "{\"success\":false,\"message\":\"Please log in to add courses to cart\"}";
+            response.getWriter().write(errorJson);
             return;
         }
 
@@ -157,30 +161,44 @@ public class CartServlet extends HttpServlet {
             session.setAttribute("cart", cart);
         }
 
-        // Add course to cart
-        boolean added = cart.addItem(course);
-        // If user is logged in, also add to database
-        if (added && user != null) {
-            cartItemDAO.addToCart(user.getCustomerID(), courseId, course.getPrice());
+        // Check if course is already in cart
+        boolean alreadyInCart = cart.containsCourse(courseId);
+        boolean added = false;
+        String message = "";
+
+        if (alreadyInCart) {
+            message = "This course is already in your cart";
+        } else {
+            // Add course to cart
+            added = cart.addItem(course);
+            // If user is logged in, also add to database
+            if (added && user != null) {
+                cartItemDAO.addToCart(user.getCustomerID(), courseId, course.getPrice());
+            }
+
+            if (!added) {
+                message = "Failed to add course to cart. Please try again.";
+            }
         }
 
         // Return JSON response
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        // Simple JSON response with success status and cart count
-        String jsonResponse = "{\"success\":" + added + ",\"count\":" + cart.getItemCount() + "}";
+        // JSON response with success status, cart count and message
+        String jsonResponse = "{\"success\":" + added +
+                ",\"count\":" + cart.getItemCount() +
+                ",\"message\":\"" + message + "\"}";
         response.getWriter().write(jsonResponse);
-
     }
 
     /**
      * Remove a course from the cart.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     private void removeFromCart(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -235,10 +253,10 @@ public class CartServlet extends HttpServlet {
     /**
      * Clear the shopping cart.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     private void clearCart(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

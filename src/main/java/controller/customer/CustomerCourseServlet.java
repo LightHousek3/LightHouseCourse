@@ -27,9 +27,9 @@ import model.Customer;
 import model.OrderDetail;
 
 /**
- * Course controller for listing courses and showing course details.
+ * Course controller for showing course details and my courses.
  */
-@WebServlet(name = "CustomerCourseServlet", urlPatterns = {"/courses", "/course/*", "/my-courses"})
+@WebServlet(name = "CustomerCourseServlet", urlPatterns = { "/courses", "/course/*", "/my-courses" })
 public class CustomerCourseServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
@@ -51,12 +51,12 @@ public class CustomerCourseServlet extends HttpServlet {
     }
 
     /**
-     * Handles the HTTP GET request - listing courses or showing details.
+     * Handles the HTTP GET request - showing details or my courses.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -66,18 +66,20 @@ public class CustomerCourseServlet extends HttpServlet {
         String servletPath = request.getServletPath();
         List<Category> categories = categoryDAO.getAllCategories();
         request.setAttribute("categories", categories);
+
         switch (servletPath) {
             case "/courses":
-                listCourses(request, response);
+                // Redirect to home page with scroll parameter
+                response.sendRedirect(request.getContextPath() + "/home?scroll=true");
                 break;
             case "/course":
                 if (pathInfo == null) {
-                    response.sendRedirect(request.getContextPath() + "/courses");
+                    response.sendRedirect(request.getContextPath() + "/home?scroll=true");
                     return;
                 }
                 String idStr = pathInfo.substring(1);
                 if (!idStr.matches("\\d+")) {
-                    response.sendRedirect(request.getContextPath() + "/courses");
+                    response.sendRedirect(request.getContextPath() + "/home?scroll=true");
                     return;
                 }
                 showCourseDetail(request, response);
@@ -88,220 +90,12 @@ public class CustomerCourseServlet extends HttpServlet {
     }
 
     /**
-     * Show the list of courses with optional filtering.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    private void listCourses(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String sortParam = request.getParameter("sortParam");
-        if (sortParam == null || sortParam.isEmpty()) {
-            sortParam = "newest";
-        }
-
-        // Get filter parameters
-        String keyword = request.getParameter("keyword");
-        String categoryParam = request.getParameter("category");
-        String pageParam = request.getParameter("page");
-
-        // Validate keyword
-        if (keyword != null && !isValidKeyword(keyword)) {
-            request.setAttribute("errorMessage",
-                    "Invalid keyword. Requirements:"
-                    + "<ul>"
-                    + "<li>Length 2-50 characters</li>"
-                    + "<li>Must not contain special characters</li>"
-                    + "<li>Maximum 5 words</li>"
-                    + "<li>Must not repeat any word or phrase more than 3 times</li>"
-                    + "</ul>");
-            request.setAttribute("keyword", keyword);
-            keyword = null;
-        }
-
-        // Default values
-        int categoryId = 0;
-        int page = 1;
-        int pageSize = 9; // Courses per page
-
-        // Parse parameters
-        if (categoryParam != null && Validator.isValidNumber(categoryParam)) {
-            categoryId = Integer.parseInt(categoryParam);
-        }
-
-        if (pageParam != null && Validator.isValidNumber(pageParam)) {
-            page = Integer.parseInt(pageParam);
-            if (page < 1) {
-                page = 1;
-            }
-        }
-
-        // Get courses based on filters
-        List<Course> courses;
-        int totalCourses;
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            // Search by keyword (and optionally category)
-            courses = courseDAO.searchCourseByNameOrCategory(keyword, categoryId);
-            totalCourses = courses.size();
-            request.setAttribute("keyword", keyword);
-        } else if (categoryId > 0) {
-            // Filter by category
-            courses = courseDAO.getByCategory(categoryId);
-            totalCourses = courses.size();
-            Category category = categoryDAO.getCategoryById(categoryId);
-            if (category != null) {
-                request.setAttribute("categoryName", category.getName());
-            }
-        } else {
-            // No filters, get all courses
-            courses = courseDAO.getAllCourses();
-            totalCourses = courses.size();
-        }
-
-        // Sort courses
-        if (courses != null && !courses.isEmpty()) {
-            switch (sortParam) {
-                case "price_asc":
-                    Collections.sort(courses, new Comparator<Course>() {
-                        @Override
-                        public int compare(Course c1, Course c2) {
-                            return Double.compare(c1.getPrice(), c2.getPrice());
-                        }
-                    });
-                    break;
-                case "price_desc":
-                    Collections.sort(courses, new Comparator<Course>() {
-                        @Override
-                        public int compare(Course c1, Course c2) {
-                            return Double.compare(c2.getPrice(), c1.getPrice());
-                        }
-                    });
-                    break;
-                case "popularity":
-                    Collections.sort(courses, new Comparator<Course>() {
-                        @Override
-                        public int compare(Course c1, Course c2) {
-                            return Integer.compare(c2.getEnrollmentCount(), c1.getEnrollmentCount());
-                        }
-                    });
-                    break;
-                default: // newest
-                    Collections.sort(courses, new Comparator<Course>() {
-                        @Override
-                        public int compare(Course c1, Course c2) {
-                            return Integer.compare(c2.getCourseID(), c1.getCourseID());
-                        }
-                    });
-                    break;
-            }
-        }
-
-        // Pagination (in-memory)
-        int offset = (page - 1) * pageSize;
-        int end = Math.min(offset + pageSize, courses.size());
-        List<Course> pagedCourses;
-        if (offset < end) {
-            pagedCourses = courses.subList(offset, end);
-        } else {
-            pagedCourses = new java.util.ArrayList<>();
-        }
-
-        // Set attributes for pagination
-        int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
-
-        request.setAttribute("courses", pagedCourses);
-        request.setAttribute("currentPage", page);
-        request.setAttribute("totalPages", totalPages);
-        request.setAttribute("totalCourses", totalCourses);
-        request.setAttribute("categoryId", categoryId);
-        request.setAttribute("sort", sortParam);
-
-        // Forward to course listing page
-        request.getRequestDispatcher("/WEB-INF/views/customer/manage-courses/courses-list.jsp").forward(request,
-                response);
-    }
-
-    /**
-     * Validates the search keyword
-     *
-     * @param keyword The keyword to validate
-     * @return true if keyword is valid, false otherwise
-     */
-    private boolean isValidKeyword(String keyword) {
-        // Kiểm tra keyword null hoặc trống
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return true;
-        }
-
-        keyword = keyword.trim();
-
-        // Kiểm tra độ dài từ khóa (2-50 ký tự)
-        if (keyword.length() < 2 || keyword.length() > 50) {
-            return false;
-        }
-
-        // Kiểm tra ký tự đặc biệt không cho phép
-        String specialCharsPattern = "[!@#$%^&*(),.?\":{}|<>]";
-        if (keyword.matches(".*" + specialCharsPattern + ".*")) {
-            return false;
-        }
-
-        // Kiểm tra số từ trong từ khóa (tối đa 5 từ)
-        if (keyword.split("\\s+").length > 5) {
-            return false;
-        }
-
-        // Kiểm tra từ lặp lại (thêm mới)
-        String[] words = keyword.split("\\s+");
-        String previousWord = "";
-        int repeatCount = 1;
-        int maxRepeat = 3; // Số lần lặp tối đa cho phép
-
-        for (String word : words) {
-            if (word.equals(previousWord)) {
-                repeatCount++;
-                if (repeatCount > maxRepeat) {
-                    return false;
-                }
-            } else {
-                repeatCount = 1;
-                previousWord = word;
-            }
-        }
-
-        // Kiểm tra chuỗi con lặp lại (thêm mới)
-        String normalizedKeyword = keyword.toLowerCase();
-        for (int length = 3; length <= normalizedKeyword.length() / 2; length++) {
-            for (int i = 0; i <= normalizedKeyword.length() - length; i++) {
-                String substring = normalizedKeyword.substring(i, i + length);
-                int count = 0;
-                int lastIndex = 0;
-
-                while ((lastIndex = normalizedKeyword.indexOf(substring, lastIndex)) != -1) {
-                    count++;
-                    lastIndex++;
-
-                    if (count > 3) { // Nếu một chuỗi con xuất hiện quá 3 lần
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Show the details of a specific course.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     private void showCourseDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -397,8 +191,9 @@ public class CustomerCourseServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         Customer customer = (Customer) session.getAttribute("user");
-        
-        if(customer == null) return;
+
+        if (customer == null)
+            return;
 
         try {
             // Get user's purchased courses with order details - now only returns the most
@@ -457,6 +252,6 @@ public class CustomerCourseServlet extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Course Servlet - Displays course listings and details";
+        return "Course Servlet - Displays course details and my courses";
     }
 }

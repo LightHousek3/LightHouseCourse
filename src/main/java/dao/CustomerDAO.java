@@ -41,8 +41,8 @@ public class CustomerDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "INSERT INTO Customers (Username, Password, Email, IsActive, FullName, Phone, Address, Avatar, AuthProvider, AuthProviderId, Token) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO Customers (Username, Password, Email, IsActive, FullName, Phone, Address, Avatar, AuthProvider, AuthProviderId, Token, TokenExpires, LastTokenRequest) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, customer.getUsername());
@@ -55,7 +55,9 @@ public class CustomerDAO extends DBContext {
             ps.setString(8, customer.getAvatar());
             ps.setString(9, customer.getAuthProvider());
             ps.setString(10, customer.getAuthProviderId());
-            ps.setString(11, customer.getToken()); // Thêm dòng này
+            ps.setString(11, customer.getToken());
+            ps.setTimestamp(12, customer.getTokenExpires());
+            ps.setTimestamp(13, customer.getLastTokenRequest());
 
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 1) {
@@ -831,6 +833,191 @@ public class CustomerDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Update password reset token and expiration time for a customer
+     * 
+     * @param email      The email of the customer
+     * @param token      The password reset token
+     * @param expiryTime The expiration time for the token
+     * @return true if update successful, false otherwise
+     */
+    public boolean updatePasswordResetToken(String email, String token, java.sql.Timestamp expiryTime) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Customers SET Token = ?, TokenExpires = ?, LastTokenRequest = CURRENT_TIMESTAMP WHERE Email = ? AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, token);
+            ps.setTimestamp(2, expiryTime);
+            ps.setString(3, email);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Verify password reset token
+     * 
+     * @param email The email of the customer
+     * @param token The password reset token
+     * @return The customer if token is valid, null otherwise
+     */
+    public Customer verifyPasswordResetToken(String email, String token) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Customer customer = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM Customers WHERE Email = ? AND Token = ? AND TokenExpires > CURRENT_TIMESTAMP AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setString(2, token);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                customer = mapCustomer(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return customer;
+    }
+
+    /**
+     * Reset customer password and clear token
+     * 
+     * @param email       The email of the customer
+     * @param newPassword The new password (already encrypted)
+     * @return true if reset successful, false otherwise
+     */
+    public boolean resetPassword(String email, String newPassword) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Customers SET Password = ?, Token = NULL, TokenExpires = NULL WHERE Email = ? AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, newPassword);
+            ps.setString(2, email);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Check if a user can request a new token (60 seconds between requests)
+     * 
+     * @param email The email of the customer
+     * @return true if user can request a new token, false otherwise
+     */
+    public boolean canRequestNewToken(String email) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT LastTokenRequest FROM Customers WHERE Email = ? AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                java.sql.Timestamp lastRequest = rs.getTimestamp("LastTokenRequest");
+
+                if (lastRequest == null) {
+                    return true;
+                }
+
+                long currentTime = System.currentTimeMillis();
+                long lastRequestTime = lastRequest.getTime();
+
+                // 60 seconds (60000 milliseconds) between requests
+                return (currentTime - lastRequestTime) >= 60000;
+            }
+
+            // If no record found, user can request a token
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Get remaining time (in seconds) before user can request a new token
+     * 
+     * @param email The email of the customer
+     * @return Remaining time in seconds, 0 if user can request a new token
+     */
+    public long getRemainingTimeForNewToken(String email) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT LastTokenRequest FROM Customers WHERE Email = ? AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                java.sql.Timestamp lastRequest = rs.getTimestamp("LastTokenRequest");
+
+                if (lastRequest == null) {
+                    return 0;
+                }
+
+                long currentTime = System.currentTimeMillis();
+                long lastRequestTime = lastRequest.getTime();
+
+                // 60 seconds (60000 milliseconds) between requests
+                long elapsedTime = currentTime - lastRequestTime;
+                if (elapsedTime < 60000) {
+                    return (60000 - elapsedTime) / 1000; // Convert to seconds
+                }
+            }
+
+            // If no record found or time has passed, user can request a token
+            return 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
         } finally {
             closeResources(rs, ps, conn);
         }

@@ -198,7 +198,7 @@
                                 <h3>Your cart is empty</h3>
                                 <p class="text-muted mb-4">Looks like you haven't added any courses to your cart yet.
                                 </p>
-                                <a href="${pageContext.request.contextPath}/courses" class="btn btn-primary">
+                                <a href="${pageContext.request.contextPath}/home?scroll=true" class="btn btn-primary">
                                     <i class="fas fa-book-open me-2"></i>Browse Courses
                                 </a>
                             </div>
@@ -262,7 +262,7 @@
                                         </div>
                                         <div class="card-footer bg-white">
                                             <div class="d-flex justify-content-between">
-                                                <a href="${pageContext.request.contextPath}/courses"
+                                                <a href="${pageContext.request.contextPath}/home?scroll=true"
                                                     class="btn btn-outline-primary">
                                                     <i class="fas fa-arrow-left me-2"></i> Continue Shopping
                                                 </a>

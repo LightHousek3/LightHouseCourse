@@ -20,10 +20,10 @@ public class PaymentTransactionDAO extends DBContext {
     /**
      * Insert a new payment transaction into the database.
      *
-     * @param transaction The transaction to insert
+     * @param transaction The transaction to insertPaymentTransaction
      * @return The generated transaction ID, or -1 if insertion failed
      */
-    public int insert(PaymentTransaction transaction) {
+    public int insertPaymentTransaction(PaymentTransaction transaction) {
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;

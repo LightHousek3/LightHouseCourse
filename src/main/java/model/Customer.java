@@ -4,6 +4,8 @@
  */
 package model;
 
+import java.sql.Timestamp;
+
 /**
  * Represents a customer in the system.
  *
@@ -21,6 +23,8 @@ public class Customer {
     private String address;
     private String avatar;
     private String token;
+    private Timestamp tokenExpires;
+    private Timestamp lastTokenRequest;
     private String authProvider; // 'local', 'google', 'facebook'
     private String authProviderId; // Provider's unique user ID
 
@@ -163,6 +167,22 @@ public class Customer {
         this.token = token;
     }
 
+    public java.sql.Timestamp getTokenExpires() {
+        return tokenExpires;
+    }
+
+    public void setTokenExpires(java.sql.Timestamp tokenExpires) {
+        this.tokenExpires = tokenExpires;
+    }
+
+    public java.sql.Timestamp getLastTokenRequest() {
+        return lastTokenRequest;
+    }
+
+    public void setLastTokenRequest(java.sql.Timestamp lastTokenRequest) {
+        this.lastTokenRequest = lastTokenRequest;
+    }
+
     public String getAuthProvider() {
         return authProvider;
     }
@@ -187,6 +207,35 @@ public class Customer {
      */
     public boolean isSocialLogin() {
         return !"local".equalsIgnoreCase(this.authProvider);
+    }
+
+    /**
+     * Check if the token is expired
+     * 
+     * @return true if token is expired or null, false otherwise
+     */
+    public boolean isTokenExpired() {
+        if (this.tokenExpires == null) {
+            return true;
+        }
+        return new java.util.Date().after(this.tokenExpires);
+    }
+
+    /**
+     * Check if user can request a new token (60 seconds between requests)
+     * 
+     * @return true if user can request a new token, false otherwise
+     */
+    public boolean canRequestNewToken() {
+        if (this.lastTokenRequest == null) {
+            return true;
+        }
+
+        long currentTime = System.currentTimeMillis();
+        long lastRequestTime = this.lastTokenRequest.getTime();
+
+        // 60 seconds (60000 milliseconds) between requests
+        return (currentTime - lastRequestTime) >= 60000;
     }
 
     @Override

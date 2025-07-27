@@ -44,6 +44,7 @@ CREATE TABLE Customers (
     Avatar NVARCHAR(255), 
     Token NVARCHAR(255),
     TokenExpires DATETIME,
+	LastTokenRequest DATETIME,
     AuthProvider NVARCHAR(50) DEFAULT 'local', -- Register with social local, google, facbook
     AuthProviderId NVARCHAR(255) NULL
 );

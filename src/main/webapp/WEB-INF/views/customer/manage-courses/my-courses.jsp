@@ -99,7 +99,8 @@
                                 <p>You haven't purchased any courses yet. Browse our catalog to find courses that
                                     interest you.</p>
                                 <hr>
-                                <a href="${pageContext.request.contextPath}/courses" class="btn btn-primary">Browse
+                                <a href="${pageContext.request.contextPath}/home?scroll=true"
+                                    class="btn btn-primary">Browse
                                     Courses</a>
                             </div>
                         </c:when>
