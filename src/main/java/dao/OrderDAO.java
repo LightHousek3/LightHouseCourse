@@ -112,13 +112,12 @@ public class OrderDAO extends DBContext {
 
         return details;
     }
-    
+
     /**
-     * Get all courses purchased by a customer with their order details.
-     * Returns a list of Object arrays where each array contains:
-     * [0] - Course object
+     * Get all courses purchased by a customer with their order details. Returns
+     * a list of Object arrays where each array contains: [0] - Course object
      * [1] - OrderDetail object with information about the purchase
-     * 
+     *
      * @param customerId The ID of the customer
      * @return List of Object arrays containing Course and OrderDetail
      */
@@ -130,12 +129,12 @@ public class OrderDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT c.CourseID, c.Name, c.Description, c.Price, c.ImageUrl, " +
-                    "c.Duration, c.Level, od.*, o.OrderDate FROM Orders o " +
-                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
-                    "JOIN Courses c ON od.CourseID = c.CourseID " +
-                    "WHERE o.CustomerID = ? AND o.Status = 'completed' " +
-                    "ORDER BY o.OrderDate DESC";
+            String sql = "SELECT c.CourseID, c.Name, c.Description, c.Price, c.ImageUrl, "
+                    + "c.Duration, c.Level, od.*, o.OrderDate FROM Orders o "
+                    + "JOIN OrderDetails od ON o.OrderID = od.OrderID "
+                    + "JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "WHERE o.CustomerID = ? AND o.Status = 'completed' "
+                    + "ORDER BY o.OrderDate DESC";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, customerId);
@@ -168,7 +167,7 @@ public class OrderDAO extends DBContext {
                 orderDetail.setPrice(rs.getDouble("Price"));
 
                 // Add to list as Object array
-                Object[] data = { course, orderDetail };
+                Object[] data = {course, orderDetail};
                 purchasedCourses.add(data);
             }
         } catch (SQLException e) {
@@ -179,11 +178,11 @@ public class OrderDAO extends DBContext {
 
         return purchasedCourses;
     }
-    
+
     /**
      * Check if a user has purchased a course.
-     * 
-     * @param customerId   The ID of the customer
+     *
+     * @param customerId The ID of the customer
      * @param courseId The ID of the course
      * @return true if purchased, false otherwise
      */
@@ -247,4 +246,34 @@ public class OrderDAO extends DBContext {
         detail.setPrice(rs.getDouble("Price"));
         return detail;
     }
+
+    public int getTotalStudentsByInstructorId(int instructorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT COUNT(DISTINCT o.CustomerID) AS TotalStudents "
+                   + "FROM Orders o "
+                   + "JOIN OrderDetails od ON o.OrderID = od.OrderID "
+                   + "JOIN CourseInstructors ci ON od.CourseID = ci.CourseID "
+                   + "WHERE o.Status = 'completed' AND ci.InstructorID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("TotalStudents");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return 0;
+    }
+
 }

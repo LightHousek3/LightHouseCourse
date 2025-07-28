@@ -553,6 +553,26 @@
                                                             </div>
                                                         </div>
                                                     </li>
+                                                    <!-- Full Name -->
+                                                    <li class="info-item">
+                                                        <div class="info-icon">
+                                                            <i class="fas fa-id-card"></i>
+                                                        </div>
+                                                        <div class="info-content">
+                                                            <div class="info-label">Full Name</div>
+                                                            <div class="info-value">
+                                                                <c:choose>
+                                                                    <c:when test="${not empty instructor.fullName}">
+                                                                        ${instructor.fullName}
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <span class="text-muted">Not provided</span>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+
                                                     <li class="info-item">
                                                         <div class="info-icon">
                                                             <i class="fas fa-envelope"></i>

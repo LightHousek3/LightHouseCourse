@@ -10,6 +10,7 @@ import java.util.List;
 import dao.CourseDAO;
 import dao.CategoryDAO;
 import dao.CourseProgressDAO;
+import dao.InstructorDAO;
 import dao.OrderDAO;
 import dao.RefundRequestDAO;
 import dao.RatingDAO;
@@ -30,7 +31,7 @@ import model.OrderDetail;
 /**
  * Course controller for listing courses and showing course details.
  */
-@WebServlet(name = "CustomerCourseServlet", urlPatterns = { "/courses", "/course/*", "/my-courses" })
+@WebServlet(name = "CustomerCourseServlet", urlPatterns = {"/courses", "/course/*", "/my-courses", "/course/instructor-info"})
 public class CustomerCourseServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
@@ -39,6 +40,7 @@ public class CustomerCourseServlet extends HttpServlet {
     private RefundRequestDAO refundRequestDAO;
     private RatingDAO ratingDAO;
     private CourseProgressDAO progressDAO;
+    private InstructorDAO instructorDAO;
 
     @Override
     public void init() throws ServletException {
@@ -49,15 +51,16 @@ public class CustomerCourseServlet extends HttpServlet {
         refundRequestDAO = new RefundRequestDAO();
         ratingDAO = new RatingDAO();
         progressDAO = new CourseProgressDAO();
+        instructorDAO = new dao.InstructorDAO();
     }
 
     /**
      * Handles the HTTP GET request - listing courses or showing details.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -85,16 +88,20 @@ public class CustomerCourseServlet extends HttpServlet {
                 break;
             case "/my-courses":
                 showPurchasedCourses(request, response);
+                break;
+            case "/course/instructor-info":
+                showInstructorInfo(request, response);
+                break;
         }
     }
 
     /**
      * Show the list of courses with optional filtering.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     private void listCourses(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -113,12 +120,12 @@ public class CustomerCourseServlet extends HttpServlet {
         if (keyword != null && !isValidKeyword(keyword)) {
             request.setAttribute("errorMessage",
                     "Invalid keyword. Requirements:"
-                            + "<ul>"
-                            + "<li>Length 2-50 characters</li>"
-                            + "<li>Must not contain special characters</li>"
-                            + "<li>Maximum 5 words</li>"
-                            + "<li>Must not repeat any word or phrase more than 3 times</li>"
-                            + "</ul>");
+                    + "<ul>"
+                    + "<li>Length 2-50 characters</li>"
+                    + "<li>Must not contain special characters</li>"
+                    + "<li>Maximum 5 words</li>"
+                    + "<li>Must not repeat any word or phrase more than 3 times</li>"
+                    + "</ul>");
             request.setAttribute("keyword", keyword);
             keyword = null;
         }
@@ -299,10 +306,10 @@ public class CustomerCourseServlet extends HttpServlet {
     /**
      * Show the details of a specific course.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     private void showCourseDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -404,8 +411,7 @@ public class CustomerCourseServlet extends HttpServlet {
         }
 
         // Forward to course detail page
-        request.getRequestDispatcher("/WEB-INF/views/customer/manage-courses/course-detail.jsp").forward(request,
-                response);
+        request.getRequestDispatcher("/WEB-INF/views/customer/manage-courses/course-detail.jsp").forward(request, response);
     }
 
     private void showPurchasedCourses(HttpServletRequest request, HttpServletResponse response)
@@ -468,6 +474,43 @@ public class CustomerCourseServlet extends HttpServlet {
             // Log the exception
             getServletContext().log("Error in CustomerCourseServlet", e);
         }
+    }
+
+    private void showInstructorInfo(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String instructorIdParam = request.getParameter("instructorId");
+        if (!Validator.isValidNumber(instructorIdParam)) {
+            response.sendRedirect(request.getContextPath() + "/courses");
+            return;
+        }
+
+        int instructorId = Integer.parseInt(instructorIdParam);
+        model.Instructor instructor = new dao.InstructorDAO().getInstructorById(instructorId);
+
+        if (instructor == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Instructor not found.");
+            return;
+        }
+
+        // Thêm dữ liệu bổ sung
+        List<Course> instructorCourses = courseDAO.getCoursesByInstructorId(instructorId);
+        double averageRating = ratingDAO.getAverageRatingByInstructorId(instructorId);
+        int ratingCount = ratingDAO.getRatingCountByInstructorId(instructorId);
+        int totalStudents = orderDAO.getTotalStudentsByInstructorId(instructorId);
+
+        instructor.setTotalStudents(totalStudents);
+
+        // Set attribute and forward to view
+        request.setAttribute("selectedUser", instructor);
+        request.setAttribute("courses", instructorCourses);
+        request.setAttribute("totalCourses", instructorCourses.size());
+        request.setAttribute("averageRating", averageRating);
+        request.setAttribute("ratingCount", ratingCount);
+        request.setAttribute("totalStudents", totalStudents);
+
+        request.getRequestDispatcher("/WEB-INF/views/customer/manage-courses/view-instructor-information.jsp")
+                .forward(request, response);
     }
 
     /**

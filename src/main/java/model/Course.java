@@ -143,7 +143,7 @@ public class Course {
 
     /**
      * Add an instructor to this course
-     * 
+     *
      * @param instructor The instructor to add
      */
     public void addInstructor(Instructor instructor) {
@@ -155,7 +155,7 @@ public class Course {
 
     /**
      * Get the primary instructor (first in the list) for backward compatibility
-     * 
+     *
      * @return The primary instructor ID or 0 if no instructors
      */
     public int getInstructorId() {
@@ -216,6 +216,20 @@ public class Course {
 
     public void setEnrollmentCount(int enrollmentCount) {
         this.enrollmentCount = enrollmentCount;
+    }
+
+    /**
+     * Set the instructor for this course (as the first and only instructor).
+     *
+     * @param instructor The instructor to set.
+     */
+    public void setInstructor(Instructor instructor) {
+        if (this.instructors == null) {
+            this.instructors = new ArrayList<>();
+        } else {
+            this.instructors.clear(); // Chỉ giữ một instructor duy nhất
+        }
+        this.instructors.add(instructor);
     }
 
     @Override

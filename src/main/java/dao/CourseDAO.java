@@ -62,6 +62,9 @@ public class CourseDAO extends DBContext {
                 // Get course instructors
                 List<Instructor> instructors = getInstructorsForCourse(courseId);
                 course.setInstructors(instructors);
+                if (instructors != null && !instructors.isEmpty()) {
+                    course.setInstructor(instructors.get(0));
+                }
 
                 // Get course ratings
                 double avgRating = ratingDAO.getAverageRatingForCourse(courseId);

@@ -248,13 +248,34 @@
                         </div>
                         <p class="lead">${course.description}</p>
 
-                        <div class="course-instructor">
-                            <img src="${pageContext.request.contextPath}/assets/images/default-instructor.jpg"
-                                 class="instructor-img" alt="Instructor">
-                            <div>
-                                <small>Expert Educator</small>
-                            </div>
-                        </div>
+                        <c:if test="${not empty course.instructors}">
+                            <c:forEach var="inst" items="${course.instructors}" varStatus="loop">
+                                <c:if test="${loop.index == 0}">
+                                    <a href="${pageContext.request.contextPath}/course/instructor-info?instructorId=${inst.instructorID}"
+                                       class="course-instructor text-decoration-none text-dark d-flex align-items-center">
+
+                                        <c:choose>
+                                            <c:when test="${not empty inst.avatar}">
+                                                <img src="${pageContext.request.contextPath}${inst.avatar}"
+                                                     class="instructor-img" alt="Instructor" />
+                                            </c:when>
+                                            <c:otherwise>
+                                                <img src="${pageContext.request.contextPath}/assets/images/default-instructor.jpg"
+                                                     class="instructor-img" alt="Instructor" />
+                                            </c:otherwise>
+                                        </c:choose>
+
+                                        <div class="ms-3">
+                                            <div class="fw-bold">${inst.fullName}</div>
+                                            <small class="text-muted">Expert Educator</small>
+                                        </div>
+                                    </a>
+                                </c:if>
+                            </c:forEach>
+                        </c:if>
+
+
+
                     </div>
                     <div class="col-lg-4">
                         <div class="card">

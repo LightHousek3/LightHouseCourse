@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpSession;
 import model.Customer;
 import util.EmailUtils;
 import util.PasswordEncrypt;
+import dao.SuperUserDAO;
 
 /**
  *
@@ -24,6 +25,7 @@ import util.PasswordEncrypt;
 public class CustomerRegisterServlet extends HttpServlet {
 
     private final CustomerDAO customerDAO = new CustomerDAO();
+    private final SuperUserDAO superUserDAO = new SuperUserDAO();
 
     /**
      * Handles the HTTP <code>GET</code> method.
@@ -69,7 +71,7 @@ public class CustomerRegisterServlet extends HttpServlet {
             return;
         }
 
-        if (customerDAO.usernameExists(username)) {
+        if (customerDAO.usernameExists(username) || superUserDAO.usernameExists(username)) {
             request.setAttribute("error", "Username already exists.");
             request.getRequestDispatcher("/WEB-INF/views/customer/register-account/register-account.jsp").forward(request, response);
             return;
@@ -81,7 +83,7 @@ public class CustomerRegisterServlet extends HttpServlet {
             return;
         }
 
-        if (customerDAO.emailExists(email)) {
+        if (customerDAO.emailExists(email) || superUserDAO.emailExists(email)) {
             request.setAttribute("error", "Email already registered.");
             request.getRequestDispatcher("/WEB-INF/views/customer/register-account/register-account.jsp").forward(request, response);
             return;
@@ -103,7 +105,7 @@ public class CustomerRegisterServlet extends HttpServlet {
         String encryptedPassword = PasswordEncrypt.encrypt(password);
 
         // Tạo mã xác minh 6 số ngẫu nhiên
-       String token = String.format("%06d", new java.util.Random().nextInt(1000000));
+        String token = String.format("%06d", new java.util.Random().nextInt(1000000));
 
         // Tạo customer
         Customer customer = new Customer();

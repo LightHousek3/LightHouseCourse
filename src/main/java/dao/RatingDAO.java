@@ -354,7 +354,7 @@ public class RatingDAO extends DBContext {
      *
      * @param year The year to filter by
      * @return Map where key is course name and value is array of 12 monthly
-     *         average ratings
+     * average ratings
      * @throws SQLException If a database error occurs
      */
     public Map<String, double[]> getAverageRatingsByMonth(int year) throws SQLException {
@@ -552,7 +552,7 @@ public class RatingDAO extends DBContext {
      * by courseId.
      *
      * @param instructorId The instructor's ID
-     * @param courseId     The course ID to filter
+     * @param courseId The course ID to filter
      * @return List of ratings for the instructor's courses and courseId
      */
     public List<Rating> getRatingsByInstructorIdAndCourseId(int instructorId, int courseId) {
@@ -592,7 +592,7 @@ public class RatingDAO extends DBContext {
      * by stars.
      *
      * @param instructorId The instructor's ID
-     * @param stars        The star rating to filter
+     * @param stars The star rating to filter
      * @return List of ratings for the instructor's courses and stars
      */
     public List<Rating> getRatingsByInstructorIdAndStars(int instructorId, int stars) {
@@ -632,8 +632,8 @@ public class RatingDAO extends DBContext {
      * by courseId and stars.
      *
      * @param instructorId The instructor's ID
-     * @param courseId     The course ID to filter
-     * @param stars        The star rating to filter
+     * @param courseId The course ID to filter
+     * @param stars The star rating to filter
      * @return List of ratings for the instructor's courses, courseId, and stars
      */
     public List<Rating> getRatingsByInstructorIdAndCourseIdAndStars(int instructorId, int courseId, int stars) {
@@ -678,11 +678,11 @@ public class RatingDAO extends DBContext {
                 + "WHERE ci.InstructorID = ? "
                 + "ORDER BY r.CreatedAt DESC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, instructorId);
             ps.setInt(2, offset);
             ps.setInt(3, limit);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ratings.add(mapRating(rs));
                 }
@@ -698,11 +698,11 @@ public class RatingDAO extends DBContext {
                 + "FROM Ratings r "
                 + "JOIN CourseInstructors ci ON r.CourseID = ci.CourseID "
                 + "WHERE ci.InstructorID = ? AND r.CourseID = ? AND r.Stars = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, instructorId);
             ps.setInt(2, courseId);
             ps.setInt(3, stars);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("total");
                 }
@@ -718,10 +718,10 @@ public class RatingDAO extends DBContext {
                 + "FROM Ratings r "
                 + "JOIN CourseInstructors ci ON r.CourseID = ci.CourseID "
                 + "WHERE ci.InstructorID = ? AND r.CourseID = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, instructorId);
             ps.setInt(2, courseId);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("total");
                 }
@@ -737,10 +737,10 @@ public class RatingDAO extends DBContext {
                 + "FROM Ratings r "
                 + "JOIN CourseInstructors ci ON r.CourseID = ci.CourseID "
                 + "WHERE ci.InstructorID = ? AND r.Stars = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, instructorId);
             ps.setInt(2, stars);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("total");
                 }
@@ -761,12 +761,12 @@ public class RatingDAO extends DBContext {
                 + "WHERE ci.InstructorID = ? AND r.CourseID = ? "
                 + "ORDER BY r.CreatedAt DESC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, instructorId);
             ps.setInt(2, courseId);
             ps.setInt(3, offset);
             ps.setInt(4, limit);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ratings.add(mapRating(rs));
                 }
@@ -786,12 +786,12 @@ public class RatingDAO extends DBContext {
                 + "WHERE ci.InstructorID = ? AND r.Stars = ? "
                 + "ORDER BY r.CreatedAt DESC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, instructorId);
             ps.setInt(2, stars);
             ps.setInt(3, offset);
             ps.setInt(4, limit);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ratings.add(mapRating(rs));
                 }
@@ -812,13 +812,13 @@ public class RatingDAO extends DBContext {
                 + "WHERE ci.InstructorID = ? AND r.CourseID = ? AND r.Stars = ? "
                 + "ORDER BY r.CreatedAt DESC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, instructorId);
             ps.setInt(2, courseId);
             ps.setInt(3, stars);
             ps.setInt(4, offset);
             ps.setInt(5, limit);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ratings.add(mapRating(rs));
                 }
@@ -838,9 +838,9 @@ public class RatingDAO extends DBContext {
                 + "WHERE ci.InstructorID = ? "
                 + "ORDER BY Year DESC";
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, instructorId);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     years.add(rs.getInt("Year"));
                 }
@@ -852,7 +852,7 @@ public class RatingDAO extends DBContext {
     /**
      * Get average course ratings by year for a specific instructor.
      *
-     * @param year         The year to filter by (0 for all years)
+     * @param year The year to filter by (0 for all years)
      * @param instructorId The instructor ID to filter courses
      * @return Map of course names to average ratings
      * @throws SQLException If a database error occurs
@@ -947,6 +947,40 @@ public class RatingDAO extends DBContext {
         }
 
         return ratingsByMonth;
+    }
+
+    /**
+     * Gets the total number of ratings for all courses taught by an instructor
+     *
+     * @param instructorId The instructor ID
+     * @return The number of ratings
+     */
+    public int getRatingCountByInstructorId(int instructorId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT COUNT(*) AS RatingCount "
+                    + "FROM Ratings r "
+                    + "JOIN CourseInstructors ci ON r.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("RatingCount");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting ratings by instructor: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return count;
     }
 
 }

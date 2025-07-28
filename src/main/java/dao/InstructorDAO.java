@@ -60,46 +60,47 @@ public class InstructorDAO extends DBContext {
      * @param superUserId The ID of the super user who is an instructor
      * @return Instructor object or null if not found
      */
-   public Instructor getInstructorBySuperUserId(int superUserId) {
-    try {
-        String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
-                + "i.ApprovalDate, su.FullName, su.Email, su.Username, su.Phone, su.Address, su.Password, su.Avatar "
-                + "FROM Instructors i "
-                + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
-                + "WHERE i.SuperUserID = ?";
-        conn = getConnection();
-        ps = conn.prepareStatement(query);
-        ps.setInt(1, superUserId);
-        rs = ps.executeQuery();
-        if (rs.next()) {
-            Instructor instructor = new Instructor();
-            instructor.setInstructorID(rs.getInt("InstructorID"));
-            instructor.setSuperUserID(rs.getInt("SuperUserID"));
-            instructor.setBiography(rs.getString("Biography"));
-            instructor.setSpecialization(rs.getString("Specialization"));
-            instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
-            instructor.setName(rs.getString("FullName"));
-            instructor.setFullName(rs.getString("FullName"));
-            instructor.setEmail(rs.getString("Email"));
-            instructor.setUsername(rs.getString("Username"));
-            instructor.setPhone(rs.getString("Phone"));
-            instructor.setAddress(rs.getString("Address"));
-            instructor.setPassword(rs.getString("Password")); 
-            instructor.setAvatar(rs.getString("Avatar"));
-            // Get statistical info
-            instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
-            instructor.setTotalStudents(countStudentsForInstructor(instructor.getInstructorID()));
+    public Instructor getInstructorBySuperUserId(int superUserId) {
+        try {
+            String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
+                    + "i.ApprovalDate, su.FullName, su.Email, su.Username, su.Phone, su.Address, su.Password, su.Avatar "
+                    + "FROM Instructors i "
+                    + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
+                    + "WHERE i.SuperUserID = ?";
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, superUserId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Instructor instructor = new Instructor();
+                instructor.setInstructorID(rs.getInt("InstructorID"));
+                instructor.setSuperUserID(rs.getInt("SuperUserID"));
+                instructor.setBiography(rs.getString("Biography"));
+                instructor.setSpecialization(rs.getString("Specialization"));
+                instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
+                instructor.setName(rs.getString("FullName"));
+                instructor.setFullName(rs.getString("FullName"));
+                instructor.setEmail(rs.getString("Email"));
+                instructor.setUsername(rs.getString("Username"));
+                instructor.setPhone(rs.getString("Phone"));
+                instructor.setAddress(rs.getString("Address"));
+                instructor.setPassword(rs.getString("Password"));
+                instructor.setAvatar(rs.getString("Avatar"));
+                // Get statistical info
+                instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
+               OrderDAO orderDAO = new OrderDAO();
+instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.getInstructorID()));
 
-            return instructor;
+
+                return instructor;
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error finding instructor by user ID: " + ex.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
         }
-    } catch (SQLException ex) {
-        System.out.println("Error finding instructor by user ID: " + ex.getMessage());
-    } finally {
-        closeResources(rs, ps, conn);
+        return null;
     }
-    return null;
-}
-
 
     /**
      * Get all instructors from the database
@@ -140,7 +141,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Update instructor information in the database
-     * 
+     *
      * @param instructor The instructor to updateInstructor
      * @return True if successful, false otherwise
      */
@@ -203,11 +204,13 @@ public class InstructorDAO extends DBContext {
         try {
             // Count unique customers who have made progress in courses taught by this
             // instructor
-            String query = "SELECT COUNT(DISTINCT cp.CustomerID) as total "
-                    + "FROM CourseProgress cp "
-                    + "JOIN CourseInstructors ci ON cp.CourseID = ci.CourseID "
+            String query = "SELECT COUNT(DISTINCT lp.CustomerID) AS total "
+                    + "FROM CourseInstructors ci "
+                    + "JOIN Lessons l ON ci.CourseID = l.CourseID "
+                    + "JOIN LessonProgress lp ON lp.LessonID = l.LessonID "
                     + "WHERE ci.InstructorID = ?";
 
+            conn = getConnection();
             PreparedStatement countPs = conn.prepareStatement(query);
             countPs.setInt(1, instructorId);
             ResultSet countRs = countPs.executeQuery();
@@ -226,7 +229,7 @@ public class InstructorDAO extends DBContext {
 
     /**
      * Insert a new instructor into the database
-     * 
+     *
      * @param instructor The instructor to insert
      * @return The inserted instructor with ID or null if failed
      */
@@ -258,10 +261,10 @@ public class InstructorDAO extends DBContext {
             closeResources(rs, ps, conn);
         }
     }
-    
+
     /**
      * Delete an instructor from the database by Super User ID
-     * 
+     *
      * @param superUserId The ID of the super user who is an instructor
      * @return True if successful, false otherwise
      */
@@ -315,8 +318,11 @@ public class InstructorDAO extends DBContext {
 
     public Instructor getInstructorById(int instructorId) {
         try {
-            String query = "SELECT i.InstructorID, i.Biography, i.Specialization, i.ApprovalDate "
-                    + "FROM Instructors i WHERE i.InstructorID = ?";
+            String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
+                    + "i.ApprovalDate, su.FullName, su.Email, su.Username, su.Phone, su.Address, su.Avatar "
+                    + "FROM Instructors i "
+                    + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
+                    + "WHERE i.InstructorID = ?";
             conn = getConnection();
             ps = conn.prepareStatement(query);
             ps.setInt(1, instructorId);
@@ -324,9 +330,22 @@ public class InstructorDAO extends DBContext {
             if (rs.next()) {
                 Instructor instructor = new Instructor();
                 instructor.setInstructorID(rs.getInt("InstructorID"));
+                instructor.setSuperUserID(rs.getInt("SuperUserID"));
                 instructor.setBiography(rs.getString("Biography"));
                 instructor.setSpecialization(rs.getString("Specialization"));
                 instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
+                instructor.setFullName(rs.getString("FullName"));
+                instructor.setEmail(rs.getString("Email"));
+                instructor.setUsername(rs.getString("Username"));
+                instructor.setPhone(rs.getString("Phone"));
+                instructor.setAddress(rs.getString("Address"));
+                instructor.setAvatar(rs.getString("Avatar"));
+
+                // Thêm thống kê nếu cần
+                instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
+               OrderDAO orderDAO = new OrderDAO();
+instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.getInstructorID()));
+
                 return instructor;
             }
         } catch (SQLException ex) {
@@ -347,7 +366,8 @@ public class InstructorDAO extends DBContext {
     }
 
     /**
-     * Find an instructor by their user ID (alias for getInstructorBySuperUserId)
+     * Find an instructor by their user ID (alias for
+     * getInstructorBySuperUserId)
      *
      * @param superUserId The ID of the super user who is an instructor
      * @return Instructor object or null if not found

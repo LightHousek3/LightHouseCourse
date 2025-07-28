@@ -35,8 +35,8 @@ public class CustomerDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "INSERT INTO Customers (Username, Password, Email, IsActive, FullName, Phone, Address, Avatar, AuthProvider, AuthProviderId, Token) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO Customers (Username, Password, Email, IsActive, FullName, Phone, Address, Avatar, AuthProvider, AuthProviderId, Token, TokenExpires) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, customer.getUsername());
@@ -49,7 +49,8 @@ public class CustomerDAO extends DBContext {
             ps.setString(8, customer.getAvatar());
             ps.setString(9, customer.getAuthProvider());
             ps.setString(10, customer.getAuthProviderId());
-            ps.setString(11, customer.getToken()); // Thêm dòng này
+            ps.setString(11, customer.getToken());
+            ps.setNull(12, java.sql.Types.TIMESTAMP); // TokenExpires
 
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 1) {
@@ -405,7 +406,6 @@ public class CustomerDAO extends DBContext {
 
         return customer;
     }
-    
 
     public boolean activateCustomerByEmailAndToken(String email, String token) {
         Connection conn = null;
@@ -425,10 +425,10 @@ public class CustomerDAO extends DBContext {
             closeResources(null, ps, conn);
         }
     }
-    
+
     /**
      * Authenticate a customer.
-     * 
+     *
      * @param username The username
      * @param password The encrypted password
      * @return The authenticated user, or null if authentication failed
@@ -464,11 +464,11 @@ public class CustomerDAO extends DBContext {
 
         return user;
     }
-    
+
     /**
      * Find a customer by their social provider ID.
-     * 
-     * @param provider   The authentication provider (e.g., "google", "facebook")
+     *
+     * @param provider The authentication provider (e.g., "google", "facebook")
      * @param providerId The ID from the provider
      * @return Customer object if found, null otherwise
      */
@@ -501,7 +501,7 @@ public class CustomerDAO extends DBContext {
 
     /**
      * Process a social login - either find existing user or create new one.
-     * 
+     *
      * @param customer The customer object from social authentication
      * @return Customer object with database ID if successful, null otherwise
      */
@@ -541,7 +541,7 @@ public class CustomerDAO extends DBContext {
 
     /**
      * Update a customer's social login details.
-     * 
+     *
      * @param customer The customer to update customer
      * @return true if update customer successful, false otherwise
      */
