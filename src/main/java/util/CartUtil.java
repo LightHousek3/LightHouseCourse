@@ -10,19 +10,19 @@ import model.Course;
  */
 public class CartUtil {
     private List<CartItem> items;
-    
+
     public CartUtil() {
         this.items = new ArrayList<>();
     }
-    
+
     public List<CartItem> getItems() {
         return items;
     }
-    
+
     public void setItems(List<CartItem> items) {
         this.items = items;
     }
-    
+
     /**
      * Add a course to the cart.
      * 
@@ -36,12 +36,12 @@ public class CartUtil {
                 return false; // Course already in cart
             }
         }
-        
+
         CartItem newItem = new CartItem(course, course.getPrice());
         items.add(newItem);
         return true;
     }
-    
+
     /**
      * Remove a course from the cart.
      * 
@@ -57,7 +57,7 @@ public class CartUtil {
         }
         return false;
     }
-    
+
     /**
      * Get the total price of all items in the cart.
      * 
@@ -70,7 +70,22 @@ public class CartUtil {
         }
         return total;
     }
-    
+
+    /**
+     * Get the total price of selected items in the cart.
+     * 
+     * @return The total price of selected items
+     */
+    public double getSelectedTotalPrice() {
+        double total = 0;
+        for (CartItem item : items) {
+            if (item.isSelected()) {
+                total += item.getPrice();
+            }
+        }
+        return total;
+    }
+
     /**
      * Get the number of items in the cart.
      * 
@@ -79,7 +94,22 @@ public class CartUtil {
     public int getItemCount() {
         return items.size();
     }
-    
+
+    /**
+     * Get the number of selected items in the cart.
+     * 
+     * @return The number of selected items
+     */
+    public int getSelectedItemCount() {
+        int count = 0;
+        for (CartItem item : items) {
+            if (item.isSelected()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     /**
      * Check if the cart is empty.
      * 
@@ -88,14 +118,28 @@ public class CartUtil {
     public boolean isEmpty() {
         return items.isEmpty();
     }
-    
+
+    /**
+     * Check if there are no selected items in the cart.
+     * 
+     * @return true if no items are selected, false otherwise
+     */
+    public boolean isNothingSelected() {
+        for (CartItem item : items) {
+            if (item.isSelected()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Clear all items from the cart.
      */
     public void clear() {
         items.clear();
     }
-    
+
     /**
      * Check if a course is in the cart.
      * 
@@ -110,4 +154,54 @@ public class CartUtil {
         }
         return false;
     }
-} 
+
+    /**
+     * Select or deselect a course in the cart.
+     * 
+     * @param courseId The ID of the course to select/deselect
+     * @param selected true to select, false to deselect
+     * @return true if the course was found and updated, false otherwise
+     */
+    public boolean setItemSelected(int courseId, boolean selected) {
+        for (CartItem item : items) {
+            if (item.getCourse().getCourseID() == courseId) {
+                item.setSelected(selected);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Select all items in the cart.
+     */
+    public void selectAll() {
+        for (CartItem item : items) {
+            item.setSelected(true);
+        }
+    }
+
+    /**
+     * Deselect all items in the cart.
+     */
+    public void deselectAll() {
+        for (CartItem item : items) {
+            item.setSelected(false);
+        }
+    }
+
+    /**
+     * Get list of selected items in the cart.
+     * 
+     * @return List of selected cart items
+     */
+    public List<CartItem> getSelectedItems() {
+        List<CartItem> selectedItems = new ArrayList<>();
+        for (CartItem item : items) {
+            if (item.isSelected()) {
+                selectedItems.add(item);
+            }
+        }
+        return selectedItems;
+    }
+}

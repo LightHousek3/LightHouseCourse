@@ -56,7 +56,7 @@
                 <li class="nav-item">
                     <a class="nav-link ${activeMenu eq 'statistics' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/admin/statistics">
-                        <i class="fas fa-chart-line"></i> Statistics
+                        <i class="fas fa-chart-line"></i> View Statistics
                     </a>
                 </li>
                 <li class="nav-item mt-5">
