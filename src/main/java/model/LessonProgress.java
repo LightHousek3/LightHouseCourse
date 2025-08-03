@@ -4,6 +4,7 @@
  */
 package model;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
@@ -16,6 +17,7 @@ public class LessonProgress {
     private int customerID;
     private int lessonID;
     private boolean isCompleted;
+    private BigDecimal completionPercentage;
     private Timestamp completionDate;
     private Timestamp lastAccessDate;
 
@@ -25,21 +27,24 @@ public class LessonProgress {
 
     // Constructors
     public LessonProgress() {
+        this.completionPercentage = BigDecimal.ZERO;
     }
 
     public LessonProgress(int customerID, int lessonID) {
         this.customerID = customerID;
         this.lessonID = lessonID;
         this.isCompleted = false;
+        this.completionPercentage = BigDecimal.ZERO;
         this.lastAccessDate = new Timestamp(System.currentTimeMillis());
     }
 
     public LessonProgress(int progressID, int customerID, int lessonID, boolean isCompleted,
-            Timestamp completionDate, Timestamp lastAccessDate) {
+            BigDecimal completionPercentage, Timestamp completionDate, Timestamp lastAccessDate) {
         this.progressID = progressID;
         this.customerID = customerID;
         this.lessonID = lessonID;
         this.isCompleted = isCompleted;
+        this.completionPercentage = completionPercentage != null ? completionPercentage : BigDecimal.ZERO;
         this.completionDate = completionDate;
         this.lastAccessDate = lastAccessDate;
     }
@@ -73,8 +78,26 @@ public class LessonProgress {
         return isCompleted;
     }
 
+    // Add this method for Jakarta EL compatibility
+    public boolean getIsCompleted() {
+        return isCompleted;
+    }
+
+    // Add a standard Java boolean getter
+    public boolean isCompleted() {
+        return isCompleted;
+    }
+
     public void setIsCompleted(boolean isCompleted) {
         this.isCompleted = isCompleted;
+    }
+
+    public BigDecimal getCompletionPercentage() {
+        return completionPercentage;
+    }
+
+    public void setCompletionPercentage(BigDecimal completionPercentage) {
+        this.completionPercentage = completionPercentage != null ? completionPercentage : BigDecimal.ZERO;
     }
 
     public Timestamp getCompletionDate() {
@@ -113,6 +136,7 @@ public class LessonProgress {
     public String toString() {
         return "LessonProgress{" + "progressID=" + progressID + ", customerID=" + customerID +
                 ", lessonID=" + lessonID + ", isCompleted=" + isCompleted +
+                ", completionPercentage=" + completionPercentage +
                 ", completionDate=" + completionDate + ", lastAccessDate=" + lastAccessDate + '}';
     }
 }

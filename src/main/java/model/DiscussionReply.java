@@ -23,15 +23,16 @@ public class DiscussionReply {
 
     // Additional fields not in database
     private String authorName;
+    private String authorAvatar;
 
     // Constructors
     public DiscussionReply() {
     }
 
-    public DiscussionReply(int discussionID, int authorID, String authorType, String content) {
+    public DiscussionReply(int discussionID, int authorID, String content) {
         this.discussionID = discussionID;
         this.authorID = authorID;
-        this.authorType = authorType;
+        this.authorType = "customer";
         this.content = content;
     }
 
@@ -104,7 +105,6 @@ public class DiscussionReply {
         this.updatedAt = updatedAt;
     }
 
-    // Updated from userName to authorName
     public String getAuthorName() {
         return authorName;
     }
@@ -113,13 +113,12 @@ public class DiscussionReply {
         this.authorName = authorName;
     }
 
-    // Legacy methods for backward compatibility
-    public String getUserName() {
-        return authorName;
+    public String getAuthorAvatar() {
+        return authorAvatar;
     }
 
-    public void setUserName(String userName) {
-        this.authorName = userName;
+    public void setAuthorAvatar(String authorAvatar) {
+        this.authorAvatar = authorAvatar;
     }
 
     @Override

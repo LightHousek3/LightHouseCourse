@@ -41,6 +41,11 @@ public class Instructor {
     public Instructor() {
     }
 
+    public Instructor(int instructorID, String name) {
+        this.instructorID = instructorID;
+        this.name = name;
+    }
+
     public Instructor(int instructorID, int superUserID, String biography, String specialization, Date approvalDate) {
         this.instructorID = instructorID;
         this.superUserID = superUserID;
@@ -225,9 +230,5 @@ public class Instructor {
                 + ", avatar='" + avatar + '\''
                 + '}';
     }
-
-   
-
-    
 
 }

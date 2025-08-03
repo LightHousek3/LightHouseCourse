@@ -44,6 +44,7 @@ CREATE TABLE Customers (
     Avatar NVARCHAR(255), 
     Token NVARCHAR(255),
     TokenExpires DATETIME,
+	LastTokenRequest DATETIME,
     AuthProvider NVARCHAR(50) DEFAULT 'local', -- Register with social local, google, facbook
     AuthProviderId NVARCHAR(255) NULL
 );
@@ -185,7 +186,7 @@ GO
 -- Table RefundRequests (depend on Orders and Customers)
 CREATE TABLE RefundRequests (
     RefundID INT IDENTITY(1,1) PRIMARY KEY,
-    OrderID INT NOT NULL,
+    OrderID INT,
     CustomerID INT NOT NULL,
     RequestDate DATETIME DEFAULT GETDATE(),
     Status NVARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
@@ -195,7 +196,7 @@ CREATE TABLE RefundRequests (
     AdminMessage NVARCHAR(500) NULL,
     RefundPercentage INT NOT NULL DEFAULT 80, -- Default refund percentage
     ProcessedBy INT NULL,
-    CONSTRAINT FK_RefundRequests_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    CONSTRAINT FK_RefundRequests_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE SET NULL,
     CONSTRAINT FK_RefundRequests_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE CASCADE,
     CONSTRAINT FK_RefundRequests_ProcessedBy FOREIGN KEY (ProcessedBy) REFERENCES SuperUsers(SuperUserID)
 );
@@ -259,6 +260,7 @@ CREATE TABLE LessonProgress (
     CustomerID INT NOT NULL,
     LessonID INT NOT NULL,
     IsCompleted BIT DEFAULT 0,
+	CompletionPercentage DECIMAL(5,2) DEFAULT 0, -- Percentage of lesson completed
     CompletionDate DATETIME,
     LastAccessDate DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_LessonProgress_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
@@ -270,15 +272,15 @@ GO
 -- Table PaymentTransactions (depend on Orders and RefundRequests)
 CREATE TABLE PaymentTransactions (
     TransactionID INT IDENTITY(1,1) PRIMARY KEY,
-    OrderID INT NULL,
-    RefundRequestID INT NULL,
+    OrderID INT NULL UNIQUE,
+    RefundRequestID INT NULL UNIQUE,
     TransactionType NVARCHAR(20) NOT NULL,
     Provider NVARCHAR(20) NOT NULL,
     ProviderTransactionID NVARCHAR(100) NOT NULL,
     BankAccountInfo NVARCHAR(255) NULL,
     CreatedAt DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
-    FOREIGN KEY (RefundRequestID) REFERENCES RefundRequests(RefundID)
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
+    FOREIGN KEY (RefundRequestID) REFERENCES RefundRequests(RefundID) ON DELETE CASCADE
 );
 GO
 
@@ -478,11 +480,12 @@ VALUES
 (5, DATEADD(day, -35, GETDATE()), 2500050, 'completed'),
 (6, DATEADD(day, -30, GETDATE()), 1300000, 'completed'),
 (7, DATEADD(day, -25, GETDATE()), 1400000, 'completed'),
-(8, DATEADD(day, -20, GETDATE()), 1750000, 'completed'),
+(8, DATEADD(day, -20, GETDATE()), 3000000, 'completed'),
 (9, DATEADD(day, -15, GETDATE()), 2290000, 'completed'),
-(10, DATEADD(day, -10, GETDATE()), 1500000, 'completed'),
-(11, DATEADD(day, -5, GETDATE()), 1400000, 'completed'),
+(10, DATEADD(day, -10, GETDATE()), 980000, 'completed'),
+(11, DATEADD(day, -5, GETDATE()), 1300000, 'completed'),
 (12, DATEADD(day, -4, GETDATE()), 1000050, 'pending'),
+(12, DATEADD(day, -4, GETDATE()), 1100000, 'completed'),
 (13, DATEADD(day, -3, GETDATE()), 890000, 'pending'),
 (14, DATEADD(day, -2, GETDATE()), 2900000, 'pending');
 
@@ -490,9 +493,9 @@ VALUES
 INSERT INTO OrderDetails (OrderID, CourseID, Price)
 VALUES 
 (1, 1, 1500000), (1, 2, 1200000), (2, 3, 1100050), (3, 1, 1500000), (4, 1, 1500000), 
-(4, 6, 1300000), (5, 4, 1700000), (6, 5, 1000050), (6, 10, 1500000), (7, 6, 1300000), (8, 7, 1400000), 
-(9, 11, 1750000), (10, 9, 890000), (10, 12, 1400000), (11, 1, 1500000), (12, 7, 1400000), (13, 5, 1000050), 
-(14, 9, 890000), (15, 6, 1300000), (15, 10, 1600000);
+(4, 6, 1300000), (5, 4, 1700000), (6, 1, 1500000), (6, 10, 1500000), (7, 6, 1300000), (8, 15, 1400000), 
+(9, 11, 1750000), (10, 9, 890000), (10, 12, 1400000), (11, 15, 980000), (12, 6, 1300000), (13, 5, 1000050), 
+(14, 16, 1100000), (15, 9, 890000), (16, 6, 1300000), (16, 10, 1600000);
 
 -- Insert CartItems
 INSERT INTO CartItems (CustomerID, CourseID, Price, CreatedAt)
@@ -572,32 +575,7 @@ VALUES
 -- Insert Ratings
 INSERT INTO Ratings (CourseID, CustomerID, Stars, Comment)
 VALUES
-(1, 1, 5, N'Excellent course with hands-on projects!'),
-(2, 1, 5, 'Excellent content! The instructor explains complex concepts in a simple way.'),
-(1, 2, 4, 'Very good course. Covers all the basics and some advanced topics too.'),
-(1, 3, 5, 'Best web development course I''ve taken. Highly recommended!'),
-(3, 1, 4, N'Great React Native course with practical examples.'),
-(4, 1, 3, 'Good content but could use more exercises.'),
-(3, 2, 5, N'Excellent React Native course. Very practical.'),
-(4, 2, 4, 'Well-structured Unity course. Very informative.'),
-(5, 1, 5, 'The UI/UX principles were clearly explained with great examples.'),
-(6, 2, 5, 'Incredibly detailed JavaScript course. Learned a lot!'),
-(6, 3, 4, 'Great advanced JavaScript course. Looking forward to applying these concepts.'),
-(7, 3, 5, 'Excellent introduction to machine learning. Highly recommended!'),
-(8, 2, 4, 'Good iOS development course. Clear explanations and examples.'),
-(9, 4, 5, 'Best SQL course I''ve taken. Very comprehensive.'),
-(10, 5, 4, 'Solid DevOps course with practical examples.'),
-(11, 6, 5, 'Excellent cybersecurity content. Very relevant examples.'),
-(12, 7, 3, 'Good content but too theoretical at times.'),
-(13, 8, 4, 'Interesting blockchain course. Would have liked more hands-on projects.'),
-(14, 9, 5, 'Fantastic IoT course with great practical exercises.'),
-(15, 10, 2, 'Outdated content. Needs to be refreshed with newer Vue.js versions.'),
-(16, 11, 5, 'Excellent Django course. Very thorough and practical.'),
-(1, 4, 4, 'Good introduction to web development. Helpful for beginners.'),
-(2, 5, 5, 'Great Python course. The data science applications were very useful.'),
-(3, 6, 3, 'Decent React Native course but lacks advanced topics.'),
-(4, 7, 5, 'Excellent Unity course with practical projects.');
-
+(11, 8, 5, 'Excellent cybersecurity content. Very relevant examples.');
 
 -- Insert RefundRequests
 INSERT INTO RefundRequests (OrderID, CustomerID, RequestDate, Status, RefundAmount, Reason, ProcessedDate, AdminMessage, ProcessedBy, RefundPercentage)
@@ -1253,16 +1231,16 @@ VALUES
 -- Insert PaymentTransactions
 INSERT INTO PaymentTransactions (OrderID, RefundRequestID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo)
 VALUES
-(1, NULL, 'payment', 'PayPal', 'PAYID-MX123456', 'user@example.com'),
-(2, NULL, 'payment', 'Stripe', 'ch_3K123456789', '****1234'),
-(3, 2, 'refund', 'PayPal', 'REF-123456789', 'user@example.com'),
-(4, NULL, 'payment', 'Stripe', 'ch_3K123456790', '****5678'),
-(5, 3, 'refund', 'PayPal', 'REF-123456790', 'student3@example.com'),
-(6, 4, 'refund', 'Stripe', 're_3K123456791', '****9012'),
-(7, NULL, 'payment', 'PayPal', 'PAYID-MX123457', 'student5@example.com'),
-(8, 5, 'refund', 'Stripe', 're_3K123456792', '****3456'),
-(9, NULL, 'payment', 'PayPal', 'PAYID-MX123458', 'mike.smith@example.com'),
-(10, NULL, 'payment', 'Stripe', 'ch_3K123456793', '****7890');
+(1, NULL, 'payment', 'VNPAY', 'PAYID-MX123456', 'user@example.com'),
+(2, NULL, 'payment', 'VNPAY', 'ch_3K123456789', '****1234'),
+(3, 2, 'refund', 'VNPAY', 'REF-123456789', 'user@example.com'),
+(4, NULL, 'payment', 'VNPAY', 'ch_3K123456790', '****5678'),
+(5, 3, 'refund', 'VNPAY', 'REF-123456790', 'student3@example.com'),
+(6, 4, 'refund', 'VNPAY', 're_3K123456791', '****9012'),
+(7, NULL, 'payment', 'VNPAY', 'PAYID-MX123457', 'student5@example.com'),
+(8, 5, 'refund', 'VNPAY', 're_3K123456792', '****3456'),
+(9, NULL, 'payment', 'VNPAY', 'PAYID-MX123458', 'mike.smith@example.com'),
+(10, NULL, 'payment', 'VNPAY', 'ch_3K123456793', '****7890');
 
 -- Insert LessonItems
 INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID)
@@ -2237,175 +2215,185 @@ VALUES
 -- Insert into CourseProgress
 INSERT INTO CourseProgress (CustomerID, CourseID, LastAccessDate, CompletionPercentage, IsCompleted)
 VALUES
-(4, 1, GETDATE(), 50.0, 0), -- Customer 4, Course 1, 50% complete
+(4, 4, GETDATE(), 50.0, 0), -- Customer 4, Course 4, 50% complete
 (5, 1, DATEADD(day, -2, GETDATE()), 75.0, 0), -- Customer 5, Course 1, 75% complete
+(5, 10, NULL, 0.0, 0), -- Customer 5, Course 10, 0% complete
 (6, 6, GETDATE(), 50.0, 0), -- Customer 6, Course 6, 50% complete
 (7, 15, DATEADD(day, -1, GETDATE()), 30.0, 0), -- Customer 7, Course 15, 30% complete
-(8, 16, DATEADD(day, -3, GETDATE()), 50.0, 0), -- Customer 8, Course 16, 50% complete
-(9, 1, DATEADD(day, -4, GETDATE()), 25.0, 0), -- Customer 9, Course 1, 25% complete
+(8, 11, DATEADD(day, -3, GETDATE()), 50.0, 0), -- Customer 8, Course 11, 50% complete
+(9, 9, DATEADD(day, -4, GETDATE()), 33.0, 0), -- Customer 9, Course 9, 33% complete
+(9, 12, DATEADD(day, -4, GETDATE()), 50.0, 0), -- Customer 9, Course 12, 50% complete
 (10, 15, GETDATE(), 80.0, 0), -- Customer 10, Course 15, 80% complete
 (11, 6, DATEADD(day, -2, GETDATE()), 100.0, 1), -- Customer 11, Course 6, 100% complete
 (12, 16, DATEADD(day, -1, GETDATE()), 30.0, 0); -- Customer 12, Course 16, 30% complete
 
 -- Insert into LessonProgress
--- CourseID 1 (12 lessons, LessonID 1-12)
--- Customer 4, Course 1, 50% (6/12 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+-- CourseID 4 (10 lessons, LessonID 1-10)
+-- Customer 4, 50% (5/10 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(4, 1, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
-(4, 2, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
-(4, 3, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
-(4, 4, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
-(4, 5, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
-(4, 6, 1, DATEADD(day, -5, GETDATE()), GETDATE()),
-(4, 7, 0, NULL, GETDATE()),
-(4, 8, 0, NULL, GETDATE()),
-(4, 9, 0, NULL, GETDATE()),
-(4, 10, 0, NULL, GETDATE()),
-(4, 11, 0, NULL, GETDATE()),
-(4, 12, 0, NULL, GETDATE());
+(4, 31, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(4, 32, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
+(4, 33, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
+(4, 34, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
+(4, 35, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
+(4, 36, 0, 0.0, NULL, GETDATE()),
+(4, 37, 0, 0.0, NULL, GETDATE()),
+(4, 38, 0, 0.0, NULL, GETDATE()),
+(4, 39, 0, 0.0, NULL, GETDATE()),
+(4, 40, 0, 0.0, NULL, GETDATE());
 
 -- Customer 5, Course 1, 75% (9/12 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(5, 1, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
-(5, 2, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
-(5, 3, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
-(5, 4, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
-(5, 5, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())),
-(5, 6, 1, DATEADD(day, -10, GETDATE()), GETDATE()),
-(5, 7, 1, DATEADD(day, -9, GETDATE()), GETDATE()),
-(5, 8, 1, DATEADD(day, -8, GETDATE()), GETDATE()),
-(5, 9, 1, DATEADD(day, -7, GETDATE()), GETDATE()),
-(5, 10, 0, NULL, GETDATE()),
-(5, 11, 0, NULL, GETDATE()),
-(5, 12, 0, NULL, GETDATE());
+(5, 1, 1, 100.0, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
+(5, 2, 1, 100.0, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
+(5, 3, 1, 100.0, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
+(5, 4, 1, 100.0, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
+(5, 5, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())),
+(5, 6, 1, 100.0, DATEADD(day, -10, GETDATE()), GETDATE()),
+(5, 7, 1, 100.0, DATEADD(day, -9, GETDATE()), GETDATE()),
+(5, 8, 1, 100.0, DATEADD(day, -8, GETDATE()), GETDATE()),
+(5, 9, 1, 100.0, DATEADD(day, -7, GETDATE()), GETDATE()),
+(5, 10, 0, 0.0, NULL, GETDATE()),
+(5, 11, 0, 0.0, NULL, GETDATE()),
+(5, 12, 0, 0.0, NULL, GETDATE());
 
--- Customer 9, Course 1, 25% (3/12 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+-- Customer 9, Course 9, 33% (3/9 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(9, 1, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())),
-(9, 2, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())),
-(9, 3, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
-(9, 4, 0, NULL, GETDATE()),
-(9, 5, 0, NULL, GETDATE()),
-(9, 6, 0, NULL, GETDATE()),
-(9, 7, 0, NULL, GETDATE()),
-(9, 8, 0, NULL, GETDATE()),
-(9, 9, 0, NULL, GETDATE()),
-(9, 10, 0, NULL, GETDATE()),
-(9, 11, 0, NULL, GETDATE()),
-(9, 12, 0, NULL, GETDATE());
+(9, 79, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())),
+(9, 80, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())),
+(9, 81, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
+(9, 82, 0, 0.0, NULL, GETDATE()),
+(9, 83, 0, 0.0, NULL, GETDATE()),
+(9, 84, 0, 0.0, NULL, GETDATE()),
+(9, 85, 0, 0.0, NULL, GETDATE()),
+(9, 86, 0, 0.0, NULL, GETDATE()),
+(9, 87, 0, 0.0, NULL, GETDATE());
+
+-- Customer 9, Course 12, 50% (5/10 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(9, 110, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())),
+(9, 111, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())),
+(9, 112, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
+(9, 113, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -2, GETDATE())),
+(9, 114, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -2, GETDATE())),
+(9, 115, 0, 0.0, NULL, GETDATE()),
+(9, 116, 0, 0.0, NULL, GETDATE()),
+(9, 117, 0, 0.0, NULL, GETDATE()),
+(9, 118, 0, 0.0, NULL, GETDATE()),
+(9, 119, 0, 0.0, NULL, GETDATE());
 
 -- CourseID 6 (10 lessons, LessonID 49-58)
 -- Customer 6, Course 6, 50% (5/10 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(6, 49, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
-(6, 50, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
-(6, 51, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
-(6, 52, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
-(6, 53, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
-(6, 54, 0, NULL, GETDATE()),
-(6, 55, 0, NULL, GETDATE()),
-(6, 56, 0, NULL, GETDATE()),
-(6, 57, 0, NULL, GETDATE()),
-(6, 58, 0, NULL, GETDATE());
+(6, 49, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(6, 50, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
+(6, 51, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
+(6, 52, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
+(6, 53, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
+(6, 54, 0, 0.0, NULL, GETDATE()),
+(6, 55, 0, 0.0, NULL, GETDATE()),
+(6, 56, 0, 0.0, NULL, GETDATE()),
+(6, 57, 0, 0.0, NULL, GETDATE()),
+(6, 58, 0, 0.0, NULL, GETDATE());
 
 -- Customer 11, Course 6, 100% (10/10 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(11, 49, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())),
-(11, 50, 1, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())),
-(11, 51, 1, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())),
-(11, 52, 1, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())),
-(11, 53, 1, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())),
-(11, 54, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
-(11, 55, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
-(11, 56, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
-(11, 57, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
-(11, 58, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE()));
+(11, 49, 1, 100.0, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())),
+(11, 50, 1, 100.0, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())),
+(11, 51, 1, 100.0, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())),
+(11, 52, 1, 100.0, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())),
+(11, 53, 1, 100.0, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())),
+(11, 54, 1, 100.0, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
+(11, 55, 1, 100.0, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
+(11, 56, 1, 100.0, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
+(11, 57, 1, 100.0, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
+(11, 58, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE()));
 
 -- CourseID 15 (10 lessons, LessonID 140-149)
 -- Customer 7, Course 15, 30% (3/10 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(7, 140, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
-(7, 141, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
-(7, 142, 1, DATEADD(day, -4, GETDATE()), GETDATE()),
-(7, 143, 0, NULL, GETDATE()),
-(7, 144, 0, NULL, GETDATE()),
-(7, 145, 0, NULL, GETDATE()),
-(7, 146, 0, NULL, GETDATE()),
-(7, 147, 0, NULL, GETDATE()),
-(7, 148, 0, NULL, GETDATE()),
-(7, 149, 0, NULL, GETDATE());
+(7, 140, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
+(7, 141, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
+(7, 142, 1, 100.0, DATEADD(day, -4, GETDATE()), GETDATE()),
+(7, 143, 0, 0.0, NULL, GETDATE()),
+(7, 144, 0, 0.0, NULL, GETDATE()),
+(7, 145, 0, 0.0, NULL, GETDATE()),
+(7, 146, 0, 0.0, NULL, GETDATE()),
+(7, 147, 0, 0.0, NULL, GETDATE()),
+(7, 148, 0, 0.0, NULL, GETDATE()),
+(7, 149, 0, 0.0, NULL, GETDATE());
 
 -- Customer 10, Course 15, 75% (7.5/10 lessons, rounded to 8 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(10, 140, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
-(10, 141, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
-(10, 142, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
-(10, 143, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
-(10, 144, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())),
-(10, 145, 1, DATEADD(day, -10, GETDATE()), GETDATE()),
-(10, 146, 1, DATEADD(day, -9, GETDATE()), GETDATE()),
-(10, 147, 1, DATEADD(day, -8, GETDATE()), GETDATE()),
-(10, 148, 0, NULL, GETDATE()),
-(10, 149, 0, NULL, GETDATE());
+(10, 140, 1, 100.0, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
+(10, 141, 1, 100.0, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
+(10, 142, 1, 100.0, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
+(10, 143, 1, 100.0, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
+(10, 144, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())),
+(10, 145, 1, 100.0, DATEADD(day, -10, GETDATE()), GETDATE()),
+(10, 146, 1, 100.0, DATEADD(day, -9, GETDATE()), GETDATE()),
+(10, 147, 1, 100.0, DATEADD(day, -8, GETDATE()), GETDATE()),
+(10, 148, 0, 0.0, NULL, GETDATE()),
+(10, 149, 0, 0.0, NULL, GETDATE());
 
--- CourseID 16 (10 lessons, LessonID 150-159)
--- Customer 8, Course 16, 50% (5/10 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+-- CourseID 11 (12 lessons, LessonID 98-109)
+-- Customer 8, Course 11, 50% (6/12 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(8, 150, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
-(8, 151, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
-(8, 152, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
-(8, 153, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
-(8, 154, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
-(8, 155, 0, NULL, GETDATE()),
-(8, 156, 0, NULL, GETDATE()),
-(8, 157, 0, NULL, GETDATE()),
-(8, 158, 0, NULL, GETDATE()),
-(8, 159, 0, NULL, GETDATE());
+(8, 98, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
+(8, 99, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
+(8, 100, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
+(8, 101, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
+(8, 102, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
+(8, 103, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
+(8, 104, 0, 0.0, NULL, GETDATE()),
+(8, 105, 0, 0.0, NULL, GETDATE()),
+(8, 106, 0, 0.0, NULL, GETDATE()),
+(8, 107, 0, 0.0, NULL, GETDATE()),
+(8, 108, 0, 0.0, NULL, GETDATE()),
+(8, 109, 0, 0.0, NULL, GETDATE());
 
 -- Customer 12, Course 16, 25% (2.5/10 lessons, rounded to 3 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionDate, LastAccessDate)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(12, 150, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
-(12, 151, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
-(12, 152, 1, DATEADD(day, -4, GETDATE()), GETDATE()),
-(12, 153, 0, NULL, GETDATE()),
-(12, 154, 0, NULL, GETDATE()),
-(12, 155, 0, NULL, GETDATE()),
-(12, 156, 0, NULL, GETDATE()),
-(12, 157, 0, NULL, GETDATE()),
-(12, 158, 0, NULL, GETDATE()),
-(12, 159, 0, NULL, GETDATE());
+(12, 150, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
+(12, 151, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
+(12, 152, 1, 100.0, DATEADD(day, -4, GETDATE()), GETDATE()),
+(12, 153, 0, 0.0, NULL, GETDATE()),
+(12, 154, 0, 0.0, NULL, GETDATE()),
+(12, 155, 0, 0.0, NULL, GETDATE()),
+(12, 156, 0, 0.0, NULL, GETDATE()),
+(12, 157, 0, 0.0, NULL, GETDATE()),
+(12, 158, 0, 0.0, NULL, GETDATE()),
+(12, 159, 0, 0.0, NULL, GETDATE());
 
 -- Insert into LessonItemProgress
--- Customer 4, Course 1, Lessons 1-6 completed
+-- Customer 4, Course 4, Lessons (10 lessons) 1-5 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(4, 1, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 1
-(4, 2, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 1
-(4, 3, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 1
-(4, 4, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 2
-(4, 5, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 2
-(4, 6, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 2
-(4, 7, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 3
-(4, 8, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 3
-(4, 9, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 3
-(4, 10, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 4
-(4, 11, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 4
-(4, 12, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 4
-(4, 13, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 5
-(4, 14, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 5
-(4, 15, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 5
-(4, 16, 1, DATEADD(day, -5, GETDATE()), GETDATE()), -- Video for Lesson 6
-(4, 17, 1, DATEADD(day, -5, GETDATE()), GETDATE()), -- Quiz for Lesson 6
-(4, 18, 1, DATEADD(day, -5, GETDATE()), GETDATE()); -- Material for Lesson 6
+(4, 91, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 31
+(4, 92, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 31
+(4, 93, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 31
+(4, 94, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 32
+(4, 95, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 32
+(4, 96, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 32
+(4, 97, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 33
+(4, 98, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 33
+(4, 99, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 33
+(4, 100, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 34
+(4, 101, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 34
+(4, 102, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 34
+(4, 103, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 35
+(4, 104, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 35
+(4, 105, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 35
 
 -- Customer 5, Course 1, Lessons 1-9 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
@@ -2438,18 +2426,37 @@ VALUES
 (5, 26, 1, DATEADD(day, -7, GETDATE()), GETDATE()), -- Quiz for Lesson 9
 (5, 27, 1, DATEADD(day, -7, GETDATE()), GETDATE()); -- Material for Lesson 9
 
--- Customer 9, Course 1, Lessons 1-3 completed
+-- Customer 9, Course 9, Lessons (9 lesssons) 79-81 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(9, 1, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 1
-(9, 2, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 1
-(9, 3, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 1
-(9, 4, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 2
-(9, 5, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 2
-(9, 6, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 2
-(9, 7, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 3
-(9, 8, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 3
-(9, 9, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())); -- Material for Lesson 3
+(9, 235, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 79
+(9, 236, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 79
+(9, 237, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 79
+(9, 238, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 80
+(9, 239, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 80
+(9, 240, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 80
+(9, 241, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 81
+(9, 242, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 81
+(9, 243, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())); -- Material for Lesson 81
+
+-- Customer 9, Course 12, Lessons (10 lesssons) 110-115 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(9, 328, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 110
+(9, 329, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 110
+(9, 330, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 110
+(9, 331, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 111
+(9, 332, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 111
+(9, 333, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 111
+(9, 334, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 112
+(9, 335, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 112
+(9, 336, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 112
+(9, 337, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 113
+(9, 338, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 113
+(9, 339, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 113
+(9, 340, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 114
+(9, 341, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 114
+(9, 342, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())); -- Material for Lesson 114
 
 -- Customer 6, Course 6, Lessons 49-53 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
@@ -2546,25 +2553,28 @@ VALUES
 (10, 440, 1, DATEADD(day, -8, GETDATE()), GETDATE()), -- Quiz for Lesson 147
 (10, 441, 1, DATEADD(day, -8, GETDATE()), GETDATE()); -- Material for Lesson 147
 
--- CourseID 16, LessonID 150-159, LessonItems 448-462
--- Customer 8, Course 16, Lessons 150-154 completed
+-- CourseID 11, LessonID 98-109, LessonItems 292-327
+-- Customer 8, Course 11, Lessons 292-309 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(8, 448, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 150
-(8, 449, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 150
-(8, 450, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 150
-(8, 451, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 151
-(8, 452, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 151
-(8, 453, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 151
-(8, 454, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 152
-(8, 455, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 152
-(8, 456, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 152
-(8, 457, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 153
-(8, 458, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 153
-(8, 459, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 153
-(8, 460, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 154
-(8, 461, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 154
-(8, 462, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 154
+(8, 292, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 98
+(8, 293, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 98
+(8, 294, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 98
+(8, 295, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 99
+(8, 296, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 99
+(8, 297, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 99
+(8, 298, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 100
+(8, 299, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 100
+(8, 300, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 100
+(8, 301, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 101
+(8, 302, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 101
+(8, 303, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 101
+(8, 304, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 102
+(8, 305, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 102
+(8, 306, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 102
+(8, 307, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 102
+(8, 308, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 102
+(8, 309, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 102
 
 -- Customer 12, Course 16, Lessons 150-152 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)

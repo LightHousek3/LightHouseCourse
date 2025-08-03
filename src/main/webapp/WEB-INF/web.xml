@@ -11,7 +11,36 @@
         <error-code>500</error-code>
         <location>/WEB-INF/views/error/500.jsp</location>
     </error-page>
+    <filter>
+        <filter-name>AuthFilter</filter-name>
+        <filter-class>filter.AuthFilter</filter-class>
+    </filter>
     
+    <!-- Filter Mappings -->
+    <!-- Admin area protection -->
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/admin/*</url-pattern>
+    </filter-mapping>
+    
+    <!-- Instructor area protection -->
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/instructor/*</url-pattern>
+    </filter-mapping>
+    
+    <!-- Customer protected areas -->
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/order/*</url-pattern>
+        <url-pattern>/refund/*</url-pattern>
+        <url-pattern>/lesson/*</url-pattern>
+        <url-pattern>/course/learning/*</url-pattern>
+        <url-pattern>/course/quiz/*</url-pattern>
+        <url-pattern>/profile/*</url-pattern>
+    </filter-mapping>
+    
+    <!-- Session Configuration -->
     <session-config>
         <session-timeout>30</session-timeout>
     </session-config>

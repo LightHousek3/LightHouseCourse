@@ -26,6 +26,7 @@ public class Discussion {
 
     // Add additional fields to display
     private String authorName;
+    private String authorAvatar;
     private String courseName;
     private String lessonTitle;
     private int replyCount;
@@ -156,13 +157,12 @@ public class Discussion {
         this.authorName = authorName;
     }
 
-    // Legacy methods for backward compatibility
-    public String getUserName() {
-        return authorName;
+    public String getAuthorAvatar() {
+        return authorAvatar;
     }
 
-    public void setUserName(String userName) {
-        this.authorName = userName;
+    public void setAuthorAvatar(String authorAvatar) {
+        this.authorAvatar = authorAvatar;
     }
 
     public String getCourseName() {

@@ -19,7 +19,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import model.Course;
 import model.Category;
-import model.SuperUser;
 import util.Validator;
 import java.util.Collections;
 import model.Rating;
@@ -29,9 +28,10 @@ import model.Customer;
 import model.OrderDetail;
 
 /**
- * Course controller for listing courses and showing course details.
+ * Course controller for showing course details and my courses.
  */
-@WebServlet(name = "CustomerCourseServlet", urlPatterns = {"/courses", "/course/*", "/my-courses", "/course/instructor-info"})
+@WebServlet(name = "CustomerCourseServlet", urlPatterns = { "/courses", "/course/*", "/my-courses",
+        "/course/instructor-info" })
 public class CustomerCourseServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
@@ -55,12 +55,12 @@ public class CustomerCourseServlet extends HttpServlet {
     }
 
     /**
-     * Handles the HTTP GET request - listing courses or showing details.
+     * Handles the HTTP GET request - showing details or my courses.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -70,18 +70,20 @@ public class CustomerCourseServlet extends HttpServlet {
         String servletPath = request.getServletPath();
         List<Category> categories = categoryDAO.getAllCategories();
         request.setAttribute("categories", categories);
+
         switch (servletPath) {
             case "/courses":
-                listCourses(request, response);
+                // Redirect to home page with scroll parameter
+                response.sendRedirect(request.getContextPath() + "/home?scroll=true");
                 break;
             case "/course":
                 if (pathInfo == null) {
-                    response.sendRedirect(request.getContextPath() + "/courses");
+                    response.sendRedirect(request.getContextPath() + "/home?scroll=true");
                     return;
                 }
                 String idStr = pathInfo.substring(1);
                 if (!idStr.matches("\\d+")) {
-                    response.sendRedirect(request.getContextPath() + "/courses");
+                    response.sendRedirect(request.getContextPath() + "/home?scroll=true");
                     return;
                 }
                 showCourseDetail(request, response);
@@ -98,10 +100,10 @@ public class CustomerCourseServlet extends HttpServlet {
     /**
      * Show the list of courses with optional filtering.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     private void listCourses(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -120,12 +122,12 @@ public class CustomerCourseServlet extends HttpServlet {
         if (keyword != null && !isValidKeyword(keyword)) {
             request.setAttribute("errorMessage",
                     "Invalid keyword. Requirements:"
-                    + "<ul>"
-                    + "<li>Length 2-50 characters</li>"
-                    + "<li>Must not contain special characters</li>"
-                    + "<li>Maximum 5 words</li>"
-                    + "<li>Must not repeat any word or phrase more than 3 times</li>"
-                    + "</ul>");
+                            + "<ul>"
+                            + "<li>Length 2-50 characters</li>"
+                            + "<li>Must not contain special characters</li>"
+                            + "<li>Maximum 5 words</li>"
+                            + "<li>Must not repeat any word or phrase more than 3 times</li>"
+                            + "</ul>");
             request.setAttribute("keyword", keyword);
             keyword = null;
         }
@@ -306,10 +308,10 @@ public class CustomerCourseServlet extends HttpServlet {
     /**
      * Show the details of a specific course.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     private void showCourseDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -325,16 +327,6 @@ public class CustomerCourseServlet extends HttpServlet {
 
         int courseId = Integer.parseInt(pathParts[1]);
         Course course = courseDAO.getCourseById(courseId);
-        System.out.println("Course: " + course);
-        if (course != null) {
-            System.out.println("Course Image URL: " + course.getImageUrl());
-
-            // Generate full image path for debugging
-            String fullImagePath = request.getContextPath() + "/" + course.getImageUrl();
-            System.out.println("Full image path: " + fullImagePath);
-        } else {
-            System.out.println("Course is null");
-        }
 
         if (course == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -349,32 +341,28 @@ public class CustomerCourseServlet extends HttpServlet {
         boolean canRateCourse = false;
         Rating userRating = null;
 
-        // if (user != null) {
-        //// alreadyPurchased = orderDAO.hasUserPurchasedCourse(user.getUserID(),
-        // courseId);
-        ////
-        //// // Check for pending and approved refund requests
-        //// if (alreadyPurchased) {
-        //// hasPendingRefund =
-        // refundRequestDAO.hasPendingRefundForCourse(user.getUserID(), courseId);
-        //// hasApprovedRefund =
-        // refundRequestDAO.hasApprovedRefundForCourse(user.getUserID(), courseId);
-        ////
-        //// // Check if user can rate the course (purchased and >80% complete)
-        //// CourseProgressDAO progressDAO = new CourseProgressDAO();
-        //// CourseProgress progress =
-        // progressDAO.getByCustomerAndCourse(user.getUserID(), courseId);
-        //// if (progress != null && progress.getCompletionPercentage().compareTo(new
-        // BigDecimal("80")) >= 0) {
-        //// canRateCourse = true;
-        //// }
-        //
-        // // Get user's rating if it exists
-        // userRating = ratingDAO.getByCustomerAndCourse(user.getUserID(), courseId);
-        // }
-        // }
+        if (user != null) {
+            // Check if user has purchased this course (based on most recent order)
+            alreadyPurchased = orderDAO.hasCustomerPurchasedCourse(user.getCustomerID(), courseId);
+
+            // Check for pending and approved refund requests on the most recent order
+            if (alreadyPurchased) {
+                hasPendingRefund = refundRequestDAO.hasPendingRefundForCourse(user.getCustomerID(), courseId);
+                hasApprovedRefund = refundRequestDAO.hasApprovedRefundForCourse(user.getCustomerID(), courseId);
+
+                // Check if user can rate the course (purchased and >80% complete)
+                CourseProgressDAO progressDAO = new CourseProgressDAO();
+                CourseProgress progress = progressDAO.getByCustomerAndCourse(user.getCustomerID(), courseId);
+                if (progress != null && progress.getCompletionPercentage().compareTo(new BigDecimal("80")) >= 0) {
+                    canRateCourse = true;
+                }
+
+                // Get user's rating if it exists
+                userRating = ratingDAO.getByCustomerAndCourse(user.getCustomerID(), courseId);
+            }
+        }
         // Get course ratings
-        // List<Rating> ratings = ratingDAO.getByCourseId(courseId);
+        List<Rating> ratings = ratingDAO.getRatingsByCourseId(courseId);
         double averageRating = ratingDAO.getAverageRatingForCourse(courseId);
         int ratingCount = ratingDAO.getRatingCountForCourse(courseId);
 
@@ -385,7 +373,7 @@ public class CustomerCourseServlet extends HttpServlet {
         request.setAttribute("hasApprovedRefund", hasApprovedRefund);
         request.setAttribute("canRateCourse", canRateCourse);
         request.setAttribute("userRating", userRating);
-        // request.setAttribute("ratings", ratings);
+        request.setAttribute("ratings", ratings);
         request.setAttribute("averageRating", averageRating);
         request.setAttribute("ratingCount", ratingCount);
 
@@ -411,16 +399,21 @@ public class CustomerCourseServlet extends HttpServlet {
         }
 
         // Forward to course detail page
-        request.getRequestDispatcher("/WEB-INF/views/customer/manage-courses/course-detail.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/customer/manage-courses/course-detail.jsp").forward(request,
+                response);
     }
 
     private void showPurchasedCourses(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
+        HttpSession session = request.getSession();
         Customer customer = (Customer) session.getAttribute("user");
 
+        if (customer == null)
+            return;
+
         try {
-            // Get user's purchased courses with order details
+            // Get user's purchased courses with order details - now only returns the most
+            // recent orders for each course
             List<Object[]> purchasedCoursesData = orderDAO
                     .getCustomerPurchasedCoursesWithOrderDetails(customer.getCustomerID());
             List<Course> purchasedCourses = new ArrayList<>();
@@ -436,17 +429,9 @@ public class CustomerCourseServlet extends HttpServlet {
                 Course course = (Course) data[0];
                 OrderDetail detail = (OrderDetail) data[1];
 
-                // Check if there's a pending or approved refund for this course
-                boolean hasPendingRefund = refundRequestDAO.hasPendingRefundForCourse(customer.getCustomerID(),
-                        course.getCourseID());
-                boolean hasApprovedRefund = refundRequestDAO.hasApprovedRefundForCourse(customer.getCustomerID(),
-                        course.getCourseID());
-
-                // Skip courses with pending or approved refunds
-                if (hasPendingRefund || hasApprovedRefund) {
-                    continue;
-                }
-
+                // The getCustomerPurchasedCoursesWithOrderDetails now only returns completed
+                // orders
+                // with no refund status on the most recent order
                 purchasedCourses.add(course);
                 orderDetails.add(detail);
 
@@ -520,6 +505,6 @@ public class CustomerCourseServlet extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Course Servlet - Displays course listings and details";
+        return "Course Servlet - Displays course details and my courses";
     }
 }

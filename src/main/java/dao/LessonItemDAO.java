@@ -2,6 +2,7 @@ package dao;
 
 import db.DBContext;
 import model.LessonItem;
+import model.LessonItemProgress;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,7 +19,7 @@ public class LessonItemDAO extends DBContext {
 
     /**
      * Get a LessonItem by ID
-     * 
+     *
      * @param lessonItemId The lesson item ID
      * @return The LessonItem, or null if not found
      */
@@ -43,12 +44,15 @@ public class LessonItemDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -59,7 +63,7 @@ public class LessonItemDAO extends DBContext {
 
     /**
      * Get LessonItem by item type and item ID
-     * 
+     *
      * @param itemType The item type (video, material, quiz)
      * @param itemId   The item ID
      * @return The LessonItem, or null if not found
@@ -86,12 +90,15 @@ public class LessonItemDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -102,7 +109,7 @@ public class LessonItemDAO extends DBContext {
 
     /**
      * Get all lesson items for a lesson
-     * 
+     *
      * @param lessonId The lesson ID
      * @return List of LessonItems for the lesson
      */
@@ -127,12 +134,15 @@ public class LessonItemDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -143,7 +153,7 @@ public class LessonItemDAO extends DBContext {
 
     /**
      * Save a LessonItem (insertLessonItem or updateLessonItem)
-     * 
+     *
      * @param lessonItem The LessonItem to saveLessonItem
      * @return true if successful, false otherwise
      */
@@ -157,7 +167,7 @@ public class LessonItemDAO extends DBContext {
 
     /**
      * Insert a new LessonItem
-     * 
+     *
      * @param lessonItem The LessonItem to insertLessonItem
      * @return The new lesson item ID, or -1 if failed
      */
@@ -189,12 +199,15 @@ public class LessonItemDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (rs != null)
+                if (rs != null) {
                     rs.close();
-                if (ps != null)
+                }
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -205,7 +218,7 @@ public class LessonItemDAO extends DBContext {
 
     /**
      * Update an existing LessonItem
-     * 
+     *
      * @param lessonItem The LessonItem to updateLessonItem
      * @return true if successful, false otherwise
      */
@@ -216,8 +229,8 @@ public class LessonItemDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "UPDATE LessonItems SET LessonID = ?, OrderIndex = ?, ItemType = ?, ItemID = ? " +
-                    "WHERE LessonItemID = ?";
+            String sql = "UPDATE LessonItems SET LessonID = ?, OrderIndex = ?, ItemType = ?, ItemID = ? "
+                    + "WHERE LessonItemID = ?";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, lessonItem.getLessonID());
@@ -232,10 +245,12 @@ public class LessonItemDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (ps != null)
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -246,7 +261,7 @@ public class LessonItemDAO extends DBContext {
 
     /**
      * Delete a lesson item
-     * 
+     *
      * @param lessonItemId The lesson item ID to deleteLessonItem
      * @return true if successful, false otherwise
      */
@@ -268,10 +283,136 @@ public class LessonItemDAO extends DBContext {
             e.printStackTrace();
         } finally {
             try {
-                if (ps != null)
+                if (ps != null) {
                     ps.close();
-                if (conn != null)
+                }
+                if (conn != null) {
                     conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return success;
+    }
+    
+    
+    public boolean updateLessonItemOrderIndex(int lessonItemID, int newOrderIndex) {
+        String sql = "UPDATE LessonItems SET OrderIndex = ? WHERE LessonItemID = ?";
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newOrderIndex);
+            ps.setInt(2, lessonItemID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            System.err.println("Update lesson item order index failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update the order index of a lesson item
+     *
+     * @param lessonItemId  The lesson item ID to update
+     * @param newOrderIndex The new order index value
+     * @return true if successful, false otherwise
+     */
+    public boolean updateLessonItemOrder(int lessonItemId, int newOrderIndex) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = false;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE LessonItems SET OrderIndex = ? WHERE LessonItemID = ?";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, newOrderIndex);
+            ps.setInt(2, lessonItemId);
+
+            int affectedRows = ps.executeUpdate();
+            success = (affectedRows > 0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return success;
+    }
+
+    /**
+     * Updates the order indices of all items in a lesson based on provided list
+     * of IDs
+     *
+     * @param lessonId      The lesson ID
+     * @param lessonItemIds List of lesson item IDs in desired order
+     * @return true if successful, false otherwise
+     */
+    public boolean reorderLessonItems(int lessonId, List<Integer> lessonItemIds) {
+        if (lessonItemIds == null || lessonItemIds.isEmpty()) {
+            return false;
+        }
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = true;
+
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            String sql = "UPDATE LessonItems SET OrderIndex = ? WHERE LessonItemID = ? AND LessonID = ?";
+
+            ps = conn.prepareStatement(sql);
+
+            for (int i = 0; i < lessonItemIds.size(); i++) {
+                ps.setInt(1, i); // OrderIndex starts from 0
+                ps.setInt(2, lessonItemIds.get(i));
+                ps.setInt(3, lessonId);
+                ps.addBatch();
+            }
+
+            int[] results = ps.executeBatch();
+            for (int result : results) {
+                if (result <= 0) {
+                    success = false;
+                    break;
+                }
+            }
+
+            if (success) {
+                conn.commit();
+            } else {
+                conn.rollback();
+            }
+        } catch (SQLException e) {
+            success = false;
+            e.printStackTrace();
+            try {
+                if (conn != null && !conn.getAutoCommit()) {
+                    conn.rollback();
+                }
+            } catch (SQLException rollbackEx) {
+                rollbackEx.printStackTrace();
+            }
+        } finally {
+            try {
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -282,7 +423,7 @@ public class LessonItemDAO extends DBContext {
 
     /**
      * Map a ResultSet row to a LessonItem object
-     * 
+     *
      * @param rs The ResultSet to map
      * @return A LessonItem object
      * @throws SQLException If a database error occurs
@@ -295,5 +436,44 @@ public class LessonItemDAO extends DBContext {
         lessonItem.setItemType(rs.getString("ItemType"));
         lessonItem.setItemID(rs.getInt("ItemID"));
         return lessonItem;
+    }
+
+    /**
+     * Get lesson item progress for a specific student and lesson item
+     *
+     * @param studentId    the customer/student ID
+     * @param lessonItemId the lesson item ID
+     * @return LessonItemProgress object or null if not found
+     */
+    public LessonItemProgress getLessonItemProgress(int studentId, int lessonItemId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        LessonItemProgress progress = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM LessonItemProgress WHERE CustomerID = ? AND LessonItemID = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, studentId);
+            ps.setInt(2, lessonItemId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                progress = new LessonItemProgress();
+                progress.setProgressID(rs.getInt("ProgressID"));
+                progress.setCustomerID(rs.getInt("CustomerID"));
+                progress.setLessonItemID(rs.getInt("LessonItemID"));
+                progress.setIsCompleted(rs.getBoolean("IsCompleted"));
+                progress.setCompletionDate(rs.getTimestamp("CompletionDate"));
+                progress.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving lesson item progress: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return progress;
     }
 }

@@ -12,6 +12,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import model.Customer;
 import model.SuperUser;
@@ -178,7 +179,7 @@ public class AdminCustomerServlet extends HttpServlet {
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
         String avatarUrl = request.getParameter("avatarUrl");
-        String hashedPassword = PasswordEncrypt.encryptSHA256(password);
+        
 
         // Basic validation
         if (username == null || username.trim().isEmpty()
@@ -242,6 +243,7 @@ public class AdminCustomerServlet extends HttpServlet {
                     response);
             return;
         }
+        String hashedPassword = PasswordEncrypt.encryptSHA256(password);
 
         // Check if avatarUrl is a base64 image
         if (avatarUrl != null && avatarUrl.startsWith("data:image")) {
@@ -487,7 +489,14 @@ public class AdminCustomerServlet extends HttpServlet {
 
         try {
             // Get the admin user info for the email footer
-            SuperUser adminUser = (SuperUser) request.getSession().getAttribute("user");
+            HttpSession session = request.getSession();
+            SuperUser adminUser;
+            try {
+                adminUser = (SuperUser) session.getAttribute("user");
+            } catch (Exception e) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
             String senderName = adminUser != null ? adminUser.getFullName() : "Admin";
 
             // Format HTML message
@@ -592,7 +601,7 @@ public class AdminCustomerServlet extends HttpServlet {
             // Create a unique filename if no identical image was found
             String fileName = prefix + "-" + UUID.randomUUID().toString() + "." + extension;
             String filePath = avatarDirPath + File.separator + fileName;
-            
+
             // Save the file
             Files.write(Paths.get(filePath), imageBytes);
 

@@ -59,14 +59,19 @@ public class InstructorProfileServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        // Test account si exist
-        SuperUser superUser = superUserDAO.getSuperUserById(7);
+        SuperUser superUser;
+
+        try {
+            superUser = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         if (superUser == null) {
             // Nếu vẫn null thì báo lỗi rõ ràng
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Test SuperUserID=4 not found in database!");
             return;
         }
-        session.setAttribute("user", superUser);
 
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
@@ -191,17 +196,15 @@ public class InstructorProfileServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
 
-        if (session.getAttribute("user") == null) {
-            SuperUser superUser = new SuperUser();
-            superUser.setSuperUserID(4); // ID test
-            superUser.setAvatar("/assets/imgs/avatars/instructor1.png");
-            superUser.setFullName("Test Instructor");
-            superUser.setRole("instructor");
-            session.setAttribute("user", superUser);
-        }
-        // --- End test ---
+        SuperUser user;
 
-        SuperUser user = (SuperUser) session.getAttribute("user");
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
         if (user == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -216,7 +219,7 @@ public class InstructorProfileServlet extends HttpServlet {
         String bio = request.getParameter("bio");
         String specialization = request.getParameter("specialization");
 
-        // Lấy instructorId từ session, nếu chưa có thì set mặc định là 1
+        // Lấy instructorId từ session
         Instructor existingInstructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
         if (existingInstructor == null) {
             response.sendRedirect(request.getContextPath() + "/instructor/profile?error=notfound");
@@ -324,7 +327,6 @@ public class InstructorProfileServlet extends HttpServlet {
             if (avatarUrl != null && !avatarUrl.trim().isEmpty()) {
                 user.setAvatar(avatarUrl);
             }
-            session.setAttribute("user", user);
             // FIX: Redirect với success message
             response.sendRedirect(request.getContextPath() + "/instructor/profile?success=updated");
         } else {
@@ -335,7 +337,14 @@ public class InstructorProfileServlet extends HttpServlet {
     private void handleChangePassword(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        SuperUser user = (SuperUser) session.getAttribute("user");
+        SuperUser user;
+
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
         if (user == null) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -346,7 +355,7 @@ public class InstructorProfileServlet extends HttpServlet {
         String newPassword = request.getParameter("newPassword");
         String confirmPassword = request.getParameter("confirmPassword");
 
-        // ✅ Lấy lại user từ DB để so sánh mật khẩu
+        // Lấy lại user từ DB để so sánh mật khẩu
         SuperUser dbUser = superUserDAO.getSuperUserById(user.getSuperUserID());
         if (dbUser == null) {
             response.sendRedirect(request.getContextPath() + "/instructor/profile?error=notfound");
@@ -355,7 +364,7 @@ public class InstructorProfileServlet extends HttpServlet {
 
         boolean hasError = false;
 
-        // ✅ Kiểm tra mật khẩu hiện tại đúng không
+        // Kiểm tra mật khẩu hiện tại đúng không
         if (!PasswordEncrypt.encryptSHA256(currentPassword).equals(dbUser.getPassword())) {
             request.setAttribute("currentPasswordError", "Current password is incorrect.");
             hasError = true;
@@ -376,7 +385,7 @@ public class InstructorProfileServlet extends HttpServlet {
             return;
         }
 
-        // ✅ Mã hóa và cập nhật SuperUser
+        // Mã hóa và cập nhật SuperUser
         String encryptedNewPassword = PasswordEncrypt.encryptSHA256(newPassword);
         dbUser.setPassword(encryptedNewPassword);
         boolean updated = superUserDAO.updatePassword(dbUser);
@@ -432,7 +441,7 @@ public class InstructorProfileServlet extends HttpServlet {
             hasError = true;
         }
 
-// Validate email
+        // Validate email
         if (!Validator.isValidEmail(email)) {
             request.setAttribute("emailError", "Please enter a valid email address");
             hasError = true;
@@ -583,7 +592,14 @@ public class InstructorProfileServlet extends HttpServlet {
         try {
             // Get the instructor user info for the email footer
             HttpSession session = request.getSession();
-            SuperUser senderUser = (SuperUser) session.getAttribute("user");
+            SuperUser senderUser;
+
+            try {
+                senderUser = (SuperUser) session.getAttribute("user");
+            } catch (Exception e) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
             String senderName = senderUser != null ? senderUser.getFullName() : "System";
 
             // Format HTML message

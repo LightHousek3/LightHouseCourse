@@ -1086,6 +1086,7 @@
                                                     </c:otherwise>
                                                 </c:choose>
 
+
                                                 <li class="content-item ${isCurrentContent?'active':''}${isContentCompleted ? 'completed' : ''}"
                                                     data-id="${itemId}" data-type="${itemType}"
                                                     order-index="${orderIdex}">
@@ -1159,6 +1160,11 @@
                                         </c:when>
                                     </c:choose>
                                 </h1>
+
+                                <!-- Discussion Button -->
+                                <c:if test="${currentLesson != null}">
+                                    <jsp:include page="lesson-discussion-button.jsp" />
+                                </c:if>
 
                                 <p class="content-subheading">
                                     <c:choose>
@@ -1823,14 +1829,14 @@
                                     newLink.href = `${pageContext.request.contextPath}/learning/\${itemType}/\${itemId}`;
                                     newLink.className = 'content-link';
                                     newLink.innerHTML = `
-        <span class="content-icon">
-            <i class="\${itemIcon}"></i>
-        </span>
-        <span class="content-title">\${itemTitle}</span>
-        <span class="content-status">
-            \${itemStatus.replace('<i class="fas fa-lock"></i>', '')}
-        </span>
-    `;
+<span class="content-icon">
+    <i class="\${itemIcon}"></i>
+</span>
+<span class="content-title">\${itemTitle}</span>
+<span class="content-status">
+    \${itemStatus.replace('<i class="fas fa-lock"></i>', '')}
+</span>
+`;
 
                                     // Replace the locked span with the new link
                                     nextContentItem.replaceChild(newLink, lockedLink);
@@ -1857,7 +1863,7 @@
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    // Update progress
+                                    // Update course progress
                                     const progressBarFill = document.querySelector('.progress-bar-fill');
                                     const progressPercentage = document.getElementById('progressPercentage');
 
@@ -1866,6 +1872,18 @@
                                         if (progressPercentage) {
                                             progressPercentage.innerText = Math.round(data.newCompletionPercentage) + '%';
                                         }
+                                    }
+
+                                    // Update lesson progress
+                                    const lessonProgressElement = document.querySelector(`.lesson-item[data-id="${lessonId}"] .lesson-progress-bar-fill`);
+                                    if (lessonProgressElement) {
+                                        lessonProgressElement.style.width = data.lessonCompletionPercentage + '%';
+                                    }
+
+                                    // Update lesson completion text if exists
+                                    const lessonPercentageElement = document.querySelector(`.lesson-item[data-id="${lessonId}"] .lesson-percentage`);
+                                    if (lessonPercentageElement) {
+                                        lessonPercentageElement.innerText = Math.round(data.lessonCompletionPercentage) + '%';
                                     }
 
                                     // For video completions, don't auto-navigate - just update UI
@@ -1890,6 +1908,18 @@
                                     else if (data.nextType && data.nextId && data.nextLessonId) {
                                         window.location.href = '${pageContext.request.contextPath}/learning/' +
                                             data.nextType + '/' + data.nextId + '?lessonId=' + data.nextLessonId;
+                                    }
+
+                                    // Check if the lesson is complete and update its visual status
+                                    if (data.lessonComplete) {
+                                        const lessonItem = document.querySelector(`.lesson-item[data-id="${lessonId}"]`);
+                                        if (lessonItem) {
+                                            lessonItem.classList.add('completed');
+                                            const lessonStatusIcon = lessonItem.querySelector('.lesson-status span');
+                                            if (lessonStatusIcon) {
+                                                lessonStatusIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+                                            }
+                                        }
                                     }
                                 }
                             })

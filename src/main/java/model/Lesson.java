@@ -13,6 +13,7 @@ import java.util.List;
  * @author DangPH - CE180896
  */
 public class Lesson {
+
     private int lessonID;
     private String title;
     private int courseID;
@@ -20,8 +21,12 @@ public class Lesson {
 
     // Collection for lesson items (ordered resources)
     private List<LessonItem> lessonItems = new ArrayList<>();
-    
-    // Additional information
+
+    private List<Video> videos = new ArrayList<>();
+    private List<Quiz> quizs = new ArrayList<>();
+    private List<Material> materials = new ArrayList<>();
+
+// Additional information
     private boolean completed;
 
     // Constructors
@@ -86,10 +91,34 @@ public class Lesson {
         this.lessonItems = lessonItems;
     }
 
-    @Override
-    public String toString() {
-        return "Lesson{" + "lessonID=" + lessonID + ", title=" + title + ", courseID=" + courseID + ", orderIndex=" + orderIndex + ", lessonItems=" + lessonItems + ", completed=" + completed + '}';
+    public void setVideos(List<Video> videos) {
+        this.videos = videos;
     }
 
+    public void setQuizs(List<Quiz> quizs) {
+        this.quizs = quizs;
+    }
+
+    public List<Video> getVideos() {
+        return videos;
+    }
+
+    public List<Quiz> getQuizs() {
+        return quizs;
+    }
+
+    public List<Material> getMaterials() {
+        return materials;
+    }
+
+    public void setMaterials(List<Material> materials) {
+        this.materials = materials;
+    }
+
+    @Override
+    public String toString() {
+        return "Lesson{" + "lessonID=" + lessonID + ", title=" + title + ", courseID=" + courseID + ", orderIndex=" + orderIndex + ", lessonItems=" + lessonItems + ", videos=" + videos + ", quizs=" + quizs + ", materials=" + materials + ", completed=" + completed + '}';
+    }
     
+
 }

@@ -5,17 +5,20 @@
 package controller.instructor;
 
 import dao.CourseDAO;
+import dao.InstructorDAO;
 import dao.RatingDAO;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import model.Course;
+import model.Instructor;
 import model.Rating;
+import model.SuperUser;
 
 /**
  *
@@ -26,11 +29,13 @@ public class InstructorReviewServlet extends HttpServlet {
 
     private RatingDAO ratingDAO;
     private CourseDAO courseDAO;
+    private InstructorDAO instructorDAO;
 
     @Override
     public void init() throws SecurityException {
         ratingDAO = new RatingDAO();
         courseDAO = new CourseDAO();
+        instructorDAO = new InstructorDAO();
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -45,10 +50,29 @@ public class InstructorReviewServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (request.getSession().getAttribute("instructorId") == null) {
-            request.getSession().setAttribute("instructorId", 1);
+
+        // Check if user is logged in
+        HttpSession session = request.getSession();
+        SuperUser user;
+        
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
         }
-        Integer instructorId = (Integer) request.getSession().getAttribute("instructorId");
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        // Get instructor information using getInstructorBySuperUserId
+        Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
+        if (instructor == null) {
+            // If no instructor record exists, redirect to 404 page
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        Integer instructorId = instructor.getInstructorID();
 
         // Get filter form requests
         String courseIdParam = request.getParameter("courseId");

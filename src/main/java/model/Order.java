@@ -1,44 +1,45 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-/**
- * Order model class
- *
- * @author DangPH - CE180896
- */
 public class Order {
 
     private int orderID;
     private int customerID;
     private Timestamp orderDate;
     private double totalAmount;
-    private String status; // 'pending', 'completed', 'refunded'
+    private String status; // 'pending', 'completed', 'refunded', 'refund_pending'
+    private String paymentMethod; // 'VNPAY'
+    private String paymentTransactionID;
+    private String paymentData;
 
-    // Additional information
-    private List<OrderDetail> orderDetails = new ArrayList<>();
     private Customer customer;
 
-    // Constructors
+    private String userName;
+
+    private List<OrderDetail> orderDetails = new ArrayList<>();
+
+    private Map<String, Object> attributes;
+
     public Order() {
         this.orderDetails = new ArrayList<>();
+        this.attributes = new HashMap<>();
     }
 
-    public Order(int customerID, double totalAmount) {
+    public Order(int customerID, double totalAmount, String paymentMethod) {
         this.customerID = customerID;
         this.totalAmount = totalAmount;
+        this.paymentMethod = paymentMethod;
         this.orderDate = new Timestamp(System.currentTimeMillis());
         this.status = "pending";
         this.orderDetails = new ArrayList<>();
+        this.attributes = new HashMap<>();
     }
 
-    // Getters and Setters
     public int getOrderID() {
         return orderID;
     }
@@ -55,7 +56,7 @@ public class Order {
         this.customerID = customerID;
     }
 
-    // For backward compatibility
+    // Backward compatibility
     public int getUserID() {
         return customerID;
     }
@@ -88,6 +89,46 @@ public class Order {
         this.status = status;
     }
 
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getPaymentTransactionID() {
+        return paymentTransactionID;
+    }
+
+    public void setPaymentTransactionID(String paymentTransactionID) {
+        this.paymentTransactionID = paymentTransactionID;
+    }
+
+    public String getPaymentData() {
+        return paymentData;
+    }
+
+    public void setPaymentData(String paymentData) {
+        this.paymentData = paymentData;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
     public List<OrderDetail> getOrderDetails() {
         return orderDetails;
     }
@@ -103,15 +144,27 @@ public class Order {
         this.orderDetails.add(orderDetail);
     }
 
-    public Customer getCustomer() {
-        return customer;
+    public void setAttribute(String name, Object value) {
+        if (attributes == null) {
+            attributes = new HashMap<>();
+        }
+        attributes.put(name, value);
     }
 
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
+    public Object getAttribute(String name) {
+        return attributes != null ? attributes.get(name) : null;
     }
 
-    // Helper methods
+    public boolean getBooleanAttribute(String name, boolean defaultValue) {
+        Object value = getAttribute(name);
+        return (value instanceof Boolean) ? (Boolean) value : defaultValue;
+    }
+
+    public boolean isAttributeTrue(String name) {
+        return getBooleanAttribute(name, false);
+    }
+
+    // Helper
     public boolean isPending() {
         return "pending".equals(status);
     }
@@ -130,9 +183,18 @@ public class Order {
 
     @Override
     public String toString() {
-        return "Order{" + "orderID=" + orderID + ", customerID=" + customerID + ", orderDate=" + orderDate
-                + ", totalAmount="
-                + totalAmount + ", status=" + status + ", orderDetails=" + orderDetails + ", customer=" + customer
-                + '}';
+        return "Order{" +
+                "orderID=" + orderID +
+                ", customerID=" + customerID +
+                ", orderDate=" + orderDate +
+                ", totalAmount=" + totalAmount +
+                ", status='" + status + '\'' +
+                ", paymentMethod='" + paymentMethod + '\'' +
+                ", paymentTransactionID='" + paymentTransactionID + '\'' +
+                ", paymentData='" + paymentData + '\'' +
+                ", customer=" + customer +
+                ", userName='" + userName + '\'' +
+                ", orderDetails=" + orderDetails +
+                '}';
     }
 }

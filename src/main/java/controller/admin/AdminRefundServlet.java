@@ -6,9 +6,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import model.RefundRequest;
+import model.SuperUser;
+
 /**
  * Admin controller for managing refund requests (No authorization required)
  */
@@ -161,7 +164,18 @@ public class AdminRefundServlet extends HttpServlet {
 
         try {
             int refundId = Integer.parseInt(refundIdParam);
-            int adminId = 1; // You should get this from session/authentication
+
+            // Check if admin is logged in
+            HttpSession session = request.getSession();
+            SuperUser admin;
+
+            try {
+                admin = (SuperUser) session.getAttribute("user");
+            } catch (Exception e) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+            int adminId = admin.getSuperUserID();
 
             // Get refund request details before updating status
             RefundRequest refundRequest = refundDAO.getRefundById(refundId);

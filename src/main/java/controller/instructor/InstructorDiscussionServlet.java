@@ -53,8 +53,18 @@ public class InstructorDiscussionServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        SuperUser user = (SuperUser) session.getAttribute("user");
-
+        SuperUser user;
+        
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
         // Get instructor information using getInstructorBySuperUserId
         Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
         if (instructor == null) {
@@ -90,7 +100,14 @@ public class InstructorDiscussionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        SuperUser user = (SuperUser) session.getAttribute("user");
+        SuperUser user;
+        
+        try {
+            user = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
         // Get instructor information
         Instructor instructor = instructorDAO.getInstructorBySuperUserId(user.getSuperUserID());
@@ -265,45 +282,15 @@ public class InstructorDiscussionServlet extends HttpServlet {
             }
 
             // Check if instructor teaches this course
-            List<Integer> instructorCourseIds = instructorDAO.getInstructorCourseIds(instructor.getInstructorID());
-            boolean canReply = instructorCourseIds.contains(discussion.getCourseID());
-
+            boolean canReply = replyDAO.isInstructorForCourse(instructor.getInstructorID(), discussion.getCourseID());
+            
             // Get replies for this discussion
             List<DiscussionReply> replies = replyDAO.getRepliesByDiscussionId(discussionId);
             discussion.setReplies(replies);
 
-            // Check if this discussion was automatically marked as unresolved
-            // This would be determined by checking if the most recent reply is from a
-            // customer and the discussion was previously resolved
-            boolean wasAutoUnresolved = false;
-            if (!replies.isEmpty()) {
-                DiscussionReply latestReply = replies.get(replies.size() - 1);
-                if ("customer".equals(latestReply.getAuthorType()) && !discussion.getIsResolved()) {
-                    // Check if there's an instructor reply before this customer reply
-                    boolean hasInstructorReplyBefore = false;
-                    for (int i = replies.size() - 2; i >= 0; i--) {
-                        if ("instructor".equals(replies.get(i).getAuthorType())) {
-                            hasInstructorReplyBefore = true;
-                            break;
-                        }
-                    }
-
-                    if (hasInstructorReplyBefore) {
-                        wasAutoUnresolved = true;
-                        // Add a parameter to show the auto-unresolved notification
-                        if (request.getParameter("success") == null) {
-                            response.sendRedirect(request.getContextPath()
-                                    + "/instructor/discussions/view/" + discussionId + "?success=auto_unresolved");
-                            return;
-                        }
-                    }
-                }
-            }
-
             // Set attributes for the view
             request.setAttribute("discussion", discussion);
             request.setAttribute("canReply", canReply);
-            request.setAttribute("wasAutoUnresolved", wasAutoUnresolved);
 
             // Forward to the view
             request.getRequestDispatcher("/WEB-INF/views/instructor/manage-discussions/view-discussion.jsp").forward(request,
@@ -466,14 +453,12 @@ public class InstructorDiscussionServlet extends HttpServlet {
             boolean success = replyDAO.deleteReply(replyId, instructor.getInstructorID(), "instructor");
 
             if (success) {
-                // Check if the discussion is resolved and if there are any instructor replies
-                // left
+                // Check if the discussion is resolved and if there are any instructor replies left
                 Discussion discussion = discussionDAO.getDiscussionById(discussionId);
                 if (discussion != null && discussion.getIsResolved()) {
                     boolean hasInstructorReplies = replyDAO.hasInstructorReplies(discussionId);
 
-                    // If no instructor replies left and discussion is resolved, set it back to
-                    // unresolved
+                    // If no instructor replies left and discussion is resolved, set it back to unresolved
                     if (!hasInstructorReplies) {
                         discussionDAO.updateDiscussionResolved(discussionId, false);
                         response.sendRedirect(request.getContextPath()
@@ -521,7 +506,7 @@ public class InstructorDiscussionServlet extends HttpServlet {
             int discussionId = Integer.parseInt(discussionIdParam);
 
             // Update the reply (only if it belongs to this instructor)
-            boolean success = replyDAO.updateReply(replyId, content, instructor.getInstructorID(), "instructor");
+            boolean success = replyDAO.updateReply(replyId, instructor.getInstructorID(), "instructor", content);
 
             if (success) {
                 response.sendRedirect(request.getContextPath()

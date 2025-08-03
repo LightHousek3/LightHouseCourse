@@ -88,9 +88,8 @@ public class InstructorDAO extends DBContext {
                 instructor.setAvatar(rs.getString("Avatar"));
                 // Get statistical info
                 instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
-               OrderDAO orderDAO = new OrderDAO();
-instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.getInstructorID()));
-
+                OrderDAO orderDAO = new OrderDAO();
+                instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.getInstructorID()));
 
                 return instructor;
             }
@@ -343,8 +342,8 @@ instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.g
 
                 // Thêm thống kê nếu cần
                 instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
-               OrderDAO orderDAO = new OrderDAO();
-instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.getInstructorID()));
+                OrderDAO orderDAO = new OrderDAO();
+                instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.getInstructorID()));
 
                 return instructor;
             }
@@ -356,8 +355,33 @@ instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.g
         return null;
     }
 
+    public Instructor getFullNameAndAvatarByInsId(int instructorId) {
+        try {
+            String query = "select s.FullName, s.Avatar\n"
+                    + "from Instructors i\n"
+                    + "join SuperUsers s on s.SuperUserID = i.SuperUserID\n"
+                    + "where i.InstructorID = ?";
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Instructor instructor = new Instructor();
+                instructor.setFullName(rs.getString("FullName"));
+                instructor.setAvatar(rs.getString("Avatar"));
+                return instructor;
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error getInsAndSupByInsId: " + ex.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return null;
+    }
+
     public boolean usernameExists(String username) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from
+        // nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     public boolean emailExists(String email) {
@@ -374,6 +398,35 @@ instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.g
      */
     public Instructor findByUserId(int superUserId) {
         return getInstructorBySuperUserId(superUserId);
+    }
+
+    public List<Instructor> getAllInstructorsExcept(int exceptInstructorId) {
+        List<Instructor> instructors = new ArrayList<>();
+        String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
+                + "i.ApprovalDate, su.FullName, su.Email "
+                + "FROM Instructors i "
+                + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
+                + "WHERE i.InstructorID <> ?";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, exceptInstructorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Instructor instructor = new Instructor();
+                    instructor.setInstructorID(rs.getInt("InstructorID"));
+                    instructor.setSuperUserID(rs.getInt("SuperUserID"));
+                    instructor.setBiography(rs.getString("Biography"));
+                    instructor.setSpecialization(rs.getString("Specialization"));
+                    instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
+                    instructor.setName(rs.getString("FullName"));
+                    instructor.setEmail(rs.getString("Email"));
+                    instructors.add(instructor);
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error getting instructors except id " + exceptInstructorId + ": " + ex.getMessage());
+        }
+        return instructors;
     }
 
 }

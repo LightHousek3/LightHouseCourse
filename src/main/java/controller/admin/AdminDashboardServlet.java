@@ -55,12 +55,14 @@ public class AdminDashboardServlet extends HttpServlet {
             throws ServletException, IOException {
         // Check if admin is logged in
         HttpSession session = request.getSession();
-        // Test account si exist
-        SuperUser superUser = superUserDAO.getSuperUserById(1);
-        session.setAttribute("user", superUser);
-        // End test
+        SuperUser admin;
         
-        SuperUser admin = (SuperUser) session.getAttribute("user");
+        try {
+            admin = (SuperUser) session.getAttribute("user");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         
         // Get dashboard data
         int totalCourses = courseDAO.countAllCourses(null);

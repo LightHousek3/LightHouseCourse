@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.List;
 import dao.CourseDAO;
 import dao.CategoryDAO;
@@ -15,7 +14,6 @@ import dao.LessonItemDAO;
 import dao.VideoDAO;
 import dao.MaterialDAO;
 import dao.QuizDAO;
-import java.net.URLEncoder;
 import model.Course;
 import model.Category;
 import model.Lesson;
@@ -43,7 +41,6 @@ public class AdminCourseServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
     private CategoryDAO categoryDAO;
-    private LessonDAO lessonDAO;
     private LessonItemDAO lessonItemDAO;
     private VideoDAO videoDAO;
     private MaterialDAO materialDAO;
@@ -54,7 +51,6 @@ public class AdminCourseServlet extends HttpServlet {
         super.init();
         courseDAO = new CourseDAO();
         categoryDAO = new CategoryDAO();
-        lessonDAO = new LessonDAO();
         lessonItemDAO = new LessonItemDAO();
         videoDAO = new VideoDAO();
         materialDAO = new MaterialDAO();
@@ -134,10 +130,13 @@ public class AdminCourseServlet extends HttpServlet {
                             return;
                         }
 
-                        boolean success = courseDAO.banCourse(courseID);
-                        response.sendRedirect(request.getContextPath() + "/admin/course-list?message="
-                                + URLEncoder.encode(success ? "Course has been banned successfully" : "Failed to ban the course", "UTF-8")
-                                + "&status=" + (success ? "success" : "danger"));
+                        boolean updated = courseDAO.banCourse(courseID);
+                        if (updated) {
+                            request.getSession().setAttribute("message", "Course has been banned successfully.");
+                        } else {
+                            request.getSession().setAttribute("error", "Failed to ban the course. System error – contact admin.");
+                        }
+                        response.sendRedirect(request.getContextPath() + "/admin/courses");
 
                     } catch (NumberFormatException e) {
                         response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -162,10 +161,13 @@ public class AdminCourseServlet extends HttpServlet {
                             response.sendError(HttpServletResponse.SC_NOT_FOUND);
                             return;
                         }
-                        boolean success = courseDAO.unbanCourse(courseID);
-                        response.sendRedirect(request.getContextPath() + "/admin/course-list?message="
-                                + URLEncoder.encode(success ? "Course has been unbanned successfully" : "Failed to unban the course", "UTF-8")
-                                + "&status=" + (success ? "success" : "danger"));
+                        boolean updated = courseDAO.unbanCourse(courseID);
+                        if (updated) {
+                            request.getSession().setAttribute("message", "Course has been unbanned successfully.");
+                        } else {
+                            request.getSession().setAttribute("error", "Failed to unban the course. System error – contact admin.");
+                        }
+                        response.sendRedirect(request.getContextPath() + "/admin/courses");
 
                     } catch (NumberFormatException e) {
                         response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -235,39 +237,6 @@ public class AdminCourseServlet extends HttpServlet {
         // Get all categories for filtering
         List<Category> categories = categoryDAO.getAllCategories();
         request.setAttribute("categories", categories);
-        // Handle success and error messages
-        String successParam = request.getParameter("success");
-        String errorParam = request.getParameter("error");
-
-        if (successParam != null) {
-            String message = "";
-            switch (successParam) {
-                case "approved":
-                    message = "Course has been successfully approved.";
-                    break;
-                case "rejected":
-                    message = "Course has been rejected.";
-                    break;
-                default:
-                    message = "Operation completed successfully.";
-            }
-            request.setAttribute("message", message);
-        }
-
-        if (errorParam != null) {
-            String error = "";
-            switch (errorParam) {
-                case "approval-failed":
-                    error = "Failed to approve the course.";
-                    break;
-                case "rejection-failed":
-                    error = "Failed to reject the course.";
-                    break;
-                default:
-                    error = "An error occurred during the operation.";
-            }
-            request.setAttribute("error", error);
-        }
 
         // Forward to course listing page
         request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-list.jsp").forward(request, response);
@@ -306,39 +275,6 @@ public class AdminCourseServlet extends HttpServlet {
         // Get all categories for filtering
         List<Category> categories = categoryDAO.getAllCategories();
         request.setAttribute("categories", categories);
-        // Handle success and error messages
-        String successParam = request.getParameter("success");
-        String errorParam = request.getParameter("error");
-
-        if (successParam != null) {
-            String message = "";
-            switch (successParam) {
-                case "approved":
-                    message = "Course has been successfully approved.";
-                    break;
-                case "rejected":
-                    message = "Course has been rejected.";
-                    break;
-                default:
-                    message = "Operation completed successfully.";
-            }
-            request.setAttribute("message", message);
-        }
-
-        if (errorParam != null) {
-            String error = "";
-            switch (errorParam) {
-                case "approval-failed":
-                    error = "Failed to approve the course.";
-                    break;
-                case "rejection-failed":
-                    error = "Failed to reject the course.";
-                    break;
-                default:
-                    error = "An error occurred during the operation.";
-            }
-            request.setAttribute("error", error);
-        }
 
         // Forward to course listing page with pending filter
         request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-list.jsp").forward(request, response);
@@ -465,18 +401,17 @@ public class AdminCourseServlet extends HttpServlet {
         }
 
         // Update course approval status
-        course.setApprovalStatus("approved");
-        course.setApprovalDate(new Timestamp(System.currentTimeMillis()));
-
-        boolean updated = courseDAO.updateCourse(course);
+        boolean updated = courseDAO.approveCourse(courseId);
 
         if (updated) {
             // Redirect to pending courses list with success message
-            response.sendRedirect(request.getContextPath() + "/admin/course/pending?success=approved");
+            request.getSession().setAttribute("message", "Course successfully approved.");
         } else {
             // Redirect with error message
-            response.sendRedirect(request.getContextPath() + "/admin/course/pending?error=approval-failed");
+            request.getSession().setAttribute("error", "Course approval failed. System error – contact admin.");
         }
+        response.sendRedirect(request.getContextPath() + "/admin/course/pending");
+
     }
 
     /**
@@ -561,19 +496,17 @@ public class AdminCourseServlet extends HttpServlet {
             return;
         }
 
-        // Update course status
-        course.setApprovalStatus("rejected");
-        course.setRejectionReason(rejectionReason);
-
-        boolean updated = courseDAO.updateCourse(course);
+        boolean updated = courseDAO.rejectCourse(courseId, rejectionReason);
 
         if (updated) {
             // Redirect to pending courses list with success message
-            response.sendRedirect(request.getContextPath() + "/admin/course/pending?success=rejected");
+            request.getSession().setAttribute("message", "Course successfully rejected.");
         } else {
             // Show error message
-            response.sendRedirect(request.getContextPath() + "/admin/course/pending?error=rejection-failed");
+            request.getSession().setAttribute("error", "Course rejection failed. System error – contact admin.");
         }
+        response.sendRedirect(request.getContextPath() + "/admin/course/pending");
+
     }
 
     private void listCoursesBySearch(HttpServletRequest request, HttpServletResponse response)
@@ -612,43 +545,9 @@ public class AdminCourseServlet extends HttpServlet {
         // Get all categories for filtering
         List<Category> categories = categoryDAO.getAllCategories();
         request.setAttribute("categories", categories);
-        // Handle success and error messages
-        String successParam = request.getParameter("success");
-        String errorParam = request.getParameter("error");
-
-        if (successParam != null) {
-            String message = "";
-            switch (successParam) {
-                case "approved":
-                    message = "Course has been successfully approved.";
-                    break;
-                case "rejected":
-                    message = "Course has been rejected.";
-                    break;
-                default:
-                    message = "Operation completed successfully.";
-            }
-            request.setAttribute("message", message);
-        }
-
-        if (errorParam != null) {
-            String error = "";
-            switch (errorParam) {
-                case "approval-failed":
-                    error = "Failed to approve the course.";
-                    break;
-                case "rejection-failed":
-                    error = "Failed to reject the course.";
-                    break;
-                default:
-                    error = "An error occurred during the operation.";
-            }
-            request.setAttribute("error", error);
-        }
 
         // Forward to course listing page
         request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-list.jsp").forward(request, response);
-
     }
 
     private void listCoursesByFilter(HttpServletRequest request, HttpServletResponse response)
@@ -695,39 +594,6 @@ public class AdminCourseServlet extends HttpServlet {
         // Get all categories for filtering
         List<Category> categories = categoryDAO.getAllCategories();
         request.setAttribute("categories", categories);
-        // Handle success and error messages
-        String successParam = request.getParameter("success");
-        String errorParam = request.getParameter("error");
-
-        if (successParam != null) {
-            String message = "";
-            switch (successParam) {
-                case "approved":
-                    message = "Course has been successfully approved.";
-                    break;
-                case "rejected":
-                    message = "Course has been rejected.";
-                    break;
-                default:
-                    message = "Operation completed successfully.";
-            }
-            request.setAttribute("message", message);
-        }
-
-        if (errorParam != null) {
-            String error = "";
-            switch (errorParam) {
-                case "approval-failed":
-                    error = "Failed to approve the course.";
-                    break;
-                case "rejection-failed":
-                    error = "Failed to reject the course.";
-                    break;
-                default:
-                    error = "An error occurred during the operation.";
-            }
-            request.setAttribute("error", error);
-        }
 
         // Forward to course listing page
         request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-list.jsp").forward(request, response);

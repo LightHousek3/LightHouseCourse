@@ -5,14 +5,21 @@
 package dao;
 
 import db.DBContext;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import model.CourseProgress;
 import model.Customer;
+import model.LessonItemProgress;
+import model.LessonProgress;
 
 /**
  * Data Access Object for Customer entity.
@@ -35,8 +42,8 @@ public class CustomerDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "INSERT INTO Customers (Username, Password, Email, IsActive, FullName, Phone, Address, Avatar, AuthProvider, AuthProviderId, Token, TokenExpires) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO Customers (Username, Password, Email, IsActive, FullName, Phone, Address, Avatar, AuthProvider, AuthProviderId, Token, TokenExpires, LastTokenRequest) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, customer.getUsername());
@@ -50,7 +57,8 @@ public class CustomerDAO extends DBContext {
             ps.setString(9, customer.getAuthProvider());
             ps.setString(10, customer.getAuthProviderId());
             ps.setString(11, customer.getToken());
-            ps.setNull(12, java.sql.Types.TIMESTAMP); // TokenExpires
+            ps.setTimestamp(12, customer.getTokenExpires());
+            ps.setTimestamp(13, customer.getLastTokenRequest());
 
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 1) {
@@ -205,19 +213,34 @@ public class CustomerDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "UPDATE Customers SET Username = ?, Password = ?, Email = ?, IsActive = ?, "
-                    + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE CustomerID = ? ";
-
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, customer.getUsername());
-            ps.setString(2, customer.getPassword());
-            ps.setString(3, customer.getEmail());
-            ps.setBoolean(4, customer.isActive());
-            ps.setString(5, customer.getFullName());
-            ps.setString(6, customer.getPhone());
-            ps.setString(7, customer.getAddress());
-            ps.setString(8, customer.getAvatar());
-            ps.setInt(9, customer.getCustomerID());
+            // If the password is not null, then update.
+            if (customer.getPassword() != null) {
+                String sql = "UPDATE Customers SET Username = ?, Password = ?, Email = ?, IsActive = ?, "
+                        + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE CustomerID = ?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, customer.getUsername());
+                ps.setString(2, customer.getPassword());
+                ps.setString(3, customer.getEmail());
+                ps.setBoolean(4, customer.isActive());
+                ps.setString(5, customer.getFullName());
+                ps.setString(6, customer.getPhone());
+                ps.setString(7, customer.getAddress());
+                ps.setString(8, customer.getAvatar());
+                ps.setInt(9, customer.getCustomerID());
+            } else {
+                // If password == null then do not update the Password column.
+                String sql = "UPDATE Customers SET Username = ?, Email = ?, IsActive = ?, "
+                        + "FullName = ?, Phone = ?, Address = ?, Avatar = ? WHERE CustomerID = ?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, customer.getUsername());
+                ps.setString(2, customer.getEmail());
+                ps.setBoolean(3, customer.isActive());
+                ps.setString(4, customer.getFullName());
+                ps.setString(5, customer.getPhone());
+                ps.setString(6, customer.getAddress());
+                ps.setString(7, customer.getAvatar());
+                ps.setInt(8, customer.getCustomerID());
+            }
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected == 1;
@@ -232,7 +255,7 @@ public class CustomerDAO extends DBContext {
     /**
      * Update customer password in the database.
      *
-     * @param customerId The ID of the customer
+     * @param customerId  The ID of the customer
      * @param newPassword The new password (already encrypted)
      * @return true if update successful, false otherwise
      */
@@ -426,6 +449,253 @@ public class CustomerDAO extends DBContext {
         }
     }
 
+    public List<CourseProgress> getCourseProgressByCustomerId(int customerId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<CourseProgress> progressList = new ArrayList<>();
+        String query = "SELECT cp.[ProgressID], cp.[CustomerID], cp.[CourseID], cp.[LastAccessDate], cp.[CompletionPercentage], cp.[IsCompleted], c.[Name] AS CourseName "
+                + "FROM [LightHouseCourse].[dbo].[CourseProgress] cp "
+                + "LEFT JOIN [LightHouseCourse].[dbo].[Courses] c ON cp.[CourseID] = c.[CourseID] "
+                + "WHERE cp.[CustomerID] = ?";
+
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                System.out.println("Connection is null!");
+                return progressList;
+            }
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, customerId);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                CourseProgress cp = new CourseProgress();
+                cp.setProgressID(rs.getInt("ProgressID"));
+                cp.setCustomerID(rs.getInt("CustomerID"));
+                cp.setCourseID(rs.getInt("CourseID"));
+                cp.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+                cp.setCompletionPercentage(BigDecimal.valueOf(rs.getFloat("CompletionPercentage")));
+                cp.setCompleted(rs.getBoolean("IsCompleted"));
+                cp.setCourseName(rs.getString("CourseName") != null ? rs.getString("CourseName") : "Not Available"); // Lấy
+                                                                                                                     // từ
+                                                                                                                     // alias
+                                                                                                                     // CourseName
+                progressList.add(cp);
+
+                // Log chi tiết
+                System.out.println("Fetched: ProgressID=" + cp.getProgressID() + ", CourseID=" + cp.getCourseID()
+                        + ", CourseName=" + cp.getCourseName() + ", Completion=" + cp.getCompletionPercentage());
+            }
+            if (progressList.isEmpty()) {
+                System.out.println("No course progress found for CustomerID: " + customerId);
+            }
+        } catch (SQLException e) {
+            System.out.println("SQL Error getting course progress: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return progressList;
+    }
+
+    public List<LessonProgress> getLessonProgressByCustomerId(int customerId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<LessonProgress> progressList = new ArrayList<>();
+        String query = "SELECT [ProgressID], [CustomerID], [LessonID], [IsCompleted], [CompletionPercentage], [CompletionDate], [LastAccessDate] "
+                + "FROM [LightHouseCourse].[dbo].[LessonProgress] WHERE [CustomerID] = ?";
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, customerId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                LessonProgress lp = new LessonProgress();
+                lp.setProgressID(rs.getInt("ProgressID"));
+                lp.setCustomerID(rs.getInt("CustomerID"));
+                lp.setLessonID(rs.getInt("LessonID"));
+                lp.setIsCompleted(rs.getBoolean("IsCompleted"));
+                lp.setCompletionPercentage(rs.getBigDecimal("CompletionPercentage"));
+                lp.setCompletionDate(rs.getTimestamp("CompletionDate"));
+                lp.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+                progressList.add(lp);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error getting lesson progress: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return progressList;
+    }
+
+    public List<LessonItemProgress> getLessonItemProgressByCustomerId(int customerId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<LessonItemProgress> progressList = new ArrayList<>();
+        String query = "SELECT [ProgressID], [CustomerID], [LessonItemID], [IsCompleted], [CompletionDate], [LastAccessDate] "
+                + "FROM [LightHouseCourse].[dbo].[LessonItemProgress] WHERE [CustomerID] = ?";
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, customerId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                LessonItemProgress lip = new LessonItemProgress();
+                lip.setProgressID(rs.getInt("ProgressID"));
+                lip.setCustomerID(rs.getInt("CustomerID"));
+                lip.setLessonItemID(rs.getInt("LessonItemID"));
+                lip.setCompleted(rs.getBoolean("IsCompleted"));
+                lip.setCompletionDate(rs.getTimestamp("CompletionDate"));
+                lip.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+                progressList.add(lip);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error getting lesson item progress: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return progressList;
+    }
+
+    /**
+     * Get lesson progress by customer ID and course ID.
+     *
+     * @param customerId The ID of the customer
+     * @param courseId   The ID of the course
+     * @return List of lesson progress for the specified customer and course
+     */
+    public List<LessonProgress> getLessonProgressByCustomerIdAndCourseId(int customerId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<LessonProgress> progressList = new ArrayList<>();
+        String query = "SELECT lp.[ProgressID], lp.[CustomerID], lp.[LessonID], lp.[IsCompleted], lp.[CompletionPercentage], lp.[CompletionDate], lp.[LastAccessDate] "
+                + "FROM [LightHouseCourse].[dbo].[LessonProgress] lp "
+                + "JOIN [LightHouseCourse].[dbo].[Lessons] l ON lp.LessonID = l.LessonID "
+                + "WHERE lp.[CustomerID] = ? AND l.[CourseID] = ?";
+
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, customerId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                LessonProgress lp = new LessonProgress();
+                lp.setProgressID(rs.getInt("ProgressID"));
+                lp.setCustomerID(rs.getInt("CustomerID"));
+                lp.setLessonID(rs.getInt("LessonID"));
+                lp.setIsCompleted(rs.getBoolean("IsCompleted"));
+                lp.setCompletionPercentage(rs.getBigDecimal("CompletionPercentage"));
+                lp.setCompletionDate(rs.getTimestamp("CompletionDate"));
+                lp.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+                progressList.add(lp);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error getting lesson progress by customer and course: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return progressList;
+    }
+
+    /**
+     * Get lesson item progress by customer ID and course ID.
+     *
+     * @param customerId The ID of the customer
+     * @param courseId   The ID of the course
+     * @return List of lesson item progress for the specified customer and
+     *         course
+     */
+    public List<LessonItemProgress> getLessonItemProgressByCustomerIdAndCourseId(int customerId, int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<LessonItemProgress> progressList = new ArrayList<>();
+        String query = "SELECT lip.[ProgressID], lip.[CustomerID], lip.[LessonItemID], lip.[IsCompleted], lip.[CompletionDate], lip.[LastAccessDate] "
+                + "FROM [LightHouseCourse].[dbo].[LessonItemProgress] lip "
+                + "JOIN [LightHouseCourse].[dbo].[LessonItems] li ON lip.LessonItemID = li.LessonItemID "
+                + "JOIN [LightHouseCourse].[dbo].[Lessons] l ON li.LessonID = l.LessonID "
+                + "WHERE lip.[CustomerID] = ? AND l.[CourseID] = ?";
+
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, customerId);
+            ps.setInt(2, courseId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                LessonItemProgress lip = new LessonItemProgress();
+                lip.setProgressID(rs.getInt("ProgressID"));
+                lip.setCustomerID(rs.getInt("CustomerID"));
+                lip.setLessonItemID(rs.getInt("LessonItemID"));
+                lip.setCompleted(rs.getBoolean("IsCompleted"));
+                lip.setCompletionDate(rs.getTimestamp("CompletionDate"));
+                lip.setLastAccessDate(rs.getTimestamp("LastAccessDate"));
+                progressList.add(lip);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error getting lesson item progress by customer and course: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return progressList;
+    }
+
+    /**
+     * Lấy danh sách Customer dựa trên InstructorID
+     *
+     * @param instructorId ID của Instructor
+     * @return Danh sách Customer liên quan đến InstructorID
+     * @throws SQLException Nếu có lỗi truy vấn cơ sở dữ liệu
+     */
+    public List<Customer> getCustomersByInstructorID(int instructorId) throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Customer> customers = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT DISTINCT cu.CustomerID, cu.FullName, cu.Email, cu.Username, cu.IsActive, cu.Phone, cu.Address, cu.Avatar "
+                    + "FROM dbo.Customers cu "
+                    + "JOIN dbo.Orders o ON cu.CustomerID = o.CustomerID "
+                    + "JOIN dbo.OrderDetails od ON o.OrderID = od.OrderID "
+                    + "JOIN dbo.Courses c ON od.CourseID = c.CourseID "
+                    + "JOIN dbo.CourseInstructors ci ON c.CourseID = ci.CourseID "
+                    + "WHERE ci.InstructorID = ?";
+            System.out.println("Preparing query for instructorId: " + instructorId);
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+            System.out.println("Query executed for instructorId: " + instructorId);
+
+            while (rs.next()) {
+                Customer customer = new Customer();
+                customer.setCustomerID(rs.getInt("CustomerID"));
+                customer.setFullName(rs.getString("FullName"));
+                customer.setEmail(rs.getString("Email"));
+                customer.setUsername(rs.getString("Username"));
+                customer.setActive(rs.getBoolean("IsActive"));
+                customer.setPhone(rs.getString("Phone"));
+                customer.setAddress(rs.getString("Address"));
+                customer.setAvatar(rs.getString("Avatar"));
+                customers.add(customer);
+            }
+            System.out.println("Found " + customers.size() + " customers for instructorId: " + instructorId);
+        } catch (SQLException ex) {
+            System.out.println("SQLException in getCustomersByInstructorID: " + ex.getMessage());
+            throw ex;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return customers;
+    }
+
     /**
      * Authenticate a customer.
      *
@@ -468,7 +738,7 @@ public class CustomerDAO extends DBContext {
     /**
      * Find a customer by their social provider ID.
      *
-     * @param provider The authentication provider (e.g., "google", "facebook")
+     * @param provider   The authentication provider (e.g., "google", "facebook")
      * @param providerId The ID from the provider
      * @return Customer object if found, null otherwise
      */
@@ -564,6 +834,191 @@ public class CustomerDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Update password reset token and expiration time for a customer
+     * 
+     * @param email      The email of the customer
+     * @param token      The password reset token
+     * @param expiryTime The expiration time for the token
+     * @return true if update successful, false otherwise
+     */
+    public boolean updatePasswordResetToken(String email, String token, Timestamp expiryTime) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Customers SET Token = ?, TokenExpires = ?, LastTokenRequest = CURRENT_TIMESTAMP WHERE Email = ? AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, token);
+            ps.setTimestamp(2, expiryTime);
+            ps.setString(3, email);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Verify password reset token
+     * 
+     * @param email The email of the customer
+     * @param token The password reset token
+     * @return The customer if token is valid, null otherwise
+     */
+    public Customer verifyPasswordResetToken(String email, String token) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Customer customer = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT * FROM Customers WHERE Email = ? AND Token = ? AND TokenExpires > CURRENT_TIMESTAMP AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setString(2, token);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                customer = mapCustomer(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return customer;
+    }
+
+    /**
+     * Reset customer password and clear token
+     * 
+     * @param email       The email of the customer
+     * @param newPassword The new password (already encrypted)
+     * @return true if reset successful, false otherwise
+     */
+    public boolean resetPassword(String email, String newPassword) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "UPDATE Customers SET Password = ?, Token = NULL, TokenExpires = NULL WHERE Email = ? AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, newPassword);
+            ps.setString(2, email);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Check if a user can request a new token (60 seconds between requests)
+     * 
+     * @param email The email of the customer
+     * @return true if user can request a new token, false otherwise
+     */
+    public boolean canRequestNewToken(String email) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT LastTokenRequest FROM Customers WHERE Email = ? AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                java.sql.Timestamp lastRequest = rs.getTimestamp("LastTokenRequest");
+
+                if (lastRequest == null) {
+                    return true;
+                }
+
+                long currentTime = System.currentTimeMillis();
+                long lastRequestTime = lastRequest.getTime();
+
+                // 60 seconds (60000 milliseconds) between requests
+                return (currentTime - lastRequestTime) >= 60000;
+            }
+
+            // If no record found, user can request a token
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Get remaining time (in seconds) before user can request a new token
+     * 
+     * @param email The email of the customer
+     * @return Remaining time in seconds, 0 if user can request a new token
+     */
+    public long getRemainingTimeForNewToken(String email) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT LastTokenRequest FROM Customers WHERE Email = ? AND IsActive = 1";
+
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Timestamp lastRequest = rs.getTimestamp("LastTokenRequest");
+
+                if (lastRequest == null) {
+                    return 0;
+                }
+
+                long currentTime = System.currentTimeMillis();
+                long lastRequestTime = lastRequest.getTime();
+
+                // 60 seconds (60000 milliseconds) between requests
+                long elapsedTime = currentTime - lastRequestTime;
+                if (elapsedTime < 60000) {
+                    return (60000 - elapsedTime) / 1000; // Convert to seconds
+                }
+            }
+
+            // If no record found or time has passed, user can request a token
+            return 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
         } finally {
             closeResources(rs, ps, conn);
         }

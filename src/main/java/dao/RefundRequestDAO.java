@@ -11,7 +11,6 @@ import java.util.List;
 import model.RefundRequest;
 import db.DBContext;
 
-
 /**
  * Data Access Object for RefundRequest entities. Handles database operations
  * related to refund requests.
@@ -190,7 +189,7 @@ public class RefundRequestDAO extends DBContext {
                 }
             }
         } finally {
-            closeResources(rs, ps, conn);
+            closeResources(rs, ps, null);
         }
     }
 
@@ -284,8 +283,8 @@ public class RefundRequestDAO extends DBContext {
     }
 
     /**
-     * Gets the total number of refund requests matching the given status and search
-     * criteria.
+     * Gets the total number of refund requests matching the given status and
+     * search criteria.
      *
      * @param status The status to filter by (or "all")
      * @param search The search text to filter by
@@ -373,10 +372,10 @@ public class RefundRequestDAO extends DBContext {
 
             if (search != null && !search.trim().isEmpty()) {
                 sql.append(" AND (c.FullName LIKE ? OR STUFF((SELECT ', ' + co.Name "
-                            + "       FROM OrderDetails od "
-                            + "       JOIN Courses co ON od.CourseID = co.CourseID "
-                            + "       WHERE od.OrderID = r.OrderID "
-                            + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') LIKE ?)");
+                        + "       FROM OrderDetails od "
+                        + "       JOIN Courses co ON od.CourseID = co.CourseID "
+                        + "       WHERE od.OrderID = r.OrderID "
+                        + "       FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') LIKE ?)");
             }
 
             sql.append(" ORDER BY r.RequestDate DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
@@ -620,7 +619,7 @@ public class RefundRequestDAO extends DBContext {
         } catch (SQLException e) {
             // For backward compatibility
             try {
-                refund.setUserID(rs.getInt("UserID"));
+                refund.setCustomerID(rs.getInt("CustomerID"));
             } catch (SQLException ex) {
                 // Ignore if neither exists
             }
@@ -721,13 +720,15 @@ public class RefundRequestDAO extends DBContext {
 
         return refunds;
     }
-    
+
     /**
      * Checks if a user has a pending refund request for a specific course
+     * but only considers the most recent order for that course
      * 
-     * @param customerId   The customer ID
-     * @param courseId The course ID
-     * @return true if there's a pending refund request, false otherwise
+     * @param customerId The customer ID
+     * @param courseId   The course ID
+     * @return true if the most recent order for this course has a pending refund
+     *         request, false otherwise
      */
     public boolean hasPendingRefundForCourse(int customerId, int courseId) {
         Connection conn = null;
@@ -737,11 +738,17 @@ public class RefundRequestDAO extends DBContext {
 
         try {
             conn = DBContext.getConnection();
-            // Join with OrderDetails to find refund requests for this specific course
-            String sql = "SELECT COUNT(*) FROM RefundRequests r " +
-                    "JOIN Orders o ON r.OrderID = o.OrderID " +
-                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
-                    "WHERE r.CustomerID = ? AND od.CourseID = ? AND r.Status = 'pending'";
+            // Get the most recent order for this customer and course
+            String sql = "WITH RecentOrder AS (" +
+                    "  SELECT TOP 1 o.OrderID " +
+                    "  FROM Orders o " +
+                    "  JOIN OrderDetails od ON o.OrderID = od.OrderID " +
+                    "  WHERE o.CustomerID = ? AND od.CourseID = ? " +
+                    "  ORDER BY o.OrderDate DESC" +
+                    ") " +
+                    "SELECT COUNT(*) FROM RefundRequests r " +
+                    "JOIN RecentOrder ro ON r.OrderID = ro.OrderID " +
+                    "WHERE r.Status = 'pending'";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, customerId);
@@ -759,13 +766,15 @@ public class RefundRequestDAO extends DBContext {
 
         return hasPending;
     }
-    
+
     /**
      * Checks if a user has an approved refund request for a specific course
+     * but only considers the most recent order for that course
      * 
-     * @param customerId   The customer ID
-     * @param courseId The course ID
-     * @return true if there's an approved refund request, false otherwise
+     * @param customerId The customer ID
+     * @param courseId   The course ID
+     * @return true if the most recent order for this course has been refunded,
+     *         false otherwise
      */
     public boolean hasApprovedRefundForCourse(int customerId, int courseId) {
         Connection conn = null;
@@ -775,11 +784,17 @@ public class RefundRequestDAO extends DBContext {
 
         try {
             conn = DBContext.getConnection();
-            // Join with OrderDetails to find refund requests for this specific course
-            String sql = "SELECT COUNT(*) FROM RefundRequests r " +
-                    "JOIN Orders o ON r.OrderID = o.OrderID " +
-                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
-                    "WHERE r.CustomerID = ? AND od.CourseID = ? AND r.Status = 'approved'";
+            // Get the most recent order for this customer and course
+            String sql = "WITH RecentOrder AS (" +
+                    "  SELECT TOP 1 o.OrderID " +
+                    "  FROM Orders o " +
+                    "  JOIN OrderDetails od ON o.OrderID = od.OrderID " +
+                    "  WHERE o.CustomerID = ? AND od.CourseID = ? " +
+                    "  ORDER BY o.OrderDate DESC" +
+                    ") " +
+                    "SELECT COUNT(*) FROM RefundRequests r " +
+                    "JOIN RecentOrder ro ON r.OrderID = ro.OrderID " +
+                    "WHERE r.Status = 'approved'";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, customerId);
