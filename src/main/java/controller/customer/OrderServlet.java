@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import dao.OrderDAO;
 import dao.CartItemDAO;
+import dao.CategoryDAO;
 import dao.CourseDAO;
 import dao.CourseProgressDAO;
 import dao.PaymentTransactionDAO;
@@ -17,6 +18,7 @@ import dao.RefundRequestDAO;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import model.CartItem;
+import model.Category;
 import model.Order;
 import model.OrderDetail;
 import model.Customer;
@@ -31,15 +33,15 @@ import util.Validator;
 /**
  * Order controller for handling checkout and order history.
  */
-@WebServlet(name = "OrderServlet", urlPatterns = { "/order/checkout", "/order/history", "/order/detail/*",
-        "/order/payment" })
+@WebServlet(name = "OrderServlet", urlPatterns = {"/order/checkout", "/order/history", "/order/detail/*",
+    "/order/payment"})
 public class OrderServlet extends HttpServlet {
 
     private OrderDAO orderDAO;
     private CourseDAO courseDAO;
     private CourseProgressDAO progressDAO;
-    private RefundRequestDAO refundDAO;
     private CartItemDAO cartItemDAO;
+    private CategoryDAO categoryDAO;
 
     @Override
     public void init() throws ServletException {
@@ -47,7 +49,7 @@ public class OrderServlet extends HttpServlet {
         orderDAO = new OrderDAO();
         courseDAO = new CourseDAO();
         progressDAO = new CourseProgressDAO();
-        refundDAO = new RefundRequestDAO();
+        categoryDAO = new CategoryDAO();
         cartItemDAO = new CartItemDAO();
     }
 
@@ -55,6 +57,10 @@ public class OrderServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String servletPath = request.getServletPath();
+        
+        // Get categories for sidebar
+        List<Category> categories = categoryDAO.getAllCategories();
+        request.setAttribute("categories", categories);
 
         if (servletPath.equals("/order/checkout")) {
             showCheckout(request, response);
@@ -116,7 +122,7 @@ public class OrderServlet extends HttpServlet {
             }
 
             // Check if there are any selected items
-            if (cart.isNothingSelected() || cart.getSelectedItemCount() == 0) {
+            if (cart.isNothingSelected()) {
                 request.setAttribute("error", "Please select at least one course to checkout.");
                 request.getRequestDispatcher("/WEB-INF/views/customer/cart/cart.jsp").forward(request, response);
                 return;
@@ -145,7 +151,7 @@ public class OrderServlet extends HttpServlet {
             if (hasAlreadyPurchasedCourses) {
                 request.setAttribute("error",
                         "You have already purchased the following course(s): " + alreadyPurchasedCourses.toString()
-                                + ". Please deselect them from your cart before proceeding.");
+                        + ". Please deselect them from your cart before proceeding.");
                 request.getRequestDispatcher("/WEB-INF/views/customer/cart/cart.jsp").forward(request, response);
                 return;
             }
@@ -158,10 +164,10 @@ public class OrderServlet extends HttpServlet {
     /**
      * Process the checkout for either cart items or a single course.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     private void processCheckout(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -274,7 +280,7 @@ public class OrderServlet extends HttpServlet {
             if (hasAlreadyPurchasedCourses) {
                 request.setAttribute("error",
                         "You have already purchased the following course(s): " + alreadyPurchasedCourses.toString()
-                                + ". Please deselect them before proceeding.");
+                        + ". Please deselect them before proceeding.");
                 request.getRequestDispatcher("/WEB-INF/views/customer/order/checkout.jsp").forward(request, response);
                 return;
             }
@@ -339,10 +345,10 @@ public class OrderServlet extends HttpServlet {
     /**
      * Handle the callback from VNPay payment gateway.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     private void handleVNPayCallback(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

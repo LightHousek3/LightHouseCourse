@@ -64,25 +64,24 @@ public class PaymentTransactionDAO extends DBContext {
      * Get payment transactions by order ID.
      *
      * @param orderId The order ID to search for
-     * @return List of payment transactions for the order
+     * @return The payment transaction for the order or null if not found
      */
-    public List<PaymentTransaction> getByOrderId(int orderId) {
+    public PaymentTransaction getByOrderId(int orderId) {
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
-        List<PaymentTransaction> transactions = new ArrayList<>();
+        PaymentTransaction transaction = null;
 
         try {
             conn = getConnection();
-            String sql = "SELECT * FROM PaymentTransactions WHERE OrderID = ? ORDER BY CreatedAt DESC";
+            String sql = "SELECT * FROM PaymentTransactions WHERE OrderID = ?";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, orderId);
 
             rs = ps.executeQuery();
-            while (rs.next()) {
-                PaymentTransaction transaction = mapPaymentTransaction(rs);
-                transactions.add(transaction);
+            if (rs.next()) {
+                transaction = mapPaymentTransaction(rs);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -90,7 +89,7 @@ public class PaymentTransactionDAO extends DBContext {
             closeResources(rs, ps, conn);
         }
 
-        return transactions;
+        return transaction;
     }
 
     /**

@@ -474,7 +474,6 @@
                         // Function to handle checkout button click
                         function handleCheckoutClick() {
                             const selectedCount = document.querySelectorAll('.course-checkbox:checked').length;
-
                             if (selectedCount === 0) {
                                 alert('Please select at least one course to checkout.');
                                 return;
@@ -570,7 +569,7 @@
                                 updateUI();
 
                                 // Then update server
-                                const url = `${pageContext.request.contextPath}/cart/${isChecked ? 'select' : 'deselect'}?id=${courseId}&ajax=true`;
+                                const url = `${pageContext.request.contextPath}/cart/\${isChecked ? 'select' : 'deselect'}?id=\${courseId}&ajax=true`;
                                 updateServer(url).catch(error => {
                                     console.error('Error updating selection:', error);
                                     // No need to revert UI state as we'll refresh the page if there's an error
@@ -591,7 +590,7 @@
                             updateUI();
 
                             // Update server
-                            const url = `${pageContext.request.contextPath}/cart/${isChecked ? 'select-all' : 'deselect-all'}?ajax=true`;
+                            const url = `${pageContext.request.contextPath}/cart/\${isChecked ? 'select-all' : 'deselect-all'}?ajax=true`;
                             updateServer(url).catch(error => {
                                 console.error('Error updating selections:', error);
                                 // No need to revert UI state as we'll refresh the page if there's an error

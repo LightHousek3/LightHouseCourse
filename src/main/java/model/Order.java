@@ -13,7 +13,7 @@ public class Order {
     private Timestamp orderDate;
     private double totalAmount;
     private String status; // 'pending', 'completed', 'refunded', 'refund_pending'
-    private String paymentMethod; // 'VNPAY' hoặc 'MOMO'
+    private String paymentMethod; // 'VNPAY'
     private String paymentTransactionID;
     private String paymentData;
 

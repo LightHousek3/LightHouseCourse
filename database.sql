@@ -272,8 +272,8 @@ GO
 -- Table PaymentTransactions (depend on Orders and RefundRequests)
 CREATE TABLE PaymentTransactions (
     TransactionID INT IDENTITY(1,1) PRIMARY KEY,
-    OrderID INT NULL,
-    RefundRequestID INT NULL,
+    OrderID INT NULL UNIQUE,
+    RefundRequestID INT NULL UNIQUE,
     TransactionType NVARCHAR(20) NOT NULL,
     Provider NVARCHAR(20) NOT NULL,
     ProviderTransactionID NVARCHAR(100) NOT NULL,
@@ -1231,16 +1231,16 @@ VALUES
 -- Insert PaymentTransactions
 INSERT INTO PaymentTransactions (OrderID, RefundRequestID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo)
 VALUES
-(1, NULL, 'payment', 'PayPal', 'PAYID-MX123456', 'user@example.com'),
-(2, NULL, 'payment', 'Stripe', 'ch_3K123456789', '****1234'),
-(3, 2, 'refund', 'PayPal', 'REF-123456789', 'user@example.com'),
-(4, NULL, 'payment', 'Stripe', 'ch_3K123456790', '****5678'),
-(5, 3, 'refund', 'PayPal', 'REF-123456790', 'student3@example.com'),
-(6, 4, 'refund', 'Stripe', 're_3K123456791', '****9012'),
-(7, NULL, 'payment', 'PayPal', 'PAYID-MX123457', 'student5@example.com'),
-(8, 5, 'refund', 'Stripe', 're_3K123456792', '****3456'),
-(9, NULL, 'payment', 'PayPal', 'PAYID-MX123458', 'mike.smith@example.com'),
-(10, NULL, 'payment', 'Stripe', 'ch_3K123456793', '****7890');
+(1, NULL, 'payment', 'VNPAY', 'PAYID-MX123456', 'user@example.com'),
+(2, NULL, 'payment', 'VNPAY', 'ch_3K123456789', '****1234'),
+(3, 2, 'refund', 'VNPAY', 'REF-123456789', 'user@example.com'),
+(4, NULL, 'payment', 'VNPAY', 'ch_3K123456790', '****5678'),
+(5, 3, 'refund', 'VNPAY', 'REF-123456790', 'student3@example.com'),
+(6, 4, 'refund', 'VNPAY', 're_3K123456791', '****9012'),
+(7, NULL, 'payment', 'VNPAY', 'PAYID-MX123457', 'student5@example.com'),
+(8, 5, 'refund', 'VNPAY', 're_3K123456792', '****3456'),
+(9, NULL, 'payment', 'VNPAY', 'PAYID-MX123458', 'mike.smith@example.com'),
+(10, NULL, 'payment', 'VNPAY', 'ch_3K123456793', '****7890');
 
 -- Insert LessonItems
 INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID)

@@ -4,6 +4,7 @@
  */
 package controller.customer;
 
+import dao.CategoryDAO;
 import dao.CustomerDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,6 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
+import model.Category;
 import model.Customer;
 import util.PasswordEncrypt;
 import util.Validator;
@@ -20,11 +23,13 @@ import util.Validator;
 public class CustomerProfileServlet extends HttpServlet {
 
     private CustomerDAO customerDAO;
+    private CategoryDAO categoryDAO;
 
     @Override
     public void init() throws ServletException {
         super.init();
         customerDAO = new CustomerDAO();
+        categoryDAO = new CategoryDAO();
     }
 
     /**
@@ -56,6 +61,10 @@ public class CustomerProfileServlet extends HttpServlet {
         } else {
             request.setAttribute("user", user); // Fallback to session user
         }
+        
+        // Get categories for sidebar
+        List<Category> categories = categoryDAO.getAllCategories();
+        request.setAttribute("categories", categories);
 
         // Forward to profile JSP
         request.getRequestDispatcher("/WEB-INF/views/customer/manage-profile/view-profile.jsp").forward(request, response);

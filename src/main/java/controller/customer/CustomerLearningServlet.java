@@ -40,12 +40,12 @@ import model.LessonProgress;
  * Learning controller for handling course learning pages.
  */
 @WebServlet(name = "LearningServlet", urlPatterns = {
-        "/learning/*",
-        "/learning/lesson/*",
-        "/learning/video/*",
-        "/learning/material/*",
-        "/learning/quiz/*",
-        "/api/learning/*"
+    "/learning/*",
+    "/learning/lesson/*",
+    "/learning/video/*",
+    "/learning/material/*",
+    "/learning/quiz/*",
+    "/api/learning/*"
 })
 public class CustomerLearningServlet extends HttpServlet {
 
@@ -167,9 +167,8 @@ public class CustomerLearningServlet extends HttpServlet {
     }
 
     /**
-     * Shows the main course learning page.
-     * When accessed via /learning/{courseID}, directly redirects to the last
-     * accessed lesson item
+     * Shows the main course learning page. When accessed via
+     * /learning/{courseID}, directly redirects to the last accessed lesson item
      * rather than showing the course overview page.
      */
     private void showCourseLearning(HttpServletRequest request, HttpServletResponse response, Customer customer)
@@ -250,24 +249,43 @@ public class CustomerLearningServlet extends HttpServlet {
         checkCourseAccess(customer, course, request, response);
 
         loadAndPrepareCourse(course);
+        currentLesson = findLessonInCourse(course, lessonId);
 
         // Get the lesson item
         LessonItem currentLessonItem = getLessonItem(contentType, contentId);
+        
+        // Check if user can access this content (previous lessons must be completed)
+        if (!canAccessLesson(customer.getCustomerID(), course, currentLesson)) {
+            Map<String, Object> lastProgressPoint = findLastProgressPoint(customer.getCustomerID(), course);
 
-        // Check if user can access this specific item (previous items in the lesson must be completed)
-        if (!canAccessLessonItem(customer.getCustomerID(), currentLesson, currentLessonItem)) {
-            LessonItem lastAccessibleItem = findLastAccessibleLessonItem(customer.getCustomerID(), currentLesson);
+            if (lastProgressPoint != null) {
+                String itemType = (String) lastProgressPoint.get("type");
+                int itemId = (int) lastProgressPoint.get("id");
 
-            if (lastAccessibleItem != null) {
-                String itemType = lastAccessibleItem.getItemType().toLowerCase();
-                int itemId = lastAccessibleItem.getItemID();
-
-                request.getSession().setAttribute("errorMessage", ERROR_LESSONITEM_LOCKED);
+                request.getSession().setAttribute("errorMessage", ERROR_LESSON_LOCKED);
 
                 response.sendRedirect(
                         request.getContextPath() + "/learning/" + itemType + "/" + itemId);
                 return;
             }
+        }
+
+        // Check if user can access this specific item (previous items in the lesson must be completed)
+        if (!canAccessLessonItem(customer.getCustomerID(), currentLesson, currentLessonItem)) {
+            
+            Map<String, Object> lastProgressPoint = findLastProgressPoint(customer.getCustomerID(), course);
+
+            if (lastProgressPoint != null) {
+                String itemType = (String) lastProgressPoint.get("type");
+                int itemId = (int) lastProgressPoint.get("id");
+                System.out.println("itemType: " + itemType);
+                System.out.println("itemId: " + itemId);
+                request.getSession().setAttribute("errorMessage", ERROR_LESSON_LOCKED);
+
+                response.sendRedirect(
+                        request.getContextPath() + "/learning/" + itemType + "/" + itemId);
+                return;
+            }            
         }
 
         showContentItem(request, response, customer, contentType, content, course, currentLesson, currentLessonItem);
@@ -532,8 +550,8 @@ public class CustomerLearningServlet extends HttpServlet {
     }
 
     /**
-     * Checks if the customer has access to the course.
-     * The logic considers the most recent order for the course.
+     * Checks if the customer has access to the course. The logic considers the
+     * most recent order for the course.
      */
     private void checkCourseAccess(Customer customer, Course course, HttpServletRequest request,
             HttpServletResponse response) throws IOException, AccessDeniedException {
@@ -612,7 +630,7 @@ public class CustomerLearningServlet extends HttpServlet {
             request.setAttribute("currentLesson", currentLesson);
         }
     }
-   
+
     /**
      * Creates navigation info with previous and next items.
      */
@@ -954,11 +972,46 @@ public class CustomerLearningServlet extends HttpServlet {
 
         return null;
     }
+    
+     /**
+     * Check if a user can access a specific lesson.
+     * This enforces sequential learning - users must complete lessons in order.
+     */
+    private boolean canAccessLesson(int customerId, Course course, Lesson targetLesson) {
+        if (course == null || course.getLessons() == null || targetLesson == null) {
+            return false;
+        }
+
+        // Allow access to first lesson
+        if (course.getLessons().get(0).getLessonID() == targetLesson.getLessonID()) {
+            return true;
+        }
+
+        // Check if all previous lessons are completed
+        for (int i = 0; i < course.getLessons().size(); i++) {
+            Lesson lesson = course.getLessons().get(i);
+
+            // Once we reach our target lesson, all previous lessons should be completed
+            if (lesson.getLessonID() == targetLesson.getLessonID()) {
+                return true;
+            }
+
+            // Check if this lesson is completed
+            try {
+                if (!isLessonComplete(lesson, customerId)) {
+                    return false; // Found an incomplete previous lesson
+                }
+            } catch (ResourceNotFoundException e) {
+                return false; // Couldn't verify completion status
+            }
+        }
+
+        return false; // Target lesson not found in course
+    }
 
     /**
-     * Check if a user can access a specific lesson item.
-     * This enforces sequential learning - users must complete items in order within
-     * a lesson.
+     * Check if a user can access a specific lesson item. This enforces
+     * sequential learning - users must complete items in order within a lesson.
      */
     private boolean canAccessLessonItem(int customerId, Lesson lesson, LessonItem targetItem) {
         if (lesson == null || lesson.getLessonItems() == null || targetItem == null) {
@@ -986,6 +1039,18 @@ public class CustomerLearningServlet extends HttpServlet {
         }
 
         return false; // Target item not found in lesson
+    }
+
+    /**
+     * Finds a lesson in a course by ID.
+     */
+    private Lesson findLessonInCourse(Course course, int lessonId) {
+        for (Lesson lesson : course.getLessons()) {
+            if (lesson.getLessonID() == lessonId) {
+                return lesson;
+            }
+        }
+        return null;
     }
 
     /**

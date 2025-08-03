@@ -309,9 +309,11 @@ const LessonDiscussion = (function () {
                     <div class="discussion-meta">
                         <div>
                             <div class="discussion-author">
-                                <div class="author-avatar"></div>
+                                <div class="author-avatar">
+                                    <img src=${window.contextPath}${discussion.authorAvatar} alt="avatar" />
+                                </div>
                                 <span class="author-name">${escapeHtml(
-                                  discussion.userName
+                                  discussion.authorName
                                 )}</span>
                             </div>
                             <div class="discussion-date">${formattedDate}</div>
@@ -492,9 +494,11 @@ const LessonDiscussion = (function () {
                     )}</div>
                     
                     <div class="reply-meta">
-                        <div class="reply-author">
+                        <div class="d-flex flex-column">
+                            <div class="reply-author">
+                            <img src=${window.contextPath}${reply.authorAvatar} alt="avatar" />
                             <span class="author-name">${escapeHtml(
-                              reply.userName
+                              reply.authorName
                             )}</span>
                             ${
                               reply.isInstructorReply
@@ -503,6 +507,7 @@ const LessonDiscussion = (function () {
                             }
                         </div>
                         <div class="reply-date">${formattedDate}</div>
+                        </div>
                         <div class="reply-actions">
                             ${
                               reply.isAuthor

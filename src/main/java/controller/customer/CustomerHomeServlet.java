@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import model.Course;
 import model.Category;
 import model.Customer;
-import model.SuperUser;
 import util.CartUtil;
 import util.Validator;
 import com.google.gson.Gson;

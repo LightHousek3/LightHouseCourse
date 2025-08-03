@@ -638,13 +638,13 @@
                                                     class="list-group-item d-flex justify-content-between align-items-center">
                                                     <span><i class="fas fa-video text-primary me-2"></i> Video
                                                         Lectures</span>
-                                                    <span>10+ hours</span>
+                                                    <span><i class="fas fa-check text-success"></i></span>
                                                 </li>
                                                 <li
                                                     class="list-group-item d-flex justify-content-between align-items-center">
                                                     <span><i class="fas fa-file-alt text-primary me-2"></i> Downloadable
                                                         Resources</span>
-                                                    <span>25+</span>
+                                                    <span><i class="fas fa-check text-success"></i></span>
                                                 </li>
                                                 <li
                                                     class="list-group-item d-flex justify-content-between align-items-center">
@@ -656,12 +656,6 @@
                                                     class="list-group-item d-flex justify-content-between align-items-center">
                                                     <span><i class="fas fa-mobile-alt text-primary me-2"></i> Access on
                                                         Mobile & TV</span>
-                                                    <span><i class="fas fa-check text-success"></i></span>
-                                                </li>
-                                                <li
-                                                    class="list-group-item d-flex justify-content-between align-items-center">
-                                                    <span><i class="fas fa-certificate text-primary me-2"></i>
-                                                        Certificate of Completion</span>
                                                     <span><i class="fas fa-check text-success"></i></span>
                                                 </li>
                                             </ul>

@@ -18,11 +18,9 @@
             <div class="col-lg-2 col-md-4 mb-4 mb-md-0">
                 <h5 class="text-white mb-3">Categories</h5>
                 <ul class="list-unstyled">
-                    <li class="mb-2"><a href="${pageContext.request.contextPath}/home?category=1" class="text-white-50">Web Development</a></li>
-                    <li class="mb-2"><a href="${pageContext.request.contextPath}/home?category=2" class="text-white-50">Data Science</a></li>
-                    <li class="mb-2"><a href="${pageContext.request.contextPath}/home?category=3" class="text-white-50">Mobile Development</a></li>
-                    <li class="mb-2"><a href="${pageContext.request.contextPath}/home?category=4" class="text-white-50">Business</a></li>
-                    <li class="mb-2"><a href="${pageContext.request.contextPath}/home?category=5" class="text-white-50">Design</a></li>
+                    <c:forEach var="category" items="${categories}" begin="0" end="4">
+                        <li class="mb-2"><a href="${pageContext.request.contextPath}/home?category=${category.categoryID}" class="text-white-50">${category.name}</a></li>
+                    </c:forEach>
                 </ul>
             </div>
             <div class="col-lg-4 col-md-4">
@@ -41,15 +39,15 @@
             </div>
         </div>
         <hr class="mt-4 mb-4" style="border-color: rgba(255,255,255,0.2);">
-        <div class="row align-items-center">
-            <div class="col-md-6 text-center text-md-start">
-                <p class="text-white-50 mb-0">&copy; 2023 LightHouse Learning. All rights reserved.</p>
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="text-white-50 mb-0">&copy; 2025 LightHouse Learning. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="text-white-50 me-3">Privacy Policy</a>
+                    <a href="#" class="text-white-50 me-3">Terms of Service</a>
+                    <a href="#" class="text-white-50">Cookie Policy</a>
+                </div>
             </div>
-            <div class="col-md-6 text-center text-md-end">
-                <a href="#" class="text-white-50 me-3">Privacy Policy</a>
-                <a href="#" class="text-white-50 me-3">Terms of Service</a>
-                <a href="#" class="text-white-50">Cookie Policy</a>
-            </div>
-        </div>
     </div>
 </footer> 

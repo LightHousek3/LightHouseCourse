@@ -254,11 +254,20 @@
     gap: 0.5rem;
 }
 
-.author-avatar {
+.author-avatar, .reply-author img {
     width: 24px;
     height: 24px;
     background-color: #4361ee;
     border-radius: 50%;
+}
+
+.author-avatar img {
+    width: 100%;
+    border-radius: 50%;
+}
+
+.author-name {
+    margin-left: 8px;
 }
 
 /* Replies */

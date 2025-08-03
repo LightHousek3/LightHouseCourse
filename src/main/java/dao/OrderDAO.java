@@ -16,8 +16,6 @@ import model.Order;
 import model.OrderDetail;
 import model.PaymentTransaction;
 import db.DBContext;
-import static db.DBContext.closeResources;
-import static db.DBContext.getConnection;
 import java.sql.Statement;
 import model.Instructor;
 import java.util.HashMap;
@@ -97,7 +95,7 @@ public class OrderDAO extends DBContext {
     /**
      * Insert order details into the database.
      *
-     * @param conn    The database connection
+     * @param conn The database connection
      * @param orderId The ID of the order
      * @param details The list of order details to insertPaymentTransaction
      * @throws SQLException If a database error occurs
@@ -127,7 +125,7 @@ public class OrderDAO extends DBContext {
     /**
      * Get orders by user ID.
      *
-     * @param userID The ID of the user
+     * @param customerId The ID of the user
      * @return List of orders for the user
      */
     public List<Order> getOrdersByUserId(int customerId) {
@@ -153,6 +151,13 @@ public class OrderDAO extends DBContext {
             for (Order order : orders) {
                 List<OrderDetail> details = getOrderDetails(order.getOrderID());
                 order.setOrderDetails(details);
+
+                // Get payment transaction info
+                PaymentTransactionDAO transactionDAO = new PaymentTransactionDAO();
+                PaymentTransaction transaction = transactionDAO.getByOrderId(order.getOrderID());
+                if (transaction != null) {
+                    order.setPaymentMethod(transaction.getProvider());
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -199,12 +204,11 @@ public class OrderDAO extends DBContext {
 
                 // Get payment transaction info
                 PaymentTransactionDAO transactionDAO = new PaymentTransactionDAO();
-                List<PaymentTransaction> transactions = transactionDAO.getByOrderId(orderId);
-                if (transactions != null && !transactions.isEmpty()) {
-                    PaymentTransaction latestTransaction = transactions.get(0); // Latest transaction
-                    order.setPaymentMethod(latestTransaction.getProvider());
-                    order.setPaymentTransactionID(latestTransaction.getProviderTransactionID());
-                    order.setAttribute("paymentTransaction", latestTransaction);
+                PaymentTransaction transaction = transactionDAO.getByOrderId(orderId);
+                if (transaction != null) {
+                    order.setPaymentMethod(transaction.getProvider());
+                    order.setPaymentTransactionID(transaction.getProviderTransactionID());
+                    order.setAttribute("paymentTransaction", transaction);
                 }
             }
         } catch (SQLException e) {
@@ -304,11 +308,10 @@ public class OrderDAO extends DBContext {
     }
 
     /**
-     * Get all courses purchased by a customer with their order details.
-     * Returns a list of Object arrays where each array contains:
-     * [0] - Course object
+     * Get all courses purchased by a customer with their order details. Returns
+     * a list of Object arrays where each array contains: [0] - Course object
      * [1] - OrderDetail object with information about the purchase
-     * 
+     *
      * @param customerId The ID of the customer
      * @return List of Object arrays containing Course and OrderDetail
      */
@@ -322,12 +325,12 @@ public class OrderDAO extends DBContext {
         try {
             conn = getConnection();
             // Get all orders for the customer
-            String sql = "SELECT c.CourseID, c.Name, c.Description, c.Price, c.ImageUrl, " +
-                    "c.Duration, c.Level, od.*, o.OrderDate, o.Status FROM Orders o " +
-                    "JOIN OrderDetails od ON o.OrderID = od.OrderID " +
-                    "JOIN Courses c ON od.CourseID = c.CourseID " +
-                    "WHERE o.CustomerID = ? " +
-                    "ORDER BY o.OrderDate DESC";
+            String sql = "SELECT c.CourseID, c.Name, c.Description, c.Price, c.ImageUrl, "
+                    + "c.Duration, c.Level, od.*, o.OrderDate, o.Status FROM Orders o "
+                    + "JOIN OrderDetails od ON o.OrderID = od.OrderID "
+                    + "JOIN Courses c ON od.CourseID = c.CourseID "
+                    + "WHERE o.CustomerID = ? "
+                    + "ORDER BY o.OrderDate DESC";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, customerId);
@@ -372,7 +375,7 @@ public class OrderDAO extends DBContext {
                 orderDetail.setPrice(rs.getDouble("Price"));
 
                 // Add to map as the latest order for this course
-                Object[] data = { course, orderDetail };
+                Object[] data = {course, orderDetail};
                 latestCourseOrders.put(courseId, data);
             }
 
@@ -390,9 +393,9 @@ public class OrderDAO extends DBContext {
 
     /**
      * Check if a user has purchased a course.
-     * 
+     *
      * @param customerId The ID of the customer
-     * @param courseId   The ID of the course
+     * @param courseId The ID of the course
      * @return true if purchased, false otherwise
      */
     public boolean hasCustomerPurchasedCourse(int customerId, int courseId) {
@@ -431,7 +434,7 @@ public class OrderDAO extends DBContext {
 
     /**
      * Update an existing order in the database.
-     * 
+     *
      * @param order The order to update
      * @return true if the update was successful, false otherwise
      */
@@ -455,9 +458,9 @@ public class OrderDAO extends DBContext {
             // Update payment transaction if provided
             if (success && order.getPaymentMethod() != null) {
                 PaymentTransactionDAO transactionDAO = new PaymentTransactionDAO();
-                List<PaymentTransaction> transactions = transactionDAO.getByOrderId(order.getOrderID());
+                PaymentTransaction existingTransaction = transactionDAO.getByOrderId(order.getOrderID());
 
-                if (transactions != null && !transactions.isEmpty()) {
+                if (existingTransaction != null) {
                     // Already has a transaction - no need to update the provider
                     // If needed, could update other transaction details here
                 } else {

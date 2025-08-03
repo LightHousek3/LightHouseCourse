@@ -189,7 +189,7 @@ public class RefundRequestDAO extends DBContext {
                 }
             }
         } finally {
-            closeResources(rs, ps, conn);
+            closeResources(rs, ps, null);
         }
     }
 

@@ -336,9 +336,33 @@ public class InstructorDAO extends DBContext {
         return null;
     }
 
+    public Instructor getFullNameAndAvatarByInsId(int instructorId) {
+        try {
+            String query = "select s.FullName, s.Avatar\n"
+                    + "from Instructors i\n"
+                    + "join SuperUsers s on s.SuperUserID = i.SuperUserID\n"
+                    + "where i.InstructorID = ?";
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Instructor instructor = new Instructor();
+                instructor.setFullName(rs.getString("FullName"));
+                instructor.setAvatar(rs.getString("Avatar"));
+                return instructor;
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error getInsAndSupByInsId: " + ex.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return null;
+    }
+
     public boolean usernameExists(String username) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from
-                                                                       // nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        // nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     public boolean emailExists(String email) {
@@ -347,7 +371,8 @@ public class InstructorDAO extends DBContext {
     }
 
     /**
-     * Find an instructor by their user ID (alias for getInstructorBySuperUserId)
+     * Find an instructor by their user ID (alias for
+     * getInstructorBySuperUserId)
      *
      * @param superUserId The ID of the super user who is an instructor
      * @return Instructor object or null if not found
@@ -364,9 +389,9 @@ public class InstructorDAO extends DBContext {
                 + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
                 + "WHERE i.InstructorID <> ?";
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, exceptInstructorId);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Instructor instructor = new Instructor();
                     instructor.setInstructorID(rs.getInt("InstructorID"));

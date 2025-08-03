@@ -1,5 +1,6 @@
 package controller.customer;
 
+import dao.CategoryDAO;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,6 +12,8 @@ import dao.CourseDAO;
 import dao.OrderDAO;
 import dao.RefundRequestDAO;
 import dao.CourseProgressDAO;
+import java.util.List;
+import model.Category;
 import model.Order;
 import model.RefundRequest;
 import model.Customer;
@@ -30,6 +33,7 @@ public class RefundServlet extends HttpServlet {
     private OrderDAO orderDAO;
     private CourseDAO courseDAO;
     private CourseProgressDAO progressDAO;
+    private CategoryDAO categoryDAO;
 
     /**
      * Default constructor initializing DAOs
@@ -40,6 +44,7 @@ public class RefundServlet extends HttpServlet {
         orderDAO = new OrderDAO();
         courseDAO = new CourseDAO();
         progressDAO = new CourseProgressDAO();
+        categoryDAO = new CategoryDAO();
     }
 
     /**
@@ -105,6 +110,10 @@ public class RefundServlet extends HttpServlet {
                 // Set order date and original price
                 request.setAttribute("orderDate", order.getOrderDate());
                 request.setAttribute("originalPrice", order.getTotalAmount());
+                
+                // Get categories for sidebar
+                List<Category> categories = categoryDAO.getAllCategories();
+                request.setAttribute("categories", categories);
 
                 request.getRequestDispatcher("/WEB-INF/views/customer/order/refund-request.jsp").forward(request,
                         response);
