@@ -97,7 +97,7 @@ public class OrderServlet extends HttpServlet {
         String courseIdParam = request.getParameter("courseId");
         if (courseIdParam != null && Validator.isValidNumber(courseIdParam)) {
             int courseId = Integer.parseInt(courseIdParam);
-            Course course = courseDAO.getCourseById(courseId);
+            Course course = courseDAO.getCourseByIdWithApprovalStatus(courseId);
 
             if (course == null) {
                 response.sendRedirect(request.getContextPath() + "/courses?error=course_not_found");
@@ -209,10 +209,10 @@ public class OrderServlet extends HttpServlet {
         if (courseIdParam != null && Validator.isValidNumber(courseIdParam)) {
             // Direct course checkout
             int courseId = Integer.parseInt(courseIdParam);
-            Course course = courseDAO.getCourseById(courseId);
-
+            Course course = courseDAO.getCourseByIdWithApprovalStatus(courseId);
+            
             if (course == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Course not found");
+                response.sendRedirect(request.getContextPath() + "/courses?error=course_not_found");
                 return;
             }
 
@@ -373,7 +373,6 @@ public class OrderServlet extends HttpServlet {
 
         // Clear the pending order from session
         session.removeAttribute("pendingOrderId");
-
         // Check if payment was successful (00 is the success code from VNPay)
         if ("00".equals(vnp_ResponseCode)) {
             // Update order status to completed

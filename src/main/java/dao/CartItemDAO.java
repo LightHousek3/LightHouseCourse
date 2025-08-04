@@ -102,7 +102,7 @@ public class CartItemDAO extends DBContext {
                     double price = rs.getDouble("Price");
                     Timestamp createdAt = rs.getTimestamp("createdAt");
 
-                    Course course = courseDAO.getCourseById(courseId);
+                    Course course = courseDAO.getCourseByIdWithApprovalStatus(courseId);
                     if (course != null) {
                         CartItem item = new CartItem(cartItemId, customerId, courseId, price, createdAt);
                         item.setCourse(course);

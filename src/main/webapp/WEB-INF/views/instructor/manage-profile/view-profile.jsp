@@ -501,8 +501,6 @@
                                         </c:otherwise>
                                     </c:choose>
                                     <h3 class="profile-name">${instructor.fullName}</h3>
-                                    <p class="profile-username">
-                                        ${instructor.fullName}
                                     </p>
                                     <c:choose>
                                         <c:when test="${not empty instructor.username}">

@@ -396,7 +396,7 @@
                                                                                         test="${not empty item.item.fileUrl}">
                                                                                         <p class="d-flex align-items-center gap-2">
                                                                                             <strong>File:</strong>
-                                                                                            <a href="${pageContext.request.contextPath}/${item.item.fileUrl}"
+                                                                                            <a href="${pageContext.request.contextPath}${item.item.fileUrl}"
                                                                                                target="_blank"
                                                                                                class="btn btn-lg btn-outline-primary me-2">
                                                                                                 <i class="fas fa-eye me-1"></i>
@@ -603,7 +603,7 @@
                                     <strong>Instructor:</strong>
                                     <p class="mb-0">
                                         <c:forEach var="i" items="${course.instructors}" varStatus="status">
-                                            ${i.name}<c:if test="${!status.last}">, </c:if>
+                                            ${i.fullName}<c:if test="${!status.last}">, </c:if>
                                         </c:forEach>
                                     </p>
                                 </div>

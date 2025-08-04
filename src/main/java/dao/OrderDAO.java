@@ -136,7 +136,7 @@ public class OrderDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT * FROM Orders WHERE CustomerID = ? ORDER BY OrderDate DESC";
+            String sql = "SELECT * FROM Orders WHERE CustomerID = ? AND Status NOT IN ('pending') ORDER BY OrderDate DESC";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, customerId);
@@ -293,7 +293,6 @@ public class OrderDAO extends DBContext {
 
                 // Lấy instructor (chính) của khóa học này
                 List<Instructor> instructors = courseDAO.getInstructorsForCourse(detail.getCourseID());
-                System.out.println(instructors);
                 detail.setAttribute("instructor", instructors); // Gắn instructor vào attribute
 
                 details.add(detail);

@@ -166,7 +166,7 @@
                                         <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
                                             data-bs-toggle="tooltip">
                                             <c:forEach var="i" items="${course.instructors}" varStatus="status">
-                                                ${i.name}<c:if test="${!status.last}">, </c:if>
+                                                ${i.fullName}<c:if test="${!status.last}">, </c:if>
                                             </c:forEach>
                                         </td>
                                         <td>

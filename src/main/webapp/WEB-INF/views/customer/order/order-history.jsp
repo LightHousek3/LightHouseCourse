@@ -178,6 +178,7 @@
                     <i class="fas fa-check-circle me-2 text-success"></i> ${success}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+                <c:remove var="success" scope="request" />
             </c:if>
             <!-- Order History Tab -->
             <div class="tab-pane" id="orders">
@@ -248,7 +249,7 @@
                                                                 <c:forEach var="instructor"
                                                                            items="${detail.course.instructors}"
                                                                            varStatus="status">
-                                                                    ${instructor.name}<c:if
+                                                                    ${instructor.fullName}<c:if
                                                                         test="${!status.last}">, </c:if>
                                                                 </c:forEach>
                                                             </p>

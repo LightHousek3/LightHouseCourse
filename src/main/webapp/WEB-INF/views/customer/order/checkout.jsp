@@ -762,7 +762,7 @@
                                                         <i class="fas fa-chalkboard-teacher me-1"></i>
                                                         <c:forEach var="instructor" items="${course.instructors}"
                                                             varStatus="loop">
-                                                            ${instructor.name}<c:if test="${!loop.last}">, </c:if>
+                                                            ${instructor.fullName}<c:if test="${!loop.last}">, </c:if>
                                                         </c:forEach>
                                                     </p>
                                                     <div class="d-flex flex-wrap align-items-center gap-2 mt-2">

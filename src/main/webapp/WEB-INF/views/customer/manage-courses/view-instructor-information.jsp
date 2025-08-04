@@ -42,6 +42,10 @@
                 z-index: 2;
             }
 
+            .floating-wrapper {
+                position: unset;
+            }
+
             .floating-element {
                 position: absolute;
                 color: rgba(255, 255, 255, 0.2);
@@ -70,7 +74,7 @@
             }
 
             .floating-element:nth-child(4) {
-                top: 70%;
+                top: 80%;
                 right: 10%;
                 font-size: 2rem;
                 animation-delay: 3s;
@@ -227,9 +231,17 @@
             <div class="container">
                 <div class="row justify-content-center text-center">
                     <div class="col-lg-8">
-                        <img src="https://ui-avatars.com/api/?name=${selectedUser.fullName}&background=random"
-                             alt="${selectedUser.name}" class="profile-avatar mb-3">
-                        <h1 class="profile-name">${selectedUser.name}</h1>
+                        <c:choose>
+                            <c:when test="${selectedUser.avatar != null}">
+                                <img src="${pageContext.request.contextPath}${selectedUser.avatar}"
+                                     alt="${selectedUser.fullName}" class="profile-avatar mb-3">
+                            </c:when>
+                            <c:otherwise>
+                                <img src="https://ui-avatars.com/api/?name=${selectedUser.fullName}&background=random"
+                                     alt="${selectedUser.fullName}" class="profile-avatar mb-3">
+                            </c:otherwise>
+                        </c:choose>
+                        <h1 class="profile-name">${selectedUser.fullName}</h1>
                         <div class="profile-role">
                             <i class="fas fa-chalkboard-teacher me-2"></i>
                             Instructor
@@ -263,22 +275,6 @@
                             <fmt:formatNumber value="${averageRating}" maxFractionDigits="1" />
                         </div>
                         <div class="stat-label">Average Rating</div>
-                        <div class="rating-stars">
-                            <c:forEach begin="1" end="5" var="i">
-                                <c:choose>
-                                    <c:when test="${i <= averageRating}">
-                                        <i class="fas fa-star"></i>
-                                    </c:when>
-                                    <c:when test="${i > averageRating && i - 1 < averageRating}">
-                                        <i class="fas fa-star-half-alt"></i>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <i class="far fa-star"></i>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:forEach>
-                            <span class="text-muted ms-2">(${ratingCount} reviews)</span>
-                        </div>
                     </div>
                 </div>
                 <div class="col-md-4">

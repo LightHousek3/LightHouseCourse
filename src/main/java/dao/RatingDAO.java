@@ -40,7 +40,7 @@ public class RatingDAO extends DBContext {
 
         try {
             conn = getConnection();
-            String sql = "SELECT AVG(Stars) as AvgRating FROM Ratings WHERE CourseID = ?";
+            String sql = "SELECT ROUND(AVG(Stars * 1.0), 1) as AvgRating FROM Ratings WHERE CourseID = ?";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, courseId);
@@ -500,7 +500,7 @@ public class RatingDAO extends DBContext {
                 // Calculate average with exactly one decimal place
                 double rawAverage = (double) sum / count;
                 // Format to exactly one decimal place
-                average = Math.round(rawAverage * 100.0) / 100.0;
+                average = Math.round(rawAverage * 10.0) / 10.0;
             }
         } catch (SQLException e) {
             System.err.println("Error calculating average rating by instructor: " + e.getMessage());

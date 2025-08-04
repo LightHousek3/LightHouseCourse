@@ -34,6 +34,15 @@
                 z-index: 2;
             }
 
+            .profile-role {
+                display: inline-block;
+                padding: 6px 15px;
+                background-color: rgba(255, 255, 255, 0.2);
+                border-radius: 20px;
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+            }
+
             .floating-element {
                 position: absolute;
                 color: rgba(255, 255, 255, 0.2);
@@ -184,24 +193,27 @@
                 <div class="row justify-content-center text-center">
                     <div class="col-lg-8">
                         <c:choose>
-                                    <c:when test="${not empty user.avatar}">
-                                        <c:choose>
-                                            <c:when test="${fn:startsWith(avatar, 'https')}">
-                                                <img src="${user.avatar}" alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer">
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <img src="${pageContext.request.contextPath}${user.avatar}" alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer">
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <div class="profile-avatar mb-3" id="avatarPlaceholder">
-                                                    <i class="fas fa-user"></i>
-                                                </div>
-                                            </c:otherwise>
-                                        </c:choose>
+                            <c:when test="${not empty user.avatar}">
+                                <c:choose>
+                                    <c:when test="${fn:startsWith(avatar, 'https')}">
+                                        <img src="${user.avatar}" alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <img src="${pageContext.request.contextPath}${user.avatar}" alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer">
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="profile-avatar mb-3" id="avatarPlaceholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
                         <h1 class="profile-name">${not empty user.fullName ? user.fullName : user.username}</h1>
-                        <p class="text-white-50">Member since 2023</p>
+                        <div class="profile-role">
+                            <i class="fa-solid fa-user-graduate me-2"></i>
+                            Customer
+                        </div>
                     </div>
                 </div>
             </div>
@@ -307,7 +319,7 @@
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fas fa-user"></i></span>
                                             <input type="text" class="form-control" id="username" name="username" 
-                                                   value="${user.username}" readonly>
+                                                   value="${user.username != null ? user.username.trim(): ""}" readonly>
                                         </div>
                                         <small class="form-text text-muted">Username cannot be changed.</small>
                                     </div>
@@ -316,18 +328,18 @@
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                             <input type="email" class="form-control ${not empty emailError ? 'is-invalid' : ''}" 
-                                                   id="email" name="email" value="${user.email}" required>
+                                                   id="email" name="email" value="${user.email != null ? user.email.trim(): ""}" required>
                                             <c:if test="${not empty emailError}">
                                                 <div class="invalid-feedback">${emailError}</div>
                                             </c:if>
                                         </div>
                                     </div>
-                                    <div class="col-md-12 mb-3">
+                                    <div class="col-md-6 mb-3">
                                         <label for="fullName" class="form-label">Full Name</label>
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fas fa-user-circle"></i></span>
                                             <input type="text" class="form-control ${not empty fullNameError ? 'is-invalid' : ''}" id="fullName" name="fullName" 
-                                                   value="${param.fullName != null ? param.fullName : user.fullName}">
+                                                   value="${param.fullName != null ? param.fullName.trim() : user.fullName.trim()}">
                                             <c:if test="${not empty fullNameError}">
                                                 <p class="invalid-feedback">${fullNameError}</p>
                                             </c:if>
@@ -338,7 +350,7 @@
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fas fa-phone"></i></span>
                                             <input type="text" class="form-control ${not empty phoneError ? 'is-invalid' : ''}" id="phone" name="phone" 
-                                                   value="${param.phone != null ? param.phone : user.phone}">
+                                                   value="${param.phone != null ? param.phone.trim() : user.phone.trim()}">
                                             <c:if test="${not empty phoneError}">
                                                 <div class="invalid-feedback">${phoneError}</div>
                                             </c:if>
@@ -349,7 +361,7 @@
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fas fa-home"></i></span>
                                             <textarea class="form-control ${not empty addressError ? 'is-invalid' : ''}" id="address" name="address" 
-                                                      rows="3">${param.address != null ? param.address : user.address}</textarea>
+                                                      rows="3">${param.address != null ? param.address.trim() : user.address.trim()}</textarea>
                                             <c:if test="${not empty addressError}">
                                                 <div class="invalid-feedback">${addressError}</div>
                                             </c:if>
@@ -359,9 +371,6 @@
                                     <div class="col-12">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save me-2"></i>Save Changes
-                                        </button>
-                                        <button type="reset" class="btn btn-outline-secondary ms-2">
-                                            <i class="fas fa-undo me-2"></i>Reset
                                         </button>
                                     </div>
                                 </div>

@@ -112,7 +112,7 @@
 
     <body>
         <!-- Include Instructor Sidebar -->
-        <c:set var="activeMenu" value="ratings" scope="request" />
+        <c:set var="activeMenu" value="reviews" scope="request" />
         <jsp:include page="../common/sidebar.jsp" />
 
         <%-- Instructor Content --%>

@@ -177,7 +177,7 @@
                                                         <i class="fas fa-chalkboard-teacher me-2 text-secondary"></i>
                                                         <strong>Instructor:</strong>
                                                         <c:forEach var="inst" items="${course.instructors}" varStatus="loop">
-                                                            ${inst.name}<c:if test="${!loop.last}">, </c:if>
+                                                            ${inst.fullName}<c:if test="${!loop.last}">, </c:if>
                                                         </c:forEach>
                                                     </li>
                                                 </ul>

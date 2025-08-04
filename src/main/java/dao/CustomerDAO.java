@@ -419,6 +419,7 @@ public class CustomerDAO extends DBContext {
         customer.setAddress(rs.getString("Address"));
         customer.setAvatar(rs.getString("Avatar"));
         customer.setToken(rs.getString("Token"));
+        customer.setTokenExpires(rs.getTimestamp("TokenExpires"));
 
         // Handle potential null values for auth provider columns
         String authProvider = rs.getString("AuthProvider");

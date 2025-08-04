@@ -348,16 +348,6 @@
                         </button>
                         <div class="d-none d-lg-block">
                             <h2 class="m-0"><i class="fas fa-lock"></i> Change Password</h2>
-                            <div>
-                                <nav aria-label="breadcrumb" class="breadcrumb-nav">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a
-                                                href="${pageContext.request.contextPath}/instructor/profile">My Profile</a>
-                                        </li>
-                                        <li class="breadcrumb-item active" aria-current="page">Change Password</li>
-                                    </ol>
-                                </nav>
-                            </div>
                         </div>
                         <div class="header-actions row">
                             <a href="${pageContext.request.contextPath}/instructor/profile" class="col-md-6 col-sm-12 btn btn-lg btn-primary">
