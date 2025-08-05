@@ -119,7 +119,7 @@ public class InstructorCourseServlet extends HttpServlet {
         // Check if user is logged in
         HttpSession session = request.getSession();
         SuperUser user;
-        
+
         try {
             user = (SuperUser) session.getAttribute("user");
         } catch (Exception e) {
@@ -177,7 +177,7 @@ public class InstructorCourseServlet extends HttpServlet {
         // Check if user is logged in
         HttpSession session = request.getSession();
         SuperUser user;
-        
+
         try {
             user = (SuperUser) session.getAttribute("user");
         } catch (Exception e) {
@@ -277,14 +277,21 @@ public class InstructorCourseServlet extends HttpServlet {
         // Validate for name not null, not empty, not exceed 50 characters
         if (Validator.isNullOrEmpty(name)) {
             errors.put("name", "Course name is required.");
-        } else if (!Validator.isValidText(name, 50)) {
-            errors.put("name", "Maximum length is 50 characters.");
+        } else if (!Validator.isValidText(name, 80)) {
+            errors.put("name", "Maximum length is 80 characters.");
+        } else {
+            name = name.trim();
+            if (courseDAO.isCourseNameExists(name, null)) {
+                errors.put("name", "This course name is already taken.");
+            }
         }
 
         if (Validator.isNullOrEmpty(description)) {
             errors.put("description", "Description is required.");
-        } else if (!Validator.isValidText(description, 50)) {
-            errors.put("description", "Maximum length is 50 characters.");
+        } else if (!Validator.isValidText(description, 250)) {
+            errors.put("description", "Maximum length is 250 characters.");
+        } else {
+            description = description.trim();
         }
         double price = 0.0;
         if (Validator.isNullOrEmpty(priceStr)) {
@@ -306,30 +313,21 @@ public class InstructorCourseServlet extends HttpServlet {
         } else {
             duration = Validator.parseIntOrDefault(durationStr, 1);
         }
-
-        if (Validator.isNullOrEmpty(instructorIdsStr)) {
-            errors.put("instructorIds", "Please select at least one instructor.");
-        }
-
         if (Validator.isNullOrEmpty(categoryIdsStr)) {
             errors.put("categoryIds", "Please select at least one category.");
         }
-        String imgUrl = "";
-        if (errors.isEmpty()) {
-            imgUrl = FileUploadUtil.handleUpload(
-                    request.getPart("imageFile"),
-                    request.getServletContext().getRealPath("/assets/imgs/courses"),
-                    "/assets/imgs/courses",
-                    5L * 1024 * 1024,
-                    new String[]{".jpg", ".jpeg", ".png", ".gif"},
-                    errors,
-                    "imageFile",
-                    true);
-        }
+        String imgUrl = FileUploadUtil.handleUpload(
+                request.getPart("imageFile"),
+                request.getServletContext().getRealPath("/assets/imgs/courses"),
+                "/assets/imgs/courses",
+                5L * 1024 * 1024,
+                new String[]{".jpg", ".jpeg", ".png", ".gif"},
+                errors,
+                "imageFile",
+                true);
 
         List<Integer> instructorIds = new ArrayList<>();
         List<Integer> categoryIds = new ArrayList<>();
-        instructorIds.add(instructor.getInstructorID());
 
         // Validate instructor
         if (instructorIdsStr != null && !instructorIdsStr.trim().isEmpty()) {
@@ -361,6 +359,9 @@ public class InstructorCourseServlet extends HttpServlet {
             request.setAttribute("errors", errors);
             request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/create-course.jsp").forward(request, response);
             return;
+        }
+        if (!instructorIds.contains(instructor.getInstructorID())) {
+            instructorIds.add(instructor.getInstructorID());
         }
         // If không lỗi validate thì tạo đối tượng course để insert
         Course course = new Course(name, description, price, imgUrl, duration + " weeks", level, action);
@@ -472,13 +473,20 @@ public class InstructorCourseServlet extends HttpServlet {
 
         if (Validator.isNullOrEmpty(name)) {
             errors.put("name", "Course name is required.");
-        } else if (!Validator.isValidText(name, 50)) {
-            errors.put("name", "Maximum length is 50 characters.");
+        } else if (!Validator.isValidText(name, 80)) {
+            errors.put("name", "Maximum length is 80 characters.");
+        } else {
+            name = name.trim();
+            if (courseDAO.isCourseNameExists(name, Integer.parseInt(courseID))) {
+                errors.put("name", "This course name is already taken.");
+            }
         }
         if (Validator.isNullOrEmpty(description)) {
             errors.put("description", "Description is required.");
-        } else if (!Validator.isValidText(description, 50)) {
-            errors.put("description", "Maximum length is 50 characters.");
+        } else if (!Validator.isValidText(description, 250)) {
+            errors.put("description", "Maximum length is 250 characters.");
+        } else {
+            description = description.trim();
         }
 
         double price = 0.0;
@@ -502,28 +510,19 @@ public class InstructorCourseServlet extends HttpServlet {
         } else {
             duration = Validator.parseIntOrDefault(durationStr, 1);
         }
-
-        if (Validator.isNullOrEmpty(instructorIdsStr)) {
-            errors.put("instructorIds", "Please select at least one instructor.");
-        }
-
         if (Validator.isNullOrEmpty(categoryIdsStr)) {
             errors.put("categoryIds", "Please select at least one category.");
         }
 
-        String imgUrl = "";
-        if (errors.isEmpty()) {
-            imgUrl = FileUploadUtil.handleUpload(
-                    request.getPart("imageFile"),
-                    request.getServletContext().getRealPath("/assets/imgs/courses"),
-                    "/assets/imgs/courses",
-                    5L * 1024 * 1024,
-                    new String[]{".jpg", ".jpeg", ".png", ".gif"},
-                    errors,
-                    "imageFile",
-                    false);
-        }
-
+        String imgUrl = FileUploadUtil.handleUpload(
+                request.getPart("imageFile"),
+                request.getServletContext().getRealPath("/assets/imgs/courses"),
+                "/assets/imgs/courses",
+                5L * 1024 * 1024,
+                new String[]{".jpg", ".jpeg", ".png", ".gif"},
+                errors,
+                "imageFile",
+                false);
         int courseIdValid = Integer.parseInt(courseID);
         int durationValid = duration;
         double priceValid = price;
@@ -570,7 +569,9 @@ public class InstructorCourseServlet extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/instructor/manage-courses/edit-course.jsp").forward(request, response);
             return;
         }
-
+        if (!instructorIds.contains(instructor.getInstructorID())) {
+            instructorIds.add(instructor.getInstructorID());
+        }
         Course course = new Course();
         course.setCourseID(courseIdValid);
         course.setPrice(priceValid);
@@ -681,8 +682,13 @@ public class InstructorCourseServlet extends HttpServlet {
         String title = request.getParameter("title");
         if (Validator.isNullOrEmpty(title)) {
             errors.put("title", "Lesson title is required.");
-        } else if (!Validator.isValidText(title, 50)) {
-            errors.put("title", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(title, 150)) {
+            errors.put("title", "Maximun length is 150 characters.");
+        } else {
+            title = title.trim();
+            if (lessonDAO.isLessonTitleExists(title, courseIdValid, null)) {
+                errors.put("title", "This lesson title is already taken.");
+            }
         }
         int orderIndex = 1;
         String orderIndexStr = request.getParameter("orderIndex");
@@ -743,8 +749,13 @@ public class InstructorCourseServlet extends HttpServlet {
         String title = request.getParameter("title");
         if (Validator.isNullOrEmpty(title)) {
             errors.put("title", "Lesson title is required.");
-        } else if (!Validator.isValidText(title, 50)) {
-            errors.put("title", "Maximun length is 50 character.");
+        } else if (!Validator.isValidText(title, 150)) {
+            errors.put("title", "Maximun length is 150 characters.");
+        } else {
+            title = title.trim();
+            if (lessonDAO.isLessonTitleExists(title, courseIdValid, lessonIdValid)) {
+                errors.put("title", "This lesson title is already taken.");
+            }
         }
         int orderIndex = 1;
         String orderIndexStr = request.getParameter("orderIndex");
@@ -889,14 +900,21 @@ public class InstructorCourseServlet extends HttpServlet {
         int courseIdValid = Integer.parseInt(courseId);
         if (Validator.isNullOrEmpty(titleVideo)) {
             errors.put("titleVideo", "Title video is required.");
-        } else if (!Validator.isValidText(titleVideo, 50)) {
-            errors.put("titleVideo", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(titleVideo, 150)) {
+            errors.put("titleVideo", "Maximun length is 150 characters.");
+        } else {
+            titleVideo = titleVideo.trim();
+            if (videoDAO.isVideoTitleExists(titleVideo, lessonIdValid, null)) {
+                errors.put("titleVideo", "This video title is already taken.");
+            }
         }
 
         if (Validator.isNullOrEmpty(descriptionVideo)) {
             errors.put("descriptionVideo", "Description video is required.");
-        } else if (!Validator.isValidText(descriptionVideo, 50)) {
-            errors.put("descriptionVideo", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(descriptionVideo, 250)) {
+            errors.put("descriptionVideo", "Maximun length is 250 characters.");
+        } else {
+            descriptionVideo = descriptionVideo.trim();
         }
         int duration = 1;
         if (!Validator.isValidInteger(durationStr)) {
@@ -908,18 +926,15 @@ public class InstructorCourseServlet extends HttpServlet {
             }
         }
 
-        String videoURL = "";
-        if (errors.isEmpty()) {
-            videoURL = FileUploadUtil.handleUpload(
-                    videoUrl,
-                    request.getServletContext().getRealPath("/assets/videos"),
-                    "/assets/videos",
-                    200 * 1024 * 1024, // 200MB
-                    new String[]{".mp4", ".avi", ".mov"},
-                    errors,
-                    "videoUrl",
-                    true);
-        }
+        String videoURL = FileUploadUtil.handleUpload(
+                videoUrl,
+                request.getServletContext().getRealPath("/assets/videos"),
+                "/assets/videos",
+                200 * 1024 * 1024, // 200MB
+                new String[]{".mp4", ".avi", ".mov"},
+                errors,
+                "videoUrl",
+                true);
 
         if (!errors.isEmpty()) {
             Video video = new Video();
@@ -968,14 +983,21 @@ public class InstructorCourseServlet extends HttpServlet {
         int courseIdValid = Integer.parseInt(courseId);
         if (Validator.isNullOrEmpty(titleVideo)) {
             errors.put("titleVideo", "Title video is required.");
-        } else if (!Validator.isValidText(titleVideo, 50)) {
-            errors.put("titleVideo", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(titleVideo, 150)) {
+            errors.put("titleVideo", "Maximun length is 150 characters.");
+        } else {
+            titleVideo = titleVideo.trim();
+            if (videoDAO.isVideoTitleExists(titleVideo, lessonIdValid, videoIdValid)) {
+                errors.put("titleVideo", "This video title is already taken.");
+            }
         }
 
         if (Validator.isNullOrEmpty(descriptionVideo)) {
             errors.put("descriptionVideo", "Description video is required.");
-        } else if (!Validator.isValidText(descriptionVideo, 50)) {
-            errors.put("descriptionVideo", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(descriptionVideo, 250)) {
+            errors.put("descriptionVideo", "Maximun length is 250 characters.");
+        } else {
+            descriptionVideo = descriptionVideo.trim();
         }
         int duration = 1;
         if (!Validator.isValidInteger(durationStr)) {
@@ -987,18 +1009,15 @@ public class InstructorCourseServlet extends HttpServlet {
             }
         }
 
-        String videoURL = "";
-        if (errors.isEmpty()) {
-            videoURL = FileUploadUtil.handleUpload(
-                    videoUrl,
-                    request.getServletContext().getRealPath("/assets/videos"),
-                    "/assets/videos",
-                    200 * 1024 * 1024, // 200MB
-                    new String[]{".mp4", ".avi", ".mov"},
-                    errors,
-                    "videoUrl",
-                    false);
-        }
+        String videoURL = FileUploadUtil.handleUpload(
+                videoUrl,
+                request.getServletContext().getRealPath("/assets/videos"),
+                "/assets/videos",
+                200 * 1024 * 1024, // 200MB
+                new String[]{".mp4", ".avi", ".mov"},
+                errors,
+                "videoUrl",
+                false);
 
         if (!errors.isEmpty()) {
             Video video = new Video();
@@ -1075,31 +1094,37 @@ public class InstructorCourseServlet extends HttpServlet {
         int courseIdValid = Integer.parseInt(courseId);
         if (Validator.isNullOrEmpty(titleMaterial)) {
             errors.put("titleMaterial", "Title material is required.");
-        } else if (!Validator.isValidText(titleMaterial, 50)) {
-            errors.put("titleMaterial", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(titleMaterial, 150)) {
+            errors.put("titleMaterial", "Maximun length is 150 characters.");
+        } else {
+            titleMaterial = titleMaterial.trim();
+            if (materialDAO.isMaterialTitleExists(titleMaterial, lessonIdValid, null)) {
+                errors.put("titleMaterial", "This material title is already taken.");
+            }
         }
         if (Validator.isNullOrEmpty(descriptionMaterial)) {
             errors.put("descriptionMaterial", "Description material is required.");
-        } else if (!Validator.isValidText(descriptionMaterial, 50)) {
-            errors.put("descriptionMaterial", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(descriptionMaterial, 250)) {
+            errors.put("descriptionMaterial", "Maximun length is 250 characters.");
+        } else {
+            descriptionMaterial = descriptionMaterial.trim();
         }
         if (Validator.isNullOrEmpty(contentMaterial)) {
             errors.put("contentMaterial", "Content material is required.");
-        } else if (!Validator.isValidText(contentMaterial, 50)) {
-            errors.put("contentMaterial", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(contentMaterial, 250)) {
+            errors.put("contentMaterial", "Maximun length is 250 characters.");
+        } else {
+            contentMaterial = contentMaterial.trim();
         }
-        String materialURL = "";
-        if (errors.isEmpty()) {
-            materialURL = FileUploadUtil.handleUpload(
-                    materialUrl,
-                    request.getServletContext().getRealPath("/assets/materials"),
-                    "assets/materials",
-                    50 * 1024 * 1024, // 50MB
-                    new String[]{".pdf", ".doc", ".docx", ".ppt", ".pptx"},
-                    errors,
-                    "materialUrl",
-                    true);
-        }
+        String materialURL = FileUploadUtil.handleUpload(
+                materialUrl,
+                request.getServletContext().getRealPath("/assets/materials"),
+                "assets/materials",
+                50 * 1024 * 1024, // 50MB
+                new String[]{".pdf", ".doc", ".docx", ".ppt", ".pptx"},
+                errors,
+                "materialUrl",
+                true);
         if (!errors.isEmpty()) {
             Material material = new Material();
             material.setTitle(titleMaterial);
@@ -1146,31 +1171,37 @@ public class InstructorCourseServlet extends HttpServlet {
         int courseIdValid = Integer.parseInt(courseId);
         if (Validator.isNullOrEmpty(titleMaterial)) {
             errors.put("titleMaterial", "Title material is required.");
-        } else if (!Validator.isValidText(titleMaterial, 50)) {
-            errors.put("titleMaterial", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(titleMaterial, 150)) {
+            errors.put("titleMaterial", "Maximun length is 150 characters.");
+        } else {
+            titleMaterial = titleMaterial.trim();
+            if (materialDAO.isMaterialTitleExists(titleMaterial, lessonIdValid, materialIdValid)) {
+                errors.put("titleMaterial", "This material title is already taken.");
+            }
         }
         if (Validator.isNullOrEmpty(descriptionMaterial)) {
             errors.put("descriptionMaterial", "Description material is required.");
-        } else if (!Validator.isValidText(descriptionMaterial, 50)) {
-            errors.put("descriptionMaterial", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(descriptionMaterial, 250)) {
+            errors.put("descriptionMaterial", "Maximun length is 250 characters.");
+        } else {
+            descriptionMaterial = descriptionMaterial.trim();
         }
         if (Validator.isNullOrEmpty(contentMaterial)) {
             errors.put("contentMaterial", "Content material is required.");
-        } else if (!Validator.isValidText(contentMaterial, 50)) {
-            errors.put("contentMaterial", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(contentMaterial, 250)) {
+            errors.put("contentMaterial", "Maximun length is 250 characters.");
+        } else {
+            contentMaterial = contentMaterial.trim();
         }
-        String materialURL = "";
-        if (errors.isEmpty()) {
-            materialURL = FileUploadUtil.handleUpload(
-                    materialUrl,
-                    request.getServletContext().getRealPath("/assets/materials"),
-                    "assets/materials",
-                    50 * 1024 * 1024, // 50MB
-                    new String[]{".pdf", ".doc", ".docx", ".ppt", ".pptx"},
-                    errors,
-                    "materialUrl",
-                    false);
-        }
+        String materialURL = FileUploadUtil.handleUpload(
+                materialUrl,
+                request.getServletContext().getRealPath("/assets/materials"),
+                "assets/materials",
+                50 * 1024 * 1024, // 50MB
+                new String[]{".pdf", ".doc", ".docx", ".ppt", ".pptx"},
+                errors,
+                "materialUrl",
+                false);
         if (!errors.isEmpty()) {
             Material material = new Material();
             material.setMaterialID(materialIdValid);
@@ -1244,13 +1275,20 @@ public class InstructorCourseServlet extends HttpServlet {
         int courseIdValid = Integer.parseInt(courseId);
         if (Validator.isNullOrEmpty(titleQuiz)) {
             errors.put("titleQuiz", "Title quiz is required.");
-        } else if (!Validator.isValidText(titleQuiz, 50)) {
-            errors.put("titleQuiz", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(titleQuiz, 150)) {
+            errors.put("titleQuiz", "Maximun length is 150 characters.");
+        } else {
+            titleQuiz = titleQuiz.trim();
+            if (quizDAO.isQuizTitleExists(titleQuiz, lessonIdValid, null)) {
+                errors.put("titleQuiz", "This quiz title is already taken.");
+            }
         }
         if (Validator.isNullOrEmpty(descriptionQuiz)) {
             errors.put("descriptionQuiz", "Description quiz is required.");
-        } else if (!Validator.isValidText(descriptionQuiz, 50)) {
-            errors.put("descriptionQuiz", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(descriptionQuiz, 250)) {
+            errors.put("descriptionQuiz", "Maximun length is 250 characters.");
+        } else {
+            descriptionQuiz = descriptionQuiz.trim();
         }
         Integer timeLimit = null;
         if (!Validator.isNullOrEmpty(timeLimitStr)) {
@@ -1273,17 +1311,17 @@ public class InstructorCourseServlet extends HttpServlet {
         }
         int passingScore = 70;
         if (!Validator.isValidInteger(passingScoreStr)) {
-            errors.put("passingScore", "Passing score must be a valid number.");
+            errors.put("passingScore", "Passing must be a valid number.");
         } else {
             try {
                 int passed = Integer.parseInt(passingScoreStr);
                 if (passed <= 0 || passed > 100) {
-                    errors.put("passingScore", "Passing score must be between 1 and 100.");
+                    errors.put("passingScore", "Passing must be between 1 and 100.");
                 } else {
                     passingScore = passed;
                 }
             } catch (NumberFormatException ex) {
-                errors.put("passingScore", "Pasing score must be a valid number.");
+                errors.put("passingScore", "Pasing must be a valid number.");
             }
         }
 
@@ -1335,13 +1373,20 @@ public class InstructorCourseServlet extends HttpServlet {
         int courseIdValid = Integer.parseInt(courseId);
         if (Validator.isNullOrEmpty(titleQuiz)) {
             errors.put("titleQuiz", "Title quiz is required.");
-        } else if (!Validator.isValidText(titleQuiz, 50)) {
-            errors.put("titleQuiz", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(titleQuiz, 150)) {
+            errors.put("titleQuiz", "Maximun length is 150 characters.");
+        } else {
+            titleQuiz = titleQuiz.trim();
+            if (quizDAO.isQuizTitleExists(titleQuiz, lessonIdValid, null)) {
+                errors.put("titleQuiz", "This quiz title is already taken.");
+            }
         }
         if (Validator.isNullOrEmpty(descriptionQuiz)) {
             errors.put("descriptionQuiz", "Description quiz is required.");
-        } else if (!Validator.isValidText(descriptionQuiz, 50)) {
-            errors.put("descriptionQuiz", "Maximun length is 50 characters.");
+        } else if (!Validator.isValidText(descriptionQuiz, 250)) {
+            errors.put("descriptionQuiz", "Maximun length is 250 characters.");
+        } else {
+            descriptionQuiz = descriptionQuiz.trim();
         }
 
         Integer timeLimit = null;
@@ -1365,17 +1410,17 @@ public class InstructorCourseServlet extends HttpServlet {
         }
         int passingScore = 70;
         if (!Validator.isValidInteger(passingScoreStr)) {
-            errors.put("passingScore", "Passing score must be a valid number.");
+            errors.put("passingScore", "Passing must be a valid number.");
         } else {
             try {
                 int passed = Integer.parseInt(passingScoreStr);
                 if (passed <= 0 || passed > 100) {
-                    errors.put("passingScore", "Passing score must be between 1 and 100.");
+                    errors.put("passingScore", "Passing must be between 1 and 100.");
                 } else {
                     passingScore = passed;
                 }
             } catch (NumberFormatException ex) {
-                errors.put("passingScore", "Pasing score must be a valid number.");
+                errors.put("passingScore", "Pasing must be a valid number.");
             }
         }
         if (!errors.isEmpty()) {
@@ -1493,8 +1538,13 @@ public class InstructorCourseServlet extends HttpServlet {
         // --- Validate câu hỏi ---
         if (Validator.isNullOrEmpty(questionContent)) {
             errors.put("question", "Question content is required.");
-        } else if (!Validator.isValidText(questionContent, 50)) {
-            errors.put("question", "Maximum length is 50 characters.");
+        } else if (!Validator.isValidText(questionContent, 150)) {
+            errors.put("question", "Maximum length is 150 characters.");
+        } else {
+            questionContent = questionContent.trim();
+            if (quizDAO.isQuestionContentExists(questionContent, quizIdValid, null)) {
+                errors.put("question", "This question content is already taken.");
+            }
         }
 
         // --- Validate điểm ---
@@ -1544,6 +1594,10 @@ public class InstructorCourseServlet extends HttpServlet {
             String content = request.getParameter("answerContent" + i);
             if (Validator.isNullOrEmpty(content)) {
                 errors.put("answer" + i, "Answer #" + i + " is required.");
+            } else if (!Validator.isValidText(content, 50)) {
+                errors.put("answer" + i, "Answer #" + i + " Maximum length is 50 characters.");
+            } else {
+                content = content.trim();
             }
             Answer a = new Answer();
             a.setContent(content);
@@ -1560,7 +1614,10 @@ public class InstructorCourseServlet extends HttpServlet {
             formValues.put("points", pointsStr);
             formValues.put("correctAnswer", correctAnswerStr);
             for (int i = 1; i <= totalAnswers; i++) {
-                formValues.put("answer" + i, request.getParameter("answerContent" + i));
+                formValues.put("answer" + i,
+                        request.getParameter("answerContent" + i) != null
+                        ? request.getParameter("answerContent" + i).trim()
+                        : request.getParameter("answerContent" + i));
             }
 
             request.getSession().setAttribute("questionErrors", errors);
@@ -1638,8 +1695,13 @@ public class InstructorCourseServlet extends HttpServlet {
         // Validate nội dung câu hỏi
         if (Validator.isNullOrEmpty(questionContent)) {
             errors.put("question", "Question content is required.");
-        } else if (!Validator.isValidText(questionContent, 50)) {
-            errors.put("question", "Maximum length is 50 characters.");
+        } else if (!Validator.isValidText(questionContent, 150)) {
+            errors.put("question", "Maximum length is 150 characters.");
+        } else {
+            questionContent = questionContent.trim();
+            if (quizDAO.isQuestionContentExists(questionContent, quizIdValid, questionIdValid)) {
+                errors.put("question", "This question content is already taken.");
+            }
         }
 
         // Validate điểm
@@ -1689,7 +1751,10 @@ public class InstructorCourseServlet extends HttpServlet {
         // Validate nội dung các đáp án
         List<Answer> listAnswer = new ArrayList<>();
         for (int i = 1; i <= totalAnswers; i++) {
-            String content = request.getParameter("answerContent" + i);
+            String content
+                    = request.getParameter("answerContent" + i) != null
+                    ? request.getParameter("answerContent" + i).trim()
+                    : request.getParameter("answerContent" + i);
             String answerIDStr = request.getParameter("answerID" + i);
             Answer a = new Answer();
 
@@ -1704,6 +1769,8 @@ public class InstructorCourseServlet extends HttpServlet {
 
             if (Validator.isNullOrEmpty(content)) {
                 errors.put("answer" + i, "Answer #" + i + " is required.");
+            } else if (!Validator.isValidText(content, 50)) {
+                errors.put("answer" + i, "Answer #" + i + " Maximum length is 50 characters.");
             }
         }
 

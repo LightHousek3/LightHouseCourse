@@ -386,4 +386,34 @@ public class VideoDAO extends DBContext {
         }
     }
 
+    public boolean isVideoTitleExists(String title, int lessonId, Integer excludeVideoId) {
+        boolean exists = false;
+        String sql = "SELECT COUNT(*) FROM Videos WHERE Title = ? AND LessonID = ?";
+
+        if (excludeVideoId != null) {
+            sql += " AND VideoID != ?";
+        }
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, title);
+            ps.setInt(2, lessonId);
+
+            if (excludeVideoId != null) {
+                ps.setInt(3, excludeVideoId);
+            }
+
+            try ( ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    exists = rs.getInt(1) > 0;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return exists;
+    }
+
 }

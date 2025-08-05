@@ -99,7 +99,7 @@
                 </div>
                 <div class="d-flex align-items-center">
 
-                    <a href="${pageContext.request.contextPath}/instructor/courses/edit/${courseID}"
+                    <a href="${pageContext.request.contextPath}/instructor/courses/edit/${courseID}?tab=lesson"
                        class="btn btn-lg btn-primary">
                         <i class="fas fa-arrow-left me-2"></i> Back
                     </a>
@@ -165,29 +165,57 @@
                                                     <input type="hidden" name="courseID" value="${courseID}"/>
                                                     <div class="mb-3">
                                                         <label class="form-label">Title Video</label>
-                                                        <input type="text" class="form-control" name="titleVideo" value="${sessionScope.video != null ? sessionScope.video.title : ''}" required>
+                                                        <input 
+                                                            type="text" 
+                                                            class="form-control" 
+                                                            name="titleVideo" 
+                                                            value="${sessionScope.video != null ? sessionScope.video.title : ''}" 
+                                                            required
+                                                            placeholder="Title of video"
+                                                            >
                                                         <c:if test="${not empty sessionScope.errors['titleVideo']}">
                                                             <div class="text-danger">${sessionScope.errors['titleVideo']}</div>
                                                         </c:if>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Description Video</label>
-                                                        <textarea class="form-control" name="descriptionVideo" required>${sessionScope.video != null ? sessionScope.video.description : ''}</textarea>
+                                                        <textarea 
+                                                            class="form-control" 
+                                                            name="descriptionVideo" 
+                                                            required
+                                                            placeholder="Description of video"
+                                                            >${sessionScope.video != null ? sessionScope.video.description : ''}</textarea>
                                                         <c:if test="${not empty sessionScope.errors['descriptionVideo']}">
                                                             <div class="text-danger">${sessionScope.errors['descriptionVideo']}</div>
                                                         </c:if>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">File Video</label>
-                                                        <input id="sizeFileVideo" type="file" class="form-control" name="videoUrl" accept="video/*" required>
+                                                        <input 
+                                                            id="sizeFileVideo" 
+                                                            type="file" 
+                                                            class="form-control" 
+                                                            name="videoUrl" 
+                                                            accept="video/*" 
+                                                            required
+                                                            >
                                                         <small id="fileVideoSizeInfo" class="form-text text-muted"></small>
                                                         <c:if test="${not empty sessionScope.errors['videoUrl']}">
                                                             <div class="text-danger">${sessionScope.errors['videoUrl']}</div>
                                                         </c:if>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">Duration Video</label>
-                                                        <input type="number" class="form-control" name="duration" min="1" value="${sessionScope.video != null ? sessionScope.video.duration : ''}" required>
+                                                        <label class="form-label">Duration Video (seconds)</label>
+                                                        <input 
+                                                            type="number" 
+                                                            class="form-control" 
+                                                            name="duration" 
+                                                            min="1" 
+                                                            value="${sessionScope.video != null ? sessionScope.video.duration : ''}" 
+                                                            required
+                                                            placeholder="Duration of video"
+                                                            readonly
+                                                            >
                                                         <c:if test="${not empty sessionScope.errors['duration']}">
                                                             <div class="text-danger">${sessionScope.errors['duration']}</div>
                                                         </c:if>
@@ -215,14 +243,26 @@
                                                     <input type="hidden" name="courseID" value="${courseID}"/>
                                                     <div class="mb-3">
                                                         <label class="form-label">Title Material</label>
-                                                        <input type="text" class="form-control" name="titleMaterial" value="${sessionScope.material != null ? sessionScope.material.title : ''}" required>
+                                                        <input 
+                                                            type="text" 
+                                                            class="form-control" 
+                                                            name="titleMaterial" 
+                                                            value="${sessionScope.material != null ? sessionScope.material.title : ''}" 
+                                                            required
+                                                            placeholder="Title of material"
+                                                            >
                                                         <c:if test="${not empty sessionScope.errors['titleMaterial']}">
                                                             <div class="text-danger">${sessionScope.errors['titleMaterial']}</div>
                                                         </c:if>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Description Material</label>
-                                                        <textarea class="form-control" name="descriptionMaterial" required>${sessionScope.material != null ? sessionScope.material.description : ''}</textarea>
+                                                        <textarea 
+                                                            class="form-control" 
+                                                            name="descriptionMaterial" 
+                                                            required
+                                                            placeholder="Description of material"
+                                                            >${sessionScope.material != null ? sessionScope.material.description : ''}</textarea>
                                                         <c:if test="${not empty sessionScope.errors['descriptionMaterial']}">
                                                             <div class="text-danger">${sessionScope.errors['descriptionMaterial']}</div>
                                                         </c:if>
@@ -237,7 +277,12 @@
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Content Material</label>
-                                                        <textarea class="form-control" name="contentMaterial" required>${sessionScope.material != null ? sessionScope.material.content : ''}</textarea>
+                                                        <textarea 
+                                                            class="form-control" 
+                                                            name="contentMaterial" 
+                                                            required
+                                                            placeholder="Content of material"
+                                                            >${sessionScope.material != null ? sessionScope.material.content : ''}</textarea>
                                                         <c:if test="${not empty sessionScope.errors['contentMaterial']}">
                                                             <div class="text-danger">${sessionScope.errors['contentMaterial']}</div>
                                                         </c:if>
@@ -265,28 +310,53 @@
                                                     <input type="hidden" name="courseID" value="${courseID}"/>
                                                     <div class="mb-3">
                                                         <label class="form-label">Title Quiz</label>
-                                                        <input type="text" class="form-control" name="titleQuiz" value="${sessionScope.quiz != null ? sessionScope.quiz.title : ''}" required>
+                                                        <input 
+                                                            type="text" 
+                                                            class="form-control" 
+                                                            name="titleQuiz" 
+                                                            value="${sessionScope.quiz != null ? sessionScope.quiz.title : ''}" 
+                                                            required
+                                                            placeholder="Title of quiz"
+                                                            >
                                                         <c:if test="${not empty sessionScope.errors['titleQuiz']}">
                                                             <div class="text-danger">${sessionScope.errors['titleQuiz']}</div>
                                                         </c:if>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Description Quiz</label>
-                                                        <textarea class="form-control" name="descriptionQuiz" required>${sessionScope.quiz != null ? sessionScope.quiz.description : ''}</textarea>
+                                                        <textarea 
+                                                            class="form-control" 
+                                                            name="descriptionQuiz" 
+                                                            required
+                                                            placeholder="Description of quiz"
+                                                            >${sessionScope.quiz != null ? sessionScope.quiz.description : ''}</textarea>
                                                         <c:if test="${not empty sessionScope.errors['descriptionQuiz']}">
                                                             <div class="text-danger">${sessionScope.errors['descriptionQuiz']}</div>
                                                         </c:if>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">Time Limit</label>
-                                                        <input type="number" class="form-control" name="timeLimit" value="${sessionScope.quiz != null ? sessionScope.quiz.timeLimit : ''}">
+                                                        <label class="form-label">Time Limit (seconds)</label>
+                                                        <input 
+                                                            type="number" 
+                                                            class="form-control" 
+                                                            name="timeLimit" 
+                                                            value="${sessionScope.quiz != null ? sessionScope.quiz.timeLimit : ''}"
+                                                            placeholder="Time Limit of quiz"
+                                                            >
                                                         <c:if test="${not empty sessionScope.errors['timeLimit']}">
                                                             <div class="text-danger">${sessionScope.errors['timeLimit']}</div>
                                                         </c:if>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">Passing Score</label>
-                                                        <input type="number" class="form-control" name="passingScore" value="${sessionScope.quiz != null ? sessionScope.quiz.passingScore : ''}" required>
+                                                        <label class="form-label">Passing (%)</label>
+                                                        <input 
+                                                            type="number" 
+                                                            class="form-control" 
+                                                            name="passingScore" 
+                                                            value="${sessionScope.quiz != null ? sessionScope.quiz.passingScore : ''}" 
+                                                            required
+                                                            placeholder="Passing of quiz"
+                                                            >
                                                         <c:if test="${not empty sessionScope.errors['passingScore']}">
                                                             <div class="text-danger">${sessionScope.errors['passingScore']}</div>
                                                         </c:if>
@@ -468,14 +538,28 @@
                             <input type="hidden" name="courseID" value="${courseID}"/>
                             <div class="mb-3 text-start">
                                 <label class="form-label">Title Video</label>
-                                <input type="text" class="form-control" name="titleVideo" id="editTitleVideo" value="${sessionScope.editVideo != null ? sessionScope.editVideo.title : ''}" required>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    name="titleVideo" 
+                                    id="editTitleVideo" 
+                                    value="${sessionScope.editVideo != null ? sessionScope.editVideo.title : ''}" 
+                                    required
+                                    placeholder="Title of video"
+                                    >
                                 <c:if test="${not empty sessionScope.editErrors['titleVideo']}">
                                     <div class="text-danger">${sessionScope.editErrors['titleVideo']}</div>
                                 </c:if>
                             </div>
                             <div class="mb-3 text-start">
                                 <label class="form-label">Description Video</label>
-                                <textarea class="form-control" name="descriptionVideo" id="editDescriptionVideo" required>${sessionScope.editVideo != null ? sessionScope.editVideo.description : ''}</textarea>
+                                <textarea 
+                                    class="form-control" 
+                                    name="descriptionVideo" 
+                                    id="editDescriptionVideo" 
+                                    required
+                                    placeholder="Description of video"
+                                    >${sessionScope.editVideo != null ? sessionScope.editVideo.description : ''}</textarea>
                                 <c:if test="${not empty sessionScope.editErrors['descriptionVideo']}">
                                     <div class="text-danger">${sessionScope.editErrors['descriptionVideo']}</div>
                                 </c:if>
@@ -489,8 +573,18 @@
                                 </c:if>
                             </div>
                             <div class="mb-3 text-start">
-                                <label class="form-label">Duration Video</label>
-                                <input type="number" class="form-control" name="duration" id="editDuration" min="1" value="${sessionScope.editVideo != null ? sessionScope.editVideo.duration : ''}" required>
+                                <label class="form-label">Duration Video (seconds)</label>
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    name="duration" 
+                                    id="editDuration" 
+                                    min="1" 
+                                    value="${sessionScope.editVideo != null ? sessionScope.editVideo.duration : ''}" 
+                                    required
+                                    placeholder="Duration of video"
+                                    readonly
+                                    >
                                 <c:if test="${not empty sessionScope.editErrors['duration']}">
                                     <div class="text-danger">${sessionScope.editErrors['duration']}</div>
                                 </c:if>
@@ -557,14 +651,28 @@
                             <input type="hidden" name="courseID" value="${courseID}"/>
                             <div class="mb-3 text-start">
                                 <label class="form-label">Title Material</label>
-                                <input type="text" class="form-control" name="titleMaterial" id="editTitleMaterial" value="${sessionScope.editMaterial != null ? sessionScope.editMaterial.title : ''}" required>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    name="titleMaterial" 
+                                    id="editTitleMaterial" 
+                                    value="${sessionScope.editMaterial != null ? sessionScope.editMaterial.title : ''}" 
+                                    required
+                                    placeholder="Title of material"
+                                    >
                                 <c:if test="${not empty sessionScope.editErrors['titleMaterial']}">
                                     <div class="text-danger">${sessionScope.editErrors['titleMaterial']}</div>
                                 </c:if>
                             </div>
                             <div class="mb-3 text-start">
                                 <label class="form-label">Description Material</label>
-                                <textarea class="form-control" name="descriptionMaterial" id="editDescriptionMaterial" required>${sessionScope.editMaterial != null ? sessionScope.editMaterial.description : ''}</textarea>
+                                <textarea 
+                                    class="form-control" 
+                                    name="descriptionMaterial" 
+                                    id="editDescriptionMaterial" 
+                                    required
+                                    placeholder="Description of material"
+                                    >${sessionScope.editMaterial != null ? sessionScope.editMaterial.description : ''}</textarea>
                                 <c:if test="${not empty sessionScope.editErrors['descriptionMaterial']}">
                                     <div class="text-danger">${sessionScope.editErrors['descriptionMaterial']}</div>
                                 </c:if>
@@ -579,7 +687,13 @@
                             </div>
                             <div class="mb-3 text-start">
                                 <label class="form-label">Content Material</label>
-                                <textarea class="form-control" name="contentMaterial" id="editContentMaterial" required>${sessionScope.editMaterial != null ? sessionScope.editMaterial.content : ''}</textarea>
+                                <textarea 
+                                    class="form-control" 
+                                    name="contentMaterial" 
+                                    id="editContentMaterial" 
+                                    required
+                                    placeholder="Content of material"
+                                    >${sessionScope.editMaterial != null ? sessionScope.editMaterial.content : ''}</textarea>
                                 <c:if test="${not empty sessionScope.editErrors['contentMaterial']}">
                                     <div class="text-danger">${sessionScope.editErrors['contentMaterial']}</div>
                                 </c:if>
@@ -645,28 +759,57 @@
                             <input type="hidden" name="courseID" value="${courseID}"/>
                             <div class="mb-3 text-start">
                                 <label class="form-label">Title Quiz</label>
-                                <input type="text" class="form-control" name="titleQuiz" id="editTitleQuiz" value="${sessionScope.editQuiz != null ? sessionScope.editQuiz.title : ''}" required>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    name="titleQuiz" 
+                                    id="editTitleQuiz" 
+                                    value="${sessionScope.editQuiz != null ? sessionScope.editQuiz.title : ''}" 
+                                    required
+                                    placeholder="Title of quiz"
+                                    >
                                 <c:if test="${not empty sessionScope.editErrors['titleQuiz']}">
                                     <div class="text-danger">${sessionScope.editErrors['titleQuiz']}</div>
                                 </c:if>
                             </div>
                             <div class="mb-3 text-start">
                                 <label class="form-label">Description Quiz</label>
-                                <textarea class="form-control" name="descriptionQuiz" id="editDescriptionQuiz" required>${sessionScope.editQuiz != null ? sessionScope.editQuiz.description : ''}</textarea>
+                                <textarea 
+                                    class="form-control" 
+                                    name="descriptionQuiz" 
+                                    id="editDescriptionQuiz" 
+                                    required
+                                    placeholder="Description of quiz"
+                                    >${sessionScope.editQuiz != null ? sessionScope.editQuiz.description : ''}</textarea>
                                 <c:if test="${not empty sessionScope.editErrors['descriptionQuiz']}">
                                     <div class="text-danger">${sessionScope.editErrors['descriptionQuiz']}</div>
                                 </c:if>
                             </div>
                             <div class="mb-3 text-start">
-                                <label class="form-label">Time Limit</label>
-                                <input type="number" class="form-control" name="timeLimit" id="editTimeLimitQuiz" value="${sessionScope.editQuiz != null ? sessionScope.editQuiz.timeLimit : ''}">
+                                <label class="form-label">Time Limit (seconds)</label>
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    name="timeLimit" 
+                                    id="editTimeLimitQuiz" 
+                                    value="${sessionScope.editQuiz != null ? sessionScope.editQuiz.timeLimit : ''}"
+                                    placeholder="Time Limit of quiz"
+                                    >
                                 <c:if test="${not empty sessionScope.editErrors['timeLimit']}">
                                     <div class="text-danger">${sessionScope.editErrors['timeLimit']}</div>
                                 </c:if>
                             </div>
                             <div class="mb-3 text-start">
-                                <label class="form-label">Passing Score</label>
-                                <input type="number" class="form-control" name="passingScore" id="editPassingScoreQuiz" value="${sessionScope.editQuiz != null ? sessionScope.editQuiz.passingScore : ''}" required>
+                                <label class="form-label">Passing (%)</label>
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    name="passingScore" 
+                                    id="editPassingScoreQuiz" 
+                                    value="${sessionScope.editQuiz != null ? sessionScope.editQuiz.passingScore : ''}" 
+                                    required
+                                    placeholder="Passing of quiz"
+                                    >
                                 <c:if test="${not empty sessionScope.editErrors['passingScore']}">
                                     <div class="text-danger">${sessionScope.editErrors['passingScore']}</div>
                                 </c:if>
@@ -910,7 +1053,35 @@
             </c:if>
             });
 
+            function handleVideoDuration(fileInputId) {
+                const fileInput = document.getElementById(fileInputId);
+                        fileInput?.addEventListener('change', function () {
+                        const file = this.files[0];
+                        if (file) {
+                            const video = document.createElement('video');
+                            video.preload = 'metadata';
 
+                            video.onloadedmetadata = function () {
+                                window.URL.revokeObjectURL(video.src);
+                                const duration = Math.floor(video.duration);
+
+                                // Tìm input[name="duration"] trong cùng block với file input
+                                const formGroup = fileInput.closest('.mb-3');
+                                        const nextDurationInput = formGroup?.nextElementSibling?.querySelector('input[name="duration"]');
+                                if (nextDurationInput) {
+                                    nextDurationInput.value = duration;
+                                }
+                            };
+
+                            video.src = URL.createObjectURL(file);
+                            }
+                        }
+                        );
+            }
+
+            // Gọi hàm cho cả 2 input file
+            handleVideoDuration('fileSizeVideoForModal'); // form edit
+            handleVideoDuration('sizeFileVideo');         // form create
         </script>
     </body>
 </html>

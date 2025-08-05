@@ -125,21 +125,43 @@
                                     <input type="hidden" name="lessonID" value="${lessonID}"/>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Question Content</label>
-                                        <textarea name="questionContent" class="form-control" rows="2" required>${question.content}</textarea>
+                                        <textarea 
+                                            name="questionContent" 
+                                            class="form-control" 
+                                            rows="2" 
+                                            required
+                                            placeholder="Content of question"
+                                            >${question.content}</textarea>
                                         <c:if test="${not empty errors['question']}">
                                             <div class="text-danger">${errors['question']}</div>
                                         </c:if>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Question Point</label>
-                                        <input class="form-control" type="number" name="points" min="1" value="${question.points}" required>
+                                        <input 
+                                            class="form-control" 
+                                            type="number" 
+                                            name="points" 
+                                            min="1" 
+                                            value="${question.points}" 
+                                            required
+                                            placeholder="Point of question"
+                                            >
                                         <c:if test="${not empty errors['points']}">
                                             <div class="text-danger">${errors['points']}</div>
                                         </c:if>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Question Index</label>
-                                        <input class="form-control" type="number" name="orderIndex" min="1" value="${question.orderIndex}" required>
+                                        <input 
+                                            class="form-control" 
+                                            type="number" 
+                                            name="orderIndex" 
+                                            min="1" 
+                                            value="${question.orderIndex}" 
+                                            required
+                                            placeholder="Index of question"
+                                            >
                                         <c:if test="${not empty errors['orderIndex']}">
                                             <div class="text-danger">${errors['orderIndex']}</div>
                                         </c:if>
@@ -152,7 +174,14 @@
                                         <div class="input-group mb-2">
                                             <span class="input-group-text">#${aStatus.index + 1}</span>
                                             <input type="hidden" name="answerID${aStatus.index + 1}" value="${ans.answerID}" />
-                                            <input type="text" name="answerContent${aStatus.index + 1}" class="form-control" value="${ans.content}" required>
+                                            <input 
+                                                type="text" 
+                                                name="answerContent${aStatus.index + 1}" 
+                                                class="form-control" 
+                                                value="${ans.content}" 
+                                                required
+                                                placeholder="Answer (${aStatus.index + 1}) of question"
+                                                >
                                             <div class="input-group-text">
                                                 <input id="answer${aStatus.index + 1}" class="form-check-input mt-0" type="radio" name="correctAnswer" <c:if test="${ans.correct}">checked</c:if> value="${aStatus.index + 1}">
                                                 <label for="answer${aStatus.index + 1}"><i class="bi bi-check2-circle"></i></label>

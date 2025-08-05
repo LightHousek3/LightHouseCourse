@@ -445,10 +445,11 @@
                                                                                     </p>
                                                                                     <p><strong>Time
                                                                                             Limit:</strong>
-                                                                                            ${item.item.timeLimit}
-                                                                                        minutes</p>
-                                                                                    <p><strong>Passing
-                                                                                            Score:</strong>
+                                                                                        <c:if test="${not empty item.item.timeLimit}">${item.item.timeLimit} seconds</c:if>
+                                                                                        <c:if test="${empty item.item.timeLimit}">no time limit</c:if>
+                                                                                        </p>
+                                                                                        <p><strong>Passing
+                                                                                                Score:</strong>
                                                                                         ${item.item.passingScore}%
                                                                                     </p>
 
@@ -706,10 +707,12 @@
                                    class="btn btn-md btn-danger me-2">
                                     <i class="fas fa-times me-2"></i> Reject
                                 </a>
-                                <a href="${pageContext.request.contextPath}/admin/course/approve/${course.courseID}"
-                                   class="btn btn-md btn-success">
-                                    <i class="fas fa-check me-2"></i> Approve
-                                </a>
+                                <form method="post" action="${pageContext.request.contextPath}/admin/course/approve" style="display: inline;">
+                                    <input type="hidden" name="courseID" value="${course.courseID}"/>
+                                    <button type="submit" class="btn btn-md btn-success">
+                                        <i class="fas fa-check me-2"></i> Approve
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>

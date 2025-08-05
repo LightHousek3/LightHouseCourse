@@ -118,21 +118,43 @@
                                                     <input type="hidden" name="courseID" value="${courseID}" />
                                                     <div class="mb-3">
                                                         <label class="form-label fw-bold">Question Content</label>
-                                                        <textarea name="questionContent" class="form-control" rows="2" required>${empty sessionScope.questionFormValues ? '' : sessionScope.questionFormValues['questionContent']}</textarea>
+                                                        <textarea 
+                                                            name="questionContent" 
+                                                            class="form-control" 
+                                                            rows="2" 
+                                                            required
+                                                            placeholder="Content of question"
+                                                            >${empty sessionScope.questionFormValues ? '' : sessionScope.questionFormValues['questionContent']}</textarea>
                                                         <c:if test="${not empty sessionScope.questionErrors['question']}">
                                                             <div class="text-danger">${sessionScope.questionErrors['question']}</div>
                                                         </c:if>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-bold">Question Point</label>
-                                                        <input class="form-control" type="number" name="points" min="1" value="${empty sessionScope.questionFormValues ? '' : sessionScope.questionFormValues['points']}" required>
+                                                        <input 
+                                                            class="form-control" 
+                                                            type="number" 
+                                                            name="points" 
+                                                            min="1" 
+                                                            value="${empty sessionScope.questionFormValues ? '' : sessionScope.questionFormValues['points']}" 
+                                                            required
+                                                            placeholder="Point of question"
+                                                            >
                                                         <c:if test="${not empty sessionScope.questionErrors['points']}">
                                                             <div class="text-danger">${sessionScope.questionErrors['points']}</div>
                                                         </c:if>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-bold">Question Index</label>
-                                                        <input class="form-control" type="number" name="orderIndex" min="1" value="${empty sessionScope.questionFormValues ? '' : sessionScope.questionFormValues['orderIndex']}" required>
+                                                        <input 
+                                                            class="form-control" 
+                                                            type="number" 
+                                                            name="orderIndex" 
+                                                            min="1" 
+                                                            value="${empty sessionScope.questionFormValues ? '' : sessionScope.questionFormValues['orderIndex']}" 
+                                                            required
+                                                            placeholder="Index of question"
+                                                            >
                                                         <c:if test="${not empty sessionScope.questionErrors['orderIndex']}">
                                                             <div class="text-danger">${sessionScope.questionErrors['orderIndex']}</div>
                                                         </c:if>
@@ -144,9 +166,22 @@
                                                     <c:forEach var="i" begin="1" end="4">
                                                         <div class="input-group mb-2">
                                                             <span class="input-group-text">#${i}</span>
-                                                            <input type="text" name="answerContent${i}" class="form-control" value="${empty sessionScope.questionFormValues ? '' : sessionScope.questionFormValues['answer'.concat(i)]}" required>
+                                                            <input 
+                                                                type="text" 
+                                                                name="answerContent${i}" 
+                                                                class="form-control" 
+                                                                value="${empty sessionScope.questionFormValues ? '' : sessionScope.questionFormValues['answer'.concat(i)]}" 
+                                                                required
+                                                                placeholder="Answer (${i}) of question"
+                                                                >
                                                             <div class="input-group-text">
-                                                                <input id="answer${i}" class="form-check-input mt-0" type="radio" name="correctAnswer" value="${i}" <c:if test="${sessionScope.questionFormValues != null && sessionScope.questionFormValues['correctAnswer'] == i}">checked</c:if> >
+                                                                <input 
+                                                                    id="answer${i}" 
+                                                                    class="form-check-input mt-0" 
+                                                                    type="radio" 
+                                                                    name="correctAnswer" 
+                                                                    value="${i}" <c:if test="${sessionScope.questionFormValues != null && sessionScope.questionFormValues['correctAnswer'] == i}">checked</c:if> 
+                                                                    >
                                                                 <label for="answer${i}"><i class="bi bi-check2-circle"></i></label>
                                                             </div>
 

@@ -187,21 +187,43 @@
                                                 <input type="hidden" name="courseID" value="${course.courseID}" />
                                                 <div class="col-12 col-md-6 mb-3">
                                                     <label class="form-label fw-bold">Course Name</label>
-                                                    <input type="text" name="name" class="form-control" value="${course.name}" required/>
+                                                    <input 
+                                                        type="text" 
+                                                        name="name" 
+                                                        class="form-control" 
+                                                        value="${course.name}" 
+                                                        required
+                                                        placeholder="Name of course"
+                                                        />
                                                     <c:if test="${not empty errors['name']}">
                                                         <div class="error-text">${errors['name']}</div>
                                                     </c:if>
                                                 </div>
                                                 <div class="col-12 col-md-6 mb-3">
                                                     <label class="form-label fw-bold">Description</label>
-                                                    <textarea name="description" class="form-control" rows="3" required>${course.description}</textarea>
+                                                    <textarea 
+                                                        name="description" 
+                                                        class="form-control" 
+                                                        rows="3" 
+                                                        required
+                                                        placeholder="Description of course"
+                                                        >${course.description}</textarea>
                                                     <c:if test="${not empty errors['description']}">
                                                         <div class="error-text">${errors['description']}</div>
                                                     </c:if>
                                                 </div>
                                                 <div class="col-12 col-md-3 mb-3">
                                                     <label class="form-label fw-bold">Price (VND)</label>
-                                                    <input type="number" min="0" name="price" class="form-control" value="${course.price}" required/>
+                                                    <fmt:formatNumber value="${course.price}" type="number" pattern="#0" maxFractionDigits="0" var="FormattedValue" />
+                                                    <input 
+                                                        type="number" 
+                                                        min="0" 
+                                                        name="price" 
+                                                        class="form-control"
+                                                        value="${FormattedValue}" 
+                                                        required
+                                                        placeholder="Price of course"
+                                                        />
                                                     <c:if test="${not empty errors['price']}">
                                                         <div class="error-text">${errors['price']}</div>
                                                     </c:if>
@@ -450,22 +472,24 @@
                                        name="title"
                                        class="form-control"
                                        value="${sessionScope.lesson != null ? sessionScope.lesson.title : ''}"
-                                       maxlength="50"
-                                       required/>
+                                       maxlength="150"
+                                       required
+                                       placeholder="Title of lesson"/>
                                 <c:if test="${not empty sessionScope.lessonErrors['title']}">
-                                    <span class="error-text alert">${sessionScope.lessonErrors['title']}</span>
+                                    <span class="error-text">${sessionScope.lessonErrors['title']}</span>
                                 </c:if>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Order (Number in course)</label>
+                                <label class="form-label fw-bold">Order</label>
                                 <input type="number" 
                                        name="orderIndex" 
                                        class="form-control"
                                        min="1"
                                        value="${sessionScope.lesson != null ? sessionScope.lesson.orderIndex : ''}"
-                                       required/>
+                                       required
+                                       placeholder="Order of lesson in the course"/>
                                 <c:if test="${not empty sessionScope.lessonErrors['orderIndex']}">
-                                    <span class="error-text alert">${sessionScope.lessonErrors['orderIndex']}</span>
+                                    <span class="error-text">${sessionScope.lessonErrors['orderIndex']}</span>
                                 </c:if>
                             </div>
                             <div class="modal-footer">
@@ -499,21 +523,24 @@
                                        class="form-control"
                                        id="editLessonTitle"
                                        value="${sessionScope.editLesson != null ? sessionScope.editLesson.title : ''}"
+                                       maxlength="150"
                                        required
+                                       placeholder="Title of lesson"
                                        />
                                 <c:if test="${not empty sessionScope.editLessonErrors['title']}">
                                     <span class="error-text alert">${sessionScope.editLessonErrors['title']}</span>
                                 </c:if>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Order (Number in course)</label>
+                                <label class="form-label fw-bold">Order</label>
                                 <input type="number" 
                                        name="orderIndex" 
                                        class="form-control"
                                        min="1"
                                        id="editLessonOrderIndex"
                                        value="${sessionScope.editLesson != null ? sessionScope.editLesson.orderIndex : ''}"
-                                       required 
+                                       required
+                                       placeholder="Order of lesson in the course"
                                        />
                                 <c:if test="${not empty sessionScope.editLessonErrors['orderIndex']}">
                                     <span class="error-text alert">${sessionScope.editLessonErrors['orderIndex']}</span>

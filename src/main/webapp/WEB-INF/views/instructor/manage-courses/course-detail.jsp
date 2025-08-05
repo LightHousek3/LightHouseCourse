@@ -448,10 +448,11 @@
                                                                                     </p>
                                                                                     <p><strong>Time
                                                                                             Limit:</strong>
-                                                                                            ${item.item.timeLimit}
-                                                                                        minutes</p>
-                                                                                    <p><strong>Passing
-                                                                                            Score:</strong>
+                                                                                        <c:if test="${not empty item.item.timeLimit}">${item.item.timeLimit} seconds</c:if>
+                                                                                        <c:if test="${empty item.item.timeLimit}">no time limit</c:if>
+                                                                                        </p>
+                                                                                        <p><strong>Passing
+                                                                                                Score:</strong>
                                                                                         ${item.item.passingScore}%
                                                                                     </p>
 

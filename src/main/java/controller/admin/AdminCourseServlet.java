@@ -14,6 +14,8 @@ import dao.LessonItemDAO;
 import dao.VideoDAO;
 import dao.MaterialDAO;
 import dao.QuizDAO;
+import java.util.HashMap;
+import java.util.Map;
 import model.Course;
 import model.Category;
 import model.Lesson;
@@ -31,11 +33,11 @@ import util.Validator;
     "/admin/courses/search",
     "/admin/courses/filter",
     "/admin/course/view/*",
-    "/admin/course/approve/*",
+    "/admin/course/approve",
     "/admin/course/reject/*",
     "/admin/course/pending",
-    "/admin/course/ban/*",
-    "/admin/course/unban/*"
+    "/admin/course/ban",
+    "/admin/course/unban"
 })
 public class AdminCourseServlet extends HttpServlet {
 
@@ -93,87 +95,12 @@ public class AdminCourseServlet extends HttpServlet {
                 if (pathInfo != null) {
                     // View course details
                     viewCourseDetails(request, response);
-                } else {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                }
-                break;
-            case "/admin/course/approve":
-                if (pathInfo != null) {
-                    // Approve course
-                    approveCourse(request, response);
-                } else {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 }
                 break;
             case "/admin/course/reject":
                 if (pathInfo != null) {
                     // Show reject form
                     showRejectForm(request, response);
-                } else {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                }
-                break;
-            case "/admin/course/ban":
-                if (pathInfo != null) {
-                    try {
-                        int courseID = Integer.parseInt(pathInfo.substring(1));
-                        if (courseDAO.isCourseStatus(courseID, "pending")) {
-                            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                            return;
-                        }
-                        if (courseDAO.isCourseStatus(courseID, "rejected")) {
-                            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                            return;
-                        }
-                        if (courseDAO.isCourseStatus(courseID, "banned")) {
-                            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                            return;
-                        }
-
-                        boolean updated = courseDAO.banCourse(courseID);
-                        if (updated) {
-                            request.getSession().setAttribute("message", "Course has been banned successfully.");
-                        } else {
-                            request.getSession().setAttribute("error", "Failed to ban the course. System error – contact admin.");
-                        }
-                        response.sendRedirect(request.getContextPath() + "/admin/courses");
-
-                    } catch (NumberFormatException e) {
-                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                    }
-                } else {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                }
-                break;
-            case "/admin/course/unban":
-                if (pathInfo != null) {
-                    try {
-                        int courseID = Integer.parseInt(pathInfo.substring(1));
-                        if (courseDAO.isCourseStatus(courseID, "pending")) {
-                            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                            return;
-                        }
-                        if (courseDAO.isCourseStatus(courseID, "rejected")) {
-                            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                            return;
-                        }
-                        if (courseDAO.isCourseStatus(courseID, "approved")) {
-                            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                            return;
-                        }
-                        boolean updated = courseDAO.unbanCourse(courseID);
-                        if (updated) {
-                            request.getSession().setAttribute("message", "Course has been unbanned successfully.");
-                        } else {
-                            request.getSession().setAttribute("error", "Failed to unban the course. System error – contact admin.");
-                        }
-                        response.sendRedirect(request.getContextPath() + "/admin/courses");
-
-                    } catch (NumberFormatException e) {
-                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                    }
-                } else {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 }
                 break;
             default:
@@ -195,9 +122,23 @@ public class AdminCourseServlet extends HttpServlet {
 
         String servletPath = request.getServletPath();
 
-        if (servletPath.equals("/admin/course/reject")) {
-            // Process course rejection
-            rejectCourse(request, response);
+        switch (servletPath) {
+            case "/admin/course/reject":
+                // Process course rejection
+                rejectCourse(request, response);
+                break;
+            case "/admin/course/approve":
+                approveCourse(request, response);
+                break;
+            case "/admin/course/ban":
+                banCourse(request, response);
+                break;
+            case "/admin/course/unban":
+                unbanCourse(request, response);
+                break;
+            default:
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                break;
         }
     }
 
@@ -295,13 +236,15 @@ public class AdminCourseServlet extends HttpServlet {
         String pathInfo = request.getPathInfo();
         String[] pathParts = pathInfo.split("/");
 
-        if (pathParts.length < 2 || !Validator.isValidNumber(pathParts[1])) {
+        if (pathParts.length < 2 || !Validator.isValidInteger(pathParts[1])) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         int courseId = Integer.parseInt(pathParts[1]);
+
         Course course = courseDAO.getCourseById(courseId);
+
         if (course == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
@@ -368,40 +311,29 @@ public class AdminCourseServlet extends HttpServlet {
     private void approveCourse(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Extract course ID from path
-        String pathInfo = request.getPathInfo();
-        String[] pathParts = pathInfo.split("/");
+        String courseId = request.getParameter("courseID");
 
-        if (pathParts.length < 2 || !Validator.isValidNumber(pathParts[1])) {
+        if (!Validator.isValidInteger(courseId)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        int courseId = Integer.parseInt(pathParts[1]);
-        Course course = courseDAO.getCourseById(courseId);
+        int courseIdValid = Integer.parseInt(courseId);
+
+        Course course = courseDAO.getCourseById(courseIdValid);
 
         if (course == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        if (courseDAO.isCourseStatus(courseId, "banned")) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        if (courseDAO.isCourseStatus(courseId, "rejected")) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        if (courseDAO.isCourseStatus(courseId, "approved")) {
+        if (!courseDAO.isCourseStatus(courseIdValid, "pending")) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         // Update course approval status
-        boolean updated = courseDAO.approveCourse(courseId);
+        boolean updated = courseDAO.approveCourse(courseIdValid);
 
         if (updated) {
             // Redirect to pending courses list with success message
@@ -410,7 +342,7 @@ public class AdminCourseServlet extends HttpServlet {
             // Redirect with error message
             request.getSession().setAttribute("error", "Course approval failed. System error – contact admin.");
         }
-        response.sendRedirect(request.getContextPath() + "/admin/course/pending");
+        response.sendRedirect(request.getContextPath() + "/admin/courses");
 
     }
 
@@ -429,28 +361,21 @@ public class AdminCourseServlet extends HttpServlet {
         String pathInfo = request.getPathInfo();
         String[] pathParts = pathInfo.split("/");
 
-        if (pathParts.length < 2 || !Validator.isValidNumber(pathParts[1])) {
+        if (pathParts.length < 2 || !Validator.isValidInteger(pathParts[1])) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         int courseId = Integer.parseInt(pathParts[1]);
+
         Course course = courseDAO.getCourseById(courseId);
 
         if (course == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        if (courseDAO.isCourseStatus(courseId, "banned")) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-        if (courseDAO.isCourseStatus(courseId, "rejected")) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
 
-        if (courseDAO.isCourseStatus(courseId, "approved")) {
+        if (!courseDAO.isCourseStatus(courseId, "pending")) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -472,32 +397,42 @@ public class AdminCourseServlet extends HttpServlet {
     private void rejectCourse(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        int courseId = Integer.parseInt(request.getParameter("courseId"));
+        Map<String, String> errors = new HashMap<>();
+        String courseId = request.getParameter("courseId");
         String rejectionReason = request.getParameter("rejectionReason");
+        if (!Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        if (Validator.isNullOrEmpty(rejectionReason)) {
+            errors.put("rejectionReason", "Rejection Reason is required.");
+        } else if (!Validator.isValidText(rejectionReason, 500)) {
+            errors.put("rejectionReason", "Maximum length is 500 characters.");
+        } else {
+            rejectionReason = rejectionReason.trim();
+        }
 
-        Course course = courseDAO.getCourseById(courseId);
+        int courseIdvalid = Integer.parseInt(courseId);
+
+        if (!errors.isEmpty()) {
+            request.getSession().setAttribute("errors", errors);
+            response.sendRedirect(request.getContextPath() + "/admin/course/reject/" + courseIdvalid);
+            return;
+        }
+
+        Course course = courseDAO.getCourseById(courseIdvalid);
 
         if (course == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        if (courseDAO.isCourseStatus(courseId, "banned")) {
+
+        if (!courseDAO.isCourseStatus(courseIdvalid, "pending")) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        if (courseDAO.isCourseStatus(courseId, "rejected")) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        if (courseDAO.isCourseStatus(courseId, "approved")) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        boolean updated = courseDAO.rejectCourse(courseId, rejectionReason);
-
+        boolean updated = courseDAO.rejectCourse(courseIdvalid, rejectionReason);
         if (updated) {
             // Redirect to pending courses list with success message
             request.getSession().setAttribute("message", "Course successfully rejected.");
@@ -505,8 +440,7 @@ public class AdminCourseServlet extends HttpServlet {
             // Show error message
             request.getSession().setAttribute("error", "Course rejection failed. System error – contact admin.");
         }
-        response.sendRedirect(request.getContextPath() + "/admin/course/pending");
-
+        response.sendRedirect(request.getContextPath() + "/admin/courses");
     }
 
     private void listCoursesBySearch(HttpServletRequest request, HttpServletResponse response)
@@ -528,8 +462,8 @@ public class AdminCourseServlet extends HttpServlet {
         int offSet = (page - 1) * pageSize;
         String searchParam = request.getParameter("keyword");
         String key = "";
-        if (searchParam != null) {
-            key = searchParam;
+        if (searchParam != null && !searchParam.trim().isEmpty()) {
+            key = searchParam.trim();
         }
 
         // Get all courses
@@ -597,5 +531,69 @@ public class AdminCourseServlet extends HttpServlet {
 
         // Forward to course listing page
         request.getRequestDispatcher("/WEB-INF/views/admin/manage-courses/course-list.jsp").forward(request, response);
+    }
+
+    private void banCourse(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String courseId = request.getParameter("courseID");
+
+        if (!Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        int courseIdValid = Integer.parseInt(courseId);
+        Course course = courseDAO.getCourseById(courseIdValid);
+
+        if (course == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        if (!courseDAO.isCourseStatus(courseIdValid, "approved")) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        boolean updated = courseDAO.banCourse(courseIdValid);
+        if (updated) {
+            request.getSession().setAttribute("message", "Course has been banned successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to ban the course. System error – contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/admin/courses");
+    }
+
+    private void unbanCourse(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String courseId = request.getParameter("courseID");
+
+        if (!Validator.isValidInteger(courseId)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        int courseIdValid = Integer.parseInt(courseId);
+        Course course = courseDAO.getCourseById(courseIdValid);
+
+        if (course == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        if (!courseDAO.isCourseStatus(courseIdValid, "banned")) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        boolean updated = courseDAO.unbanCourse(courseIdValid);
+        if (updated) {
+            request.getSession().setAttribute("message", "Course has been unbanned successfully.");
+        } else {
+            request.getSession().setAttribute("error", "Failed to unban the course. System error – contact admin.");
+        }
+        response.sendRedirect(request.getContextPath() + "/admin/courses");
     }
 }

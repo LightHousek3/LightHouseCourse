@@ -99,6 +99,6 @@ public class FileUploadUtil {
             return null;
         }
         // Lưu file, trả về path public KHÔNG có dấu / đầu
-        return saveFile(part, folderPath, urlPrefix);
+        return errors.isEmpty() ? saveFile(part, folderPath, urlPrefix) : "";
     }
 }

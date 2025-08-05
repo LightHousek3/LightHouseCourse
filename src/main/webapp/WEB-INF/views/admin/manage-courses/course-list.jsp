@@ -80,7 +80,7 @@
                             <div class="col-md-6">
                                 <label for="searchKeyword" class="form-label">Search Courses</label>
                                 <input type="text" class="form-control" id="searchKeyword" name="keyword"
-                                       value="${param.keyword}" placeholder="Course name or instructor">
+                                       value="${param.keyword}" placeholder="Course name or instructor" required>
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
                                 <button type="submit" class="btn btn-md btn-outline-primary w-100">Search</button>
@@ -199,31 +199,46 @@
                                                 </a>
 
                                                 <c:if test="${course.approvalStatus eq 'pending'}">
-                                                    <a href="${pageContext.request.contextPath}/admin/course/approve/${course.courseID}"
-                                                       class="btn btn-sm btn-outline-success"
-                                                       onclick="return confirm('Are you sure you want to approve this course?')">
+                                                    <button 
+                                                        type="submit"
+                                                        class="btn btn-sm btn-outline-success"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#approveCourseModal"
+                                                        data-course-id="${course.courseID}"
+                                                        data-name="${course.name}"
+                                                        >
                                                         <i class="fas fa-check"></i>
-                                                    </a>
+                                                    </button>
+
                                                     <a href="${pageContext.request.contextPath}/admin/course/reject/${course.courseID}"
                                                        class="btn btn-sm btn-outline-danger">
                                                         <i class="fas fa-times"></i>
                                                     </a>
                                                 </c:if>
                                                 <c:if test="${course.approvalStatus eq 'approved'}">
-                                                    <a href="${pageContext.request.contextPath}/admin/course/ban/${course.courseID}"
-                                                       class="btn btn-sm btn-outline-warning"
-                                                       onclick="return confirm('Are you sure you want to ban this course?')">
+                                                    <button 
+                                                        type="submit"
+                                                        class="btn btn-sm btn-outline-warning"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#banCourseModal"
+                                                        data-course-id="${course.courseID}"
+                                                        data-name="${course.name}"
+                                                        >
                                                         <i class="fas fa-ban"></i>
-                                                    </a>
+                                                    </button>
                                                 </c:if>
                                                 <c:if test="${course.approvalStatus eq 'banned'}">
-                                                    <a href="${pageContext.request.contextPath}/admin/course/unban/${course.courseID}"
-                                                       class="btn btn-sm btn-outline-primary"
-                                                       onclick="return confirm('Unban this course and make it available again?')">
+                                                    <button 
+                                                        type="submit"
+                                                        class="btn btn-sm btn-outline-primary"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#unbanCourseModal"
+                                                        data-course-id="${course.courseID}"
+                                                        data-name="${course.name}"
+                                                        >
                                                         <i class="fas fa-undo"></i>
-                                                    </a>
+                                                    </button>
                                                 </c:if>
-
                                             </div>
                                         </td>
                                     </tr>
@@ -318,6 +333,102 @@
                 </div>
             </div>
         </div>
+        <!-- Modal ban course -->
+        <div class="modal fade"
+             id="banCourseModal"
+             tabindex="-1"
+             aria-labelledby="banCourse"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="banCourse">
+                            Confirm Ban <strong>Course</strong></h5>
+                        <button type="button" class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to ban this course with name <strong id="banCourseName"></strong> ?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-md btn-secondary"
+                                data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" action="${pageContext.request.contextPath}/admin/course/ban" style="display: inline;">
+                            <input type="hidden" name="courseID" id="banCourseID" />
+                            <button type="submit" class="btn btn-md btn-warning text-white">Ban</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal unban course -->
+        <div class="modal fade"
+             id="unbanCourseModal"
+             tabindex="-1"
+             aria-labelledby="unbanCourse"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="unbanCourse">
+                            Confirm Unban <strong>Course</strong></h5>
+                        <button type="button" class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to unban this course with name <strong id="unbanCourseName"></strong> ?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-md btn-secondary"
+                                data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" action="${pageContext.request.contextPath}/admin/course/unban" style="display: inline;">
+                            <input type="hidden" name="courseID" id="unbanCourseID" />
+                            <button type="submit" class="btn btn-md btn-primary text-white">Unban</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal approve course -->
+        <div class="modal fade"
+             id="approveCourseModal"
+             tabindex="-1"
+             aria-labelledby="approveCourse"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="approveCourse">
+                            Confirm Approve <strong>Course</strong></h5>
+                        <button type="button" class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to approve this course with name <strong id="approveCourseName"></strong> ?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-md btn-secondary"
+                                data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" action="${pageContext.request.contextPath}/admin/course/approve" style="display: inline;">
+                            <input type="hidden" name="courseID" id="approveCourseID" />
+                            <button type="submit" class="btn btn-md btn-primary text-white">Approve</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Bootstrap Bundle with Popper -->
         <jsp:include page="../common/scripts.jsp" />
 
@@ -340,6 +451,27 @@
                     bsAlert.close();
                 });
             }, 5000);
+
+            // Mở modal ban course
+            document.getElementById('banCourseModal').addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                document.getElementById('banCourseID').value = button.dataset.courseId;
+                document.getElementById('banCourseName').innerHTML = button.dataset.name;
+            });
+
+            // Mở modal unban course
+            document.getElementById('unbanCourseModal').addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                document.getElementById('unbanCourseID').value = button.dataset.courseId;
+                document.getElementById('unbanCourseName').innerHTML = button.dataset.name;
+            });
+
+            // Mở modal approve course
+            document.getElementById('approveCourseModal').addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                document.getElementById('approveCourseID').value = button.dataset.courseId;
+                document.getElementById('approveCourseName').innerHTML = button.dataset.name;
+            });
         </script>
 
     </body>

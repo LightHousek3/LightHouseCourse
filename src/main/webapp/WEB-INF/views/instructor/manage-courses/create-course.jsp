@@ -122,14 +122,27 @@
                                     <!-- Course info -->
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Course Name</label>
-                                        <input type="text" name="name" class="form-control" value="${param.name}" required/>
+                                        <input 
+                                            type="text" 
+                                            name="name" 
+                                            class="form-control" 
+                                            value="${param.name}" 
+                                            required
+                                            placeholder="Name of course"
+                                            />
                                         <c:if test="${not empty errors['name']}">
                                             <div class="error-text">${errors['name']}</div>
                                         </c:if>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Description</label>
-                                        <textarea name="description" class="form-control" rows="3" required>${param.description}</textarea>
+                                        <textarea 
+                                            name="description" 
+                                            class="form-control" 
+                                            rows="3" 
+                                            required
+                                            placeholder="Description of course"
+                                            >${param.description}</textarea>
                                         <c:if test="${not empty errors['description']}">
                                             <div class="error-text">${errors['description']}</div>
                                         </c:if>
@@ -137,7 +150,15 @@
                                     <div class="row">
                                         <div class="col-12 col-md-3 mb-3">
                                             <label class="form-label fw-bold">Price (VND)</label>
-                                            <input type="number" min="0" name="price" class="form-control" value="${param.price}" required/>
+                                            <input 
+                                                type="number" 
+                                                min="0" 
+                                                name="price" 
+                                                class="form-control" 
+                                                value="${param.price}" 
+                                                required
+                                                placeholder="Price of course"
+                                                />
                                             <c:if test="${not empty errors['price']}">
                                                 <div class="error-text">${errors['price']}</div>
                                             </c:if>

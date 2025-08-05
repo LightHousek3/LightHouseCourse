@@ -382,4 +382,34 @@ public class MaterialDAO extends DBContext {
         }
     }
 
+    public boolean isMaterialTitleExists(String title, int lessonId, Integer excludeMaterialId) {
+        boolean exists = false;
+        String sql = "SELECT COUNT(*) FROM Materials WHERE Title = ? AND LessonID = ?";
+
+        if (excludeMaterialId != null) {
+            sql += " AND MaterialID != ?";
+        }
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, title);
+            ps.setInt(2, lessonId);
+
+            if (excludeMaterialId != null) {
+                ps.setInt(3, excludeMaterialId);
+            }
+
+            try ( ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    exists = rs.getInt(1) > 0;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return exists;
+    }
+
 }

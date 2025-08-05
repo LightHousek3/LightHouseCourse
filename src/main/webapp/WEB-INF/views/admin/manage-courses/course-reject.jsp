@@ -14,6 +14,10 @@
                 background-color: #f8f9fa;
                 margin-bottom: 20px;
             }
+            .error-text {
+                color: #d63333;
+                font-size: 0.98em;
+            }
         </style>
     </head>
 
@@ -63,6 +67,10 @@
                             <textarea class="form-control" id="rejectionReason" name="rejectionReason" rows="6"
                                       required
                                       placeholder="Please explain why this course is being rejected. This information will be visible to the instructor."></textarea>
+                            <c:if test="${not empty sessionScope.errors}">
+                                <div class="error-text">${sessionScope.errors["rejectionReason"]}</div>
+                                <c:remove scope="session" var="errors"/>
+                            </c:if>
                             <small class="text-muted">Provide clear, constructive feedback so the instructor can
                                 address the issues.</small>
                         </div>
@@ -94,12 +102,12 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="${pageContext.request.contextPath}/admin/course/view/${course.courseID}"
+                            <a href="${pageContext.request.contextPath}/admin/courses"
                                class="btn btn-md btn-secondary">
                                 Cancel
                             </a>
                             <button type="submit" class="btn btn-md btn-danger">
-                                <i class="fas fa-times me-2"></i> Reject
+                                Reject
                             </button>
                         </div>
                     </form>

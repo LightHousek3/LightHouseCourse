@@ -81,8 +81,7 @@ public class LessonDAO extends DBContext {
     public boolean createLesson(Lesson lesson) {
         String sql = "INSERT INTO lessons (CourseID, Title, OrderIndex, CreatedAt, UpdatedAt) VALUES (?, ?, ?, GETDATE(), GETDATE())";
 
-        try (Connection conn = getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try ( Connection conn = getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, lesson.getCourseID());
             stmt.setString(2, lesson.getTitle());
@@ -94,7 +93,7 @@ public class LessonDAO extends DBContext {
                 return false;
             }
 
-            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+            try ( ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     lesson.setLessonID(generatedKeys.getInt(1));
                     return true;
@@ -117,7 +116,7 @@ public class LessonDAO extends DBContext {
     public boolean deleteByCourseId(int courseId) {
         String sql = "DELETE FROM lessons WHERE CourseID = ?";
 
-        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, courseId);
 
@@ -138,12 +137,11 @@ public class LessonDAO extends DBContext {
     public Lesson getLessonById(int lessonId) {
         String sql = "SELECT * FROM lessons WHERE LessonID = ?";
 
-        try (Connection conn = getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, lessonId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+            try ( ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return mapLesson(rs);
                 } else {
@@ -160,7 +158,7 @@ public class LessonDAO extends DBContext {
         // Insert the lesson itself
         String sql = "INSERT INTO Lessons (CourseID, Title, OrderIndex, CreatedAt) VALUES (?, ?, ?, ?)";
 
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             // Set the lesson values
             ps.setInt(1, lesson.getCourseID());
             ps.setString(2, lesson.getTitle());
@@ -170,7 +168,7 @@ public class LessonDAO extends DBContext {
             // Execute the insert for the lesson
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 1) {
-                try (ResultSet rs = ps.getGeneratedKeys()) {
+                try ( ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
                         lesson.setLessonID(rs.getInt(1)); // Assign the generated Lesson ID
                     }
@@ -213,7 +211,7 @@ public class LessonDAO extends DBContext {
     /**
      * Insert multiple LessonItems in a batch operation
      *
-     * @param conn        The database connection
+     * @param conn The database connection
      * @param lessonItems List of LessonItems to insert
      * @throws SQLException if a database error occurs
      */
@@ -223,7 +221,7 @@ public class LessonDAO extends DBContext {
         }
 
         String sql = "INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             for (LessonItem item : lessonItems) {
                 ps.setInt(1, item.getLessonID());
                 ps.setInt(2, item.getOrderIndex());
@@ -256,7 +254,7 @@ public class LessonDAO extends DBContext {
      * Get lesson progress for a specific student and lesson
      *
      * @param studentId the customer/student ID
-     * @param lessonId  the lesson ID
+     * @param lessonId the lesson ID
      * @return LessonProgress object or null if not found
      */
     public LessonProgress getLessonProgress(int studentId, int lessonId) {
@@ -295,7 +293,7 @@ public class LessonDAO extends DBContext {
     /**
      * Update the order index of a lesson
      *
-     * @param lessonId      The lesson ID to update
+     * @param lessonId The lesson ID to update
      * @param newOrderIndex The new order index value
      * @return true if successful, false otherwise
      */
@@ -336,7 +334,7 @@ public class LessonDAO extends DBContext {
      * Updates the order indices of all lessons in a course based on provided
      * list of IDs
      *
-     * @param courseId  The course ID
+     * @param courseId The course ID
      * @param lessonIds List of lesson IDs in desired order
      * @return true if successful, false otherwise
      */
@@ -406,9 +404,9 @@ public class LessonDAO extends DBContext {
     public List<Integer> getLessonOrderIndexesByCourse(int courseId) {
         List<Integer> orderIndexes = new ArrayList<>();
         String sql = "SELECT OrderIndex FROM Lessons WHERE CourseID = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     orderIndexes.add(rs.getInt("OrderIndex"));
                 }
@@ -424,10 +422,10 @@ public class LessonDAO extends DBContext {
     public List<Integer> getLessonOrderIndexesByCourseExceptLesson(int courseId, int exceptLessonId) {
         List<Integer> orderIndexes = new ArrayList<>();
         String sql = "SELECT OrderIndex FROM Lessons WHERE CourseID = ? AND LessonID <> ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, courseId);
             ps.setInt(2, exceptLessonId);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     orderIndexes.add(rs.getInt("OrderIndex"));
                 }
@@ -442,7 +440,7 @@ public class LessonDAO extends DBContext {
 
     public boolean updateLesson(Lesson lesson) {
         String sql = "UPDATE Lessons SET Title = ?, OrderIndex = ?, UpdatedAt = GETDATE() WHERE LessonID = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, lesson.getTitle());
             ps.setInt(2, lesson.getOrderIndex());
             ps.setInt(3, lesson.getLessonID());
@@ -458,10 +456,10 @@ public class LessonDAO extends DBContext {
         String sql = "SELECT 1 FROM Lessons l "
                 + "JOIN CourseInstructors ci ON l.CourseID = ci.CourseID "
                 + "WHERE l.LessonID = ? AND ci.InstructorID = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, lessonId);
             ps.setInt(2, instructorId);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
         } catch (SQLException e) {
@@ -472,7 +470,7 @@ public class LessonDAO extends DBContext {
 
     public boolean deleteLessonById(int lessonId) {
         String sql = "DELETE FROM Lessons WHERE LessonID = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, lessonId);
             int affected = ps.executeUpdate();
             return affected > 0;
@@ -495,9 +493,9 @@ public class LessonDAO extends DBContext {
                 + "WHERE li.LessonID = ? "
                 + "ORDER BY li.OrderIndex";
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, lessonId);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     LessonItem li = new LessonItem();
                     li.setLessonItemID(rs.getInt("LessonItemID"));
@@ -546,9 +544,9 @@ public class LessonDAO extends DBContext {
 
     public int addQuizToLesson(int lessonID, Quiz quiz) {
         int quizID = -1;
-        try (Connection conn = getConnection()) {
+        try ( Connection conn = getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement psQuiz = conn.prepareStatement(
+            try ( PreparedStatement psQuiz = conn.prepareStatement(
                     "INSERT INTO Quizzes (LessonID, Title, Description, TimeLimit, PassingScore) VALUES (?, ?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 psQuiz.setInt(1, lessonID);
@@ -564,7 +562,7 @@ public class LessonDAO extends DBContext {
                 if (psQuiz.executeUpdate() == 0) {
                     throw new SQLException("Insert quiz failed, no rows affected.");
                 }
-                try (ResultSet rs = psQuiz.getGeneratedKeys()) {
+                try ( ResultSet rs = psQuiz.getGeneratedKeys()) {
                     if (rs.next()) {
                         quizID = rs.getInt(1);
                     } else {
@@ -589,9 +587,9 @@ public class LessonDAO extends DBContext {
 
     public int addMaterialToLesson(int lessonID, Material material) {
         int materialID = -1;
-        try (Connection conn = getConnection()) {
+        try ( Connection conn = getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement psMat = conn.prepareStatement(
+            try ( PreparedStatement psMat = conn.prepareStatement(
                     "INSERT INTO Materials (LessonID, Title, Description, Content, FileUrl) VALUES (?, ?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 psMat.setInt(1, lessonID);
@@ -602,7 +600,7 @@ public class LessonDAO extends DBContext {
                 if (psMat.executeUpdate() == 0) {
                     throw new SQLException("Insert material failed, no rows affected.");
                 }
-                try (ResultSet rs = psMat.getGeneratedKeys()) {
+                try ( ResultSet rs = psMat.getGeneratedKeys()) {
                     if (rs.next()) {
                         materialID = rs.getInt(1);
                     } else {
@@ -627,9 +625,9 @@ public class LessonDAO extends DBContext {
 
     public int addVideoToLesson(int lessonID, Video video) {
         int videoID = -1;
-        try (Connection conn = getConnection()) {
+        try ( Connection conn = getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement psVid = conn.prepareStatement(
+            try ( PreparedStatement psVid = conn.prepareStatement(
                     "INSERT INTO Videos (LessonID, Title, Description, VideoUrl, Duration) VALUES (?, ?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 psVid.setInt(1, lessonID);
@@ -640,7 +638,7 @@ public class LessonDAO extends DBContext {
                 if (psVid.executeUpdate() == 0) {
                     throw new SQLException("Insert video failed, no rows affected.");
                 }
-                try (ResultSet rs = psVid.getGeneratedKeys()) {
+                try ( ResultSet rs = psVid.getGeneratedKeys()) {
                     if (rs.next()) {
                         videoID = rs.getInt(1);
                     } else {
@@ -666,22 +664,53 @@ public class LessonDAO extends DBContext {
     private void insertLessonItem(Connection conn, int lessonID, String itemType, int itemID) throws SQLException {
         int orderIndex = 1;
         String sqlOrder = "SELECT ISNULL(MAX(OrderIndex),0)+1 FROM LessonItems WHERE LessonID=?";
-        try (PreparedStatement psOrder = conn.prepareStatement(sqlOrder)) {
+        try ( PreparedStatement psOrder = conn.prepareStatement(sqlOrder)) {
             psOrder.setInt(1, lessonID);
-            try (ResultSet rs = psOrder.executeQuery()) {
+            try ( ResultSet rs = psOrder.executeQuery()) {
                 if (rs.next()) {
                     orderIndex = rs.getInt(1);
                 }
             }
         }
         String sqlLessonItem = "INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sqlLessonItem)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sqlLessonItem)) {
             ps.setInt(1, lessonID);
             ps.setInt(2, orderIndex);
             ps.setString(3, itemType);
             ps.setInt(4, itemID);
             ps.executeUpdate();
         }
+    }
+
+    public boolean isLessonTitleExists(String title, int courseId, Integer excludeLessonId) {
+        boolean exists = false;
+        String sql = "SELECT COUNT(*) FROM Lessons WHERE Title = ? AND CourseID = ?";
+
+        // Nếu đang update, loại trừ LessonID đó
+        if (excludeLessonId != null) {
+            sql += " AND LessonID != ?";
+        }
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, title);
+            ps.setInt(2, courseId);
+
+            if (excludeLessonId != null) {
+                ps.setInt(3, excludeLessonId);
+            }
+
+            try ( ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    exists = rs.getInt(1) > 0;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return exists;
     }
 
 }
