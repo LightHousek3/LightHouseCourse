@@ -23,8 +23,10 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import model.Answer;
 import model.Category;
 import model.Course;
@@ -1377,7 +1379,7 @@ public class InstructorCourseServlet extends HttpServlet {
             errors.put("titleQuiz", "Maximun length is 150 characters.");
         } else {
             titleQuiz = titleQuiz.trim();
-            if (quizDAO.isQuizTitleExists(titleQuiz, lessonIdValid, null)) {
+            if (quizDAO.isQuizTitleExists(titleQuiz, lessonIdValid, quizIdValid)) {
                 errors.put("titleQuiz", "This quiz title is already taken.");
             }
         }
@@ -1587,23 +1589,42 @@ public class InstructorCourseServlet extends HttpServlet {
         } else {
             errors.put("correctAnswer", "Correct answer must be a valid number.");
         }
-
+        Set<String> duplicateAnswer = new HashSet<>();
         // --- Validate nội dung từng đáp án ---
         List<Answer> listAnswer = new ArrayList<>();
         for (int i = 1; i <= totalAnswers; i++) {
-            String content = request.getParameter("answerContent" + i);
+            String content
+                    = request.getParameter("answerContent" + i) != null
+                    ? request.getParameter("answerContent" + i).trim()
+                    : request.getParameter("answerContent" + i);
+            Answer a = new Answer();
+            a.setContent(content);
+            a.setOrderIndex(i);
+            a.setCorrect(i == correctAnswer);
+            listAnswer.add(a);
+
             if (Validator.isNullOrEmpty(content)) {
                 errors.put("answer" + i, "Answer #" + i + " is required.");
             } else if (!Validator.isValidText(content, 50)) {
                 errors.put("answer" + i, "Answer #" + i + " Maximum length is 50 characters.");
             } else {
                 content = content.trim();
+                String toLowCaseAnswerContent = content.toLowerCase();
+                if (duplicateAnswer.contains(toLowCaseAnswerContent)) {
+                    String indexDupAns = "";
+                    for (Answer answer : listAnswer) {
+                        if (answer.getContent().equalsIgnoreCase(toLowCaseAnswerContent) && !(answer.getOrderIndex() == i)) {
+                            indexDupAns += "," + answer.getOrderIndex();
+                        }
+                    }
+                    if (!Validator.isNullOrEmpty(indexDupAns)) {
+                        indexDupAns = indexDupAns.substring(1);
+                    }
+                    errors.put("answer" + i, "Answer #" + i + " is duplicated with a previous answer (" + indexDupAns + ").");
+                } else {
+                    duplicateAnswer.add(toLowCaseAnswerContent);
+                }
             }
-            Answer a = new Answer();
-            a.setContent(content);
-            a.setOrderIndex(i);
-            a.setCorrect(i == correctAnswer);
-            listAnswer.add(a);
         }
 
         // --- Nếu có lỗi, quay lại form và giữ dữ liệu ---
@@ -1747,7 +1768,7 @@ public class InstructorCourseServlet extends HttpServlet {
         } else {
             errors.put("correctAnswer", "Invalid correct answer.");
         }
-
+        Set<String> duplicateAnswer = new HashSet<>();
         // Validate nội dung các đáp án
         List<Answer> listAnswer = new ArrayList<>();
         for (int i = 1; i <= totalAnswers; i++) {
@@ -1771,6 +1792,22 @@ public class InstructorCourseServlet extends HttpServlet {
                 errors.put("answer" + i, "Answer #" + i + " is required.");
             } else if (!Validator.isValidText(content, 50)) {
                 errors.put("answer" + i, "Answer #" + i + " Maximum length is 50 characters.");
+            } else {
+                String toLowCaseAnswerContent = content.toLowerCase();
+                if (duplicateAnswer.contains(toLowCaseAnswerContent)) {
+                    String indexDupAns = "";
+                    for (Answer answer : listAnswer) {
+                        if (answer.getContent().equalsIgnoreCase(toLowCaseAnswerContent) && !(answer.getOrderIndex() == i)) {
+                            indexDupAns += "," + answer.getOrderIndex();
+                        }
+                    }
+                    if (!Validator.isNullOrEmpty(indexDupAns)) {
+                        indexDupAns = indexDupAns.substring(1);
+                    }
+                    errors.put("answer" + i, "Answer #" + i + " is duplicated with a previous answer (" + indexDupAns + ").");
+                } else {
+                    duplicateAnswer.add(toLowCaseAnswerContent);
+                }
             }
         }
 
