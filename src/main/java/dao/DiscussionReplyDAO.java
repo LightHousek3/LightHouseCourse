@@ -17,17 +17,18 @@ import model.DiscussionReply;
 
 /**
  * Data access object for discussion replies
- * 
+ *
  * @author DangPH - CE180896
  */
 public class DiscussionReplyDAO extends DBContext {
+
     private Connection conn = null;
     private PreparedStatement ps = null;
     private ResultSet rs = null;
 
     /**
      * Get all replies for a specific discussion
-     * 
+     *
      * @param discussionId The discussion ID
      * @return List of replies
      */
@@ -35,15 +36,16 @@ public class DiscussionReplyDAO extends DBContext {
         List<DiscussionReply> replies = new ArrayList<>();
 
         try {
-            String query = "SELECT r.*, " +
-                    "CASE WHEN r.AuthorType = 'customer' THEN cu.FullName " +
-                    "     WHEN r.AuthorType = 'instructor' THEN su.FullName " +
-                    "     ELSE 'Unknown' END AS AuthorName " +
-                    "FROM DiscussionReplies r " +
-                    "LEFT JOIN Customers cu ON r.AuthorID = cu.CustomerID AND r.AuthorType = 'customer' " +
-                    "LEFT JOIN SuperUsers su ON r.AuthorID = su.SuperUserID AND r.AuthorType = 'instructor' " +
-                    "WHERE r.DiscussionID = ? " +
-                    "ORDER BY r.CreatedAt ASC";
+            String query = "SELECT r.*,\n"
+                    + "CASE WHEN r.AuthorType = 'customer' THEN cu.FullName \n"
+                    + "WHEN r.AuthorType = 'instructor' THEN su.FullName\n"
+                    + "ELSE 'Unknown' END AS AuthorName\n"
+                    + "FROM DiscussionReplies r\n"
+                    + "LEFT JOIN Customers cu ON r.AuthorID = cu.CustomerID AND r.AuthorType = 'customer'\n"
+                    + "LEFT JOIN Instructors i on i.InstructorID = r.AuthorID AND r.AuthorType = 'instructor'\n"
+                    + "LEFT JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID AND r.AuthorType = 'instructor'\n"
+                    + "WHERE r.DiscussionID = ?\n"
+                    + "ORDER BY r.CreatedAt ASC";
 
             conn = getConnection();
             ps = conn.prepareStatement(query);
@@ -65,7 +67,7 @@ public class DiscussionReplyDAO extends DBContext {
 
     /**
      * Add a new discussion reply and update discussion status if needed
-     * 
+     *
      * @param reply The reply to add
      * @return True if successful, false otherwise
      */
@@ -79,9 +81,9 @@ public class DiscussionReplyDAO extends DBContext {
             conn = getConnection();
             conn.setAutoCommit(false); // Start transaction
 
-            String query = "INSERT INTO DiscussionReplies (DiscussionID, AuthorID, AuthorType, Content, " +
-                    "CreatedAt, UpdatedAt) " +
-                    "VALUES (?, ?, ?, ?, ?, ?)";
+            String query = "INSERT INTO DiscussionReplies (DiscussionID, AuthorID, AuthorType, Content, "
+                    + "CreatedAt, UpdatedAt) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)";
 
             ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, reply.getDiscussionID());
@@ -155,7 +157,7 @@ public class DiscussionReplyDAO extends DBContext {
 
     /**
      * Create a new discussion reply
-     * 
+     *
      * @param reply The reply to create
      * @return True if successful, false otherwise
      */
@@ -163,9 +165,9 @@ public class DiscussionReplyDAO extends DBContext {
         boolean success = false;
 
         try {
-            String query = "INSERT INTO DiscussionReplies (DiscussionID, AuthorID, AuthorType, Content, " +
-                    "CreatedAt, UpdatedAt) " +
-                    "VALUES (?, ?, ?, ?, ?, ?)";
+            String query = "INSERT INTO DiscussionReplies (DiscussionID, AuthorID, AuthorType, Content, "
+                    + "CreatedAt, UpdatedAt) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)";
 
             conn = getConnection();
             ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
@@ -198,18 +200,18 @@ public class DiscussionReplyDAO extends DBContext {
 
     /**
      * Check if an instructor is teaching a specific course
-     * 
+     *
      * @param superUserId The instructor's super user ID
-     * @param courseId    The course ID
+     * @param courseId The course ID
      * @return True if the instructor is teaching the course, false otherwise
      */
     public boolean isInstructorTeachingCourse(int superUserId, int courseId) {
         boolean isTeaching = false;
 
         try {
-            String query = "SELECT COUNT(*) FROM CourseInstructors ci " +
-                    "JOIN Instructors i ON ci.InstructorID = i.InstructorID " +
-                    "WHERE i.SuperUserID = ? AND ci.CourseID = ?";
+            String query = "SELECT COUNT(*) FROM CourseInstructors ci "
+                    + "JOIN Instructors i ON ci.InstructorID = i.InstructorID "
+                    + "WHERE i.SuperUserID = ? AND ci.CourseID = ?";
 
             conn = getConnection();
             ps = conn.prepareStatement(query);
@@ -231,17 +233,18 @@ public class DiscussionReplyDAO extends DBContext {
 
     /**
      * Check if an instructor is associated with a course
-     * 
+     *
      * @param instructorId The instructor ID
-     * @param courseId     The course ID
-     * @return True if the instructor is associated with the course, false otherwise
+     * @param courseId The course ID
+     * @return True if the instructor is associated with the course, false
+     * otherwise
      */
     public boolean isInstructorForCourse(int instructorId, int courseId) {
         boolean isInstructor = false;
 
         try {
-            String query = "SELECT COUNT(*) FROM CourseInstructors " +
-                    "WHERE InstructorID = ? AND CourseID = ?";
+            String query = "SELECT COUNT(*) FROM CourseInstructors "
+                    + "WHERE InstructorID = ? AND CourseID = ?";
 
             conn = getConnection();
             ps = conn.prepareStatement(query);
@@ -263,7 +266,7 @@ public class DiscussionReplyDAO extends DBContext {
 
     /**
      * Map a ResultSet row to a DiscussionReply object
-     * 
+     *
      * @param rs The ResultSet
      * @return The DiscussionReply object
      * @throws SQLException If an error occurs
@@ -290,11 +293,11 @@ public class DiscussionReplyDAO extends DBContext {
 
     /**
      * Update a reply's content
-     * 
-     * @param replyId  The reply ID
+     *
+     * @param replyId The reply ID
      * @param authorId The author ID (for security check)
      * @param authorType The author type (customer or instructor)
-     * @param content  The new content
+     * @param content The new content
      * @return True if successful, false otherwise
      */
     public boolean updateReply(int replyId, int authorId, String authorType, String content) {
@@ -340,8 +343,8 @@ public class DiscussionReplyDAO extends DBContext {
 
     /**
      * Delete a reply
-     * 
-     * @param replyId  The reply ID
+     *
+     * @param replyId The reply ID
      * @param authorId The author ID (for security check)
      * @param authorType The author type (customer or instructor)
      * @return True if successful, false otherwise
@@ -388,7 +391,7 @@ public class DiscussionReplyDAO extends DBContext {
 
     /**
      * Get a reply by ID
-     * 
+     *
      * @param replyId The reply ID
      * @return The reply or null if not found
      */
@@ -401,14 +404,14 @@ public class DiscussionReplyDAO extends DBContext {
         try {
             conn = getConnection();
 
-            String query = "SELECT r.*, " +
-                    "CASE WHEN r.AuthorType = 'customer' THEN cu.FullName " +
-                    "     WHEN r.AuthorType = 'instructor' THEN su.FullName " +
-                    "     ELSE 'Unknown' END AS AuthorName " +
-                    "FROM DiscussionReplies r " +
-                    "LEFT JOIN Customers cu ON r.AuthorID = cu.CustomerID AND r.AuthorType = 'customer' " +
-                    "LEFT JOIN SuperUsers su ON r.AuthorID = su.SuperUserID AND r.AuthorType = 'instructor' " +
-                    "WHERE r.ReplyID = ?";
+            String query = "SELECT r.*, "
+                    + "CASE WHEN r.AuthorType = 'customer' THEN cu.FullName "
+                    + "     WHEN r.AuthorType = 'instructor' THEN su.FullName "
+                    + "     ELSE 'Unknown' END AS AuthorName "
+                    + "FROM DiscussionReplies r "
+                    + "LEFT JOIN Customers cu ON r.AuthorID = cu.CustomerID AND r.AuthorType = 'customer' "
+                    + "LEFT JOIN SuperUsers su ON r.AuthorID = su.SuperUserID AND r.AuthorType = 'instructor' "
+                    + "WHERE r.ReplyID = ?";
 
             ps = conn.prepareStatement(query);
             ps.setInt(1, replyId);
@@ -428,7 +431,7 @@ public class DiscussionReplyDAO extends DBContext {
 
     /**
      * Check if a discussion has any instructor replies
-     * 
+     *
      * @param discussionId The discussion ID
      * @return True if there are instructor replies, false otherwise
      */

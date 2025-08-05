@@ -179,7 +179,7 @@ public class AdminCustomerServlet extends HttpServlet {
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
         String avatarUrl = request.getParameter("avatarUrl");
-        String hashedPassword = PasswordEncrypt.encryptSHA256(password);
+        
 
         // Basic validation
         if (username == null || username.trim().isEmpty()
@@ -243,6 +243,7 @@ public class AdminCustomerServlet extends HttpServlet {
                     response);
             return;
         }
+        String hashedPassword = PasswordEncrypt.encryptSHA256(password);
 
         // Check if avatarUrl is a base64 image
         if (avatarUrl != null && avatarUrl.startsWith("data:image")) {

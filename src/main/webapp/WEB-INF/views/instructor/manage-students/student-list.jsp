@@ -70,7 +70,20 @@
                 </div>
             </div>
             <!-- Main Content -->
-            <!--<div class="card">-->
+            <!-- Success/Error Alerts -->
+            <c:if test="${not empty success}">
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    ${success}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </c:if>
+
+            <c:if test="${not empty error}">
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    ${error}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </c:if>
             <!-- Filter Section -->
             <div class="card mb-4">
                 <div class="m-3 mb-0 bg-white d-flex justify-content-between align-items-center">
@@ -102,7 +115,7 @@
 
                             <!-- Progress Filter -->
                             <div class="col-md-3">
-                                <label for="progress" class="form-label">Filter by Status</label>
+                                <label for="progress" class="form-label">Filter by Progress</label>
                                 <select class="form-select" id="progress" name="progress">
                                     <option value="">All Progress</option>
                                     <option value="completed" ${progressFilter eq 'completed' ? 'selected' : ''}>Completed</option>
@@ -258,21 +271,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Success/Error Alerts -->
-                <c:if test="${not empty success}">
-                    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                        ${success}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                </c:if>
-
-                <c:if test="${not empty error}">
-                    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-                        ${error}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                </c:if>
 
             </div>
             <!--</div>-->

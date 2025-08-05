@@ -815,7 +815,7 @@
                             <div class="progress-header">
                                 <div class="progress-title">Course Progress</div>
                                 <div class="progress-percentage" id="progressPercentage">
-                                    <fmt:formatNumber value="${progress.completionPercentage}" pattern="0" />%
+                                    <fmt:formatNumber value="${progress.completionPercentage}" pattern="0.##" />%
                                 </div>
                             </div>
                             <div class="progress-bar-container">
@@ -1870,7 +1870,7 @@
                                     if (progressBarFill) {
                                         progressBarFill.style.width = data.newCompletionPercentage + '%';
                                         if (progressPercentage) {
-                                            progressPercentage.innerText = Math.round(data.newCompletionPercentage) + '%';
+                                            progressPercentage.innerText = data.newCompletionPercentage + '%';
                                         }
                                     }
 

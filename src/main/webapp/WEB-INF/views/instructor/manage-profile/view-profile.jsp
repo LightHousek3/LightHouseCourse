@@ -501,8 +501,6 @@
                                         </c:otherwise>
                                     </c:choose>
                                     <h3 class="profile-name">${instructor.fullName}</h3>
-                                    <p class="profile-username">
-                                        ${instructor.fullName}
                                     </p>
                                     <c:choose>
                                         <c:when test="${not empty instructor.username}">
@@ -553,6 +551,26 @@
                                                             </div>
                                                         </div>
                                                     </li>
+                                                    <!-- Full Name -->
+                                                    <li class="info-item">
+                                                        <div class="info-icon">
+                                                            <i class="fas fa-id-card"></i>
+                                                        </div>
+                                                        <div class="info-content">
+                                                            <div class="info-label">Full Name</div>
+                                                            <div class="info-value">
+                                                                <c:choose>
+                                                                    <c:when test="${not empty instructor.fullName}">
+                                                                        ${instructor.fullName}
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <span class="text-muted">Not provided</span>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+
                                                     <li class="info-item">
                                                         <div class="info-icon">
                                                             <i class="fas fa-envelope"></i>

@@ -111,7 +111,7 @@ public class CourseProgressDAO extends DBContext {
      * @param progress The course progress to insert
      * @return The new progress ID, or -1 if failed
      */
-    private int insertCourseProgress(CourseProgress progress) {
+    public int insertCourseProgress(CourseProgress progress) {
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -157,75 +157,6 @@ public class CourseProgressDAO extends DBContext {
         }
 
         return progressId;
-    }
-
-    /**
-     * Update access time for a lesson item
-     *
-     * @param customerId   The customer ID
-     * @param lessonItemId The lesson item ID
-     * @return true if successful, false otherwise
-     */
-    public boolean updateLessonItemAccess(int customerId, int lessonItemId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        boolean success = false;
-
-        try {
-            conn = getConnection();
-
-            // First check if entry exists
-            String checkSql = "SELECT * FROM LessonItemProgress WHERE CustomerID = ? AND LessonItemID = ?";
-            ps = conn.prepareStatement(checkSql);
-            ps.setInt(1, customerId);
-            ps.setInt(2, lessonItemId);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                // Update existing entry
-                ps.close();
-                String updateSql = "UPDATE LessonItemProgress SET LastAccessDate = ? WHERE CustomerID = ? AND LessonItemID = ?";
-                ps = conn.prepareStatement(updateSql);
-                ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-                ps.setInt(2, customerId);
-                ps.setInt(3, lessonItemId);
-            } else {
-                // Insert new entry
-                ps.close();
-                String insertSql = "INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, LastAccessDate) VALUES (?, ?, 0, ?)";
-                ps = conn.prepareStatement(insertSql);
-                ps.setInt(1, customerId);
-                ps.setInt(2, lessonItemId);
-                ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
-            }
-
-            int affectedRows = ps.executeUpdate();
-            success = (affectedRows > 0);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources(null, ps, conn);
-        }
-
-        return success;
-    }
-
-    /**
-     * Save course progress (insert new or update existing).
-     *
-     * @param progress The course progress to save
-     * @return true if successful, false otherwise
-     */
-    public boolean saveCourseProgress(CourseProgress progress) {
-        // Check if progress already exists
-        CourseProgress existingProgress = getByCustomerAndCourse(progress.getCustomerID(), progress.getCourseID());
-
-        if (existingProgress != null) {
-            progress.setProgressID(existingProgress.getProgressID());
-            return updateCourseProgress(progress);
-        } else {
-            return insertCourseProgress(progress) > 0;
-        }
     }
 
     /**

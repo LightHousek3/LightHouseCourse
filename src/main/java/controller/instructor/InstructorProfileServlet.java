@@ -246,6 +246,24 @@ public class InstructorProfileServlet extends HttpServlet {
             hasError = true;
         }
 
+        // Validate address
+        if (address == null || address.trim().isEmpty()) {
+            request.setAttribute("addressError", "Address is required.");
+            hasError = true;
+        }
+
+        // Validate biography
+        if (bio == null || bio.trim().isEmpty()) {
+            request.setAttribute("biographyError", "Biography is required.");
+            hasError = true;
+        }
+
+        // (optional) Validate specialization
+        if (specialization == null || specialization.trim().isEmpty()) {
+            request.setAttribute("specializationError", "Specialization is required.");
+            hasError = true;
+        }
+
         // If validation failed, return to form with input preserved
         if (hasError) {
             existingInstructor.setEmail(email);

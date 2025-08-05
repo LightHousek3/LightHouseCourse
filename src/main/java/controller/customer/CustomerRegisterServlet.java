@@ -17,13 +17,14 @@ import java.sql.Timestamp;
 import model.Customer;
 import util.EmailUtils;
 import util.PasswordEncrypt;
+import dao.SuperUserDAO;
 import util.Validator;
 
 /**
  *
  * @author NhiDTY-CE180492
  */
-@WebServlet(name = "CustomerRegisterServlet", urlPatterns = { "/register" })
+@WebServlet(name = "CustomerRegisterServlet", urlPatterns = {"/register"})
 public class CustomerRegisterServlet extends HttpServlet {
 
     private final CustomerDAO customerDAO = new CustomerDAO();
@@ -33,10 +34,10 @@ public class CustomerRegisterServlet extends HttpServlet {
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -48,10 +49,10 @@ public class CustomerRegisterServlet extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -78,18 +79,24 @@ public class CustomerRegisterServlet extends HttpServlet {
             request.setAttribute("usernameError",
                     "Username must be 3-20 characters long and contain only letters, numbers, and underscores.");
             hasError = true;
-        } else if (customerDAO.usernameExists(username) || superUserDAO.usernameExists(username)) {
-            request.setAttribute("usernameError", "Username already exists.");
-            hasError = true;
+        } else {
+            boolean isExist = customerDAO.usernameExists(username) || superUserDAO.usernameExists(username);
+            if (isExist) {
+                request.setAttribute("usernameError", "Username already exists.");
+                hasError = true;
+            }
         }
 
         // Validate email
         if (!Validator.isValidEmail(email)) {
             request.setAttribute("emailError", "Please enter a valid email address.");
             hasError = true;
-        } else if (customerDAO.emailExists(email) || superUserDAO.emailExists(email)) {
-            request.setAttribute("emailError", "Email already registered.");
-            hasError = true;
+        } else {
+            boolean isExist = customerDAO.emailExists(email) || superUserDAO.emailExists(email);
+            if (isExist) {
+                request.setAttribute("emailError", "Email already registered.");
+                hasError = true;
+            }
         }
 
         // Validate password
@@ -99,21 +106,26 @@ public class CustomerRegisterServlet extends HttpServlet {
         }
 
         // Validate password confirmation
-        if (password != null && !password.equals(confirmPassword)) {
+        if (password == null || !password.equals(confirmPassword)) {
             request.setAttribute("confirmPasswordError", "Passwords do not match.");
             hasError = true;
         }
 
         // Validate fullName if provided
-        if (fullName != null && !fullName.trim().isEmpty() && !Validator.isValidFullname(fullName)) {
-            request.setAttribute("fullnameError",
-                    "Full name should contain at least 2 words, only letters, spaces, and basic punctuation.");
+        if (fullName == null || fullName.trim().isEmpty() || !Validator.isValidFullname(fullName)) {
+            request.setAttribute("fullnameError", "Full name should contain at least 2 words, only letters, spaces, and basic punctuation.");
             hasError = true;
         }
 
         // Validate phone if provided
-        if (phone != null && !phone.trim().isEmpty() && !Validator.isValidPhone(phone)) {
+        if (phone == null || phone.trim().isEmpty() || !Validator.isValidPhone(phone)) {
             request.setAttribute("phoneError", "Phone number must be 10-11 digits.");
+            hasError = true;
+        }
+
+        // Validate address
+        if (address == null || address.trim().isEmpty()) {
+            request.setAttribute("addressError", "Address cannot be empty");
             hasError = true;
         }
 

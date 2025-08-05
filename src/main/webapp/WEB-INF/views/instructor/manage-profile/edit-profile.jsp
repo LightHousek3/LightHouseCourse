@@ -293,7 +293,7 @@
                 background-color: #f8f9fa;
             }
 
-            
+
 
             /* Content area */
             .instructor-content {
@@ -387,16 +387,6 @@
                             </button>
                             <div class="d-none d-lg-block">
                                 <h2 class="m-0"><i class="fas fa-user-edit"></i> Edit Profile</h2>
-                                <div>
-                                    <nav aria-label="breadcrumb" class="breadcrumb-nav">
-                                        <ol class="breadcrumb">
-                                            <li class="breadcrumb-item"><a
-                                                    href="${pageContext.request.contextPath}/instructor/profile">My Profile</a>
-                                            </li>
-                                            <li class="breadcrumb-item active" aria-current="page">Edit Profile</li>
-                                        </ol>
-                                    </nav>
-                                </div>
                             </div>
                             <div class="header-actions row">
                                 <a href="${pageContext.request.contextPath}/instructor/profile" class="col-md-6 col-sm-12 btn btn-lg btn-primary">
@@ -498,11 +488,11 @@
                                                     <label for="fullName" class="form-label">Full Name <span
                                                             class="required">*</span></label>
                                                     <input type="text"
-                                                           class="form-control ${not empty fullnameError ? 'is-invalid' : ''}"
+                                                           class="form-control ${not empty fullNameError ? 'is-invalid' : ''}"
                                                            id="fullName" name="fullName" value="${instructor.fullName}">
-                                                    <c:if test="${not empty fullameError}">
+                                                    <c:if test="${not empty fullNameError}">
                                                         <div class="invalid-feedback">
-                                                            ${fullnameError}
+                                                            ${fullNameError}
                                                         </div>
                                                     </c:if>
                                                 </div>
@@ -533,14 +523,27 @@
                                                 <div class="col-md-6">
                                                     <label for="address" class="form-label">Address<span
                                                             class="required">*</span></label>
-                                                    <textarea class="form-control" id="address" name="address"
-                                                              rows="3">${instructor.address}</textarea>
+                                                    <textarea class="form-control ${not empty addressError ? 'is-invalid' : ''}" 
+                                                              id="address" name="address" rows="3">${instructor.address}</textarea>
+                                                    <c:if test="${not empty addressError}">
+                                                        <div class="invalid-feedback">
+                                                            ${addressError}
+                                                        </div>
+                                                    </c:if>
+
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="biography" class="form-label">Biography<span
                                                             class="required">*</span></label>
-                                                    <textarea class="form-control" id="biography" name="bio"
-                                                              rows="4" placeholder="Write a short biography...">${instructor.biography}</textarea>
+                                                    <textarea class="form-control ${not empty biographyError ? 'is-invalid' : ''}" 
+                                                              id="biography" name="bio" rows="4"
+                                                              placeholder="Write a short biography...">${instructor.biography}</textarea>
+                                                    <c:if test="${not empty biographyError}">
+                                                        <div class="invalid-feedback">
+                                                            ${biographyError}
+                                                        </div>
+                                                    </c:if>
+
                                                 </div>
 
                                                 <div class="col-md-6">

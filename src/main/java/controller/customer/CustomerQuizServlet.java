@@ -114,9 +114,6 @@ public class CustomerQuizServlet extends HttpServlet {
 
                 // Get the course ID from the lesson's course ID
                 int lessonId = quiz.getLessonID();
-                if (lessonId <= 0 && lessonItem != null) {
-                    lessonId = quizDAO.getLessonIdByQuizId(quizId);
-                }
 
                 if (lessonId <= 0) {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot determine lesson for this quiz");
@@ -136,6 +133,12 @@ public class CustomerQuizServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/course/" + courseId + "?error=not_purchased");
                     return;
                 }
+                
+                // Check for pending refund requests on the most recent order
+                if (refundDAO.hasPendingRefundForCourse(currentCustomer.getCustomerID(), courseId)) {
+                    response.sendRedirect(request.getContextPath() + "/course/" + courseId + "?error=refund_pending");
+                    return;
+                }
 
                 // Check for approved refund requests on the most recent order
                 if (refundDAO.hasApprovedRefundForCourse(currentCustomer.getCustomerID(), courseId)) {
@@ -150,8 +153,7 @@ public class CustomerQuizServlet extends HttpServlet {
                     return;
                 }
 
-                // Check if user can access this specific item (previous items must be
-                // completed)
+                // Check if user can access this specific item (previous items must be completed)
                 if (!canAccessLessonItem(currentCustomer.getCustomerID(), currentLesson, lessonItem)) {
                     // Find the last accessible item for redirection
                     LessonItem lastAccessibleItem = findLastAccessibleLessonItem(currentCustomer.getCustomerID(),

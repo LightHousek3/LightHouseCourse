@@ -44,9 +44,14 @@
                 color: #ffc107;
             }
 
-            .status-cancelled {
+            .status-refunded {
                 background-color: #f8d7da;
                 color: #dc3545;
+            }
+
+            .status-refund_pending {
+                background-color: #cee8e5;
+                color: #6327d3;
             }
 
             .card {
@@ -234,9 +239,13 @@
                                     <span class="status-badge status-pending"><i
                                             class="fas fa-clock me-2"></i>Pending</span>
                                     </c:when>
-                                    <c:when test="${order.status eq 'cancelled'}">
-                                    <span class="status-badge status-cancelled"><i
-                                            class="fas fa-times-circle me-2"></i>Cancelled</span>
+                                    <c:when test="${order.status eq 'refunded'}">
+                                    <span class="status-badge status-refunded"><i
+                                            class="fas fa-times-circle me-2"></i>Refunded</span>
+                                    </c:when>
+                                    <c:when test="${order.status eq 'refund_pending'}">
+                                    <span class="status-badge status-refund_pending"><i
+                                            class="fas fa-clock me-2"></i>Refund Pending</span>
                                     </c:when>
                                 </c:choose>
                         </h4>

@@ -182,7 +182,10 @@
                             <label for="fullname" class="form-label">Full Name</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-user-circle"></i></span>
-                                <input type="text" class="form-control" id="fullname" name="fullname" value="${fullname}">
+                                <input type="text" class="form-control ${not empty fullnameError ? 'is-invalid' : ''}" id="fullname" name="fullname" value="${fullname}" required>
+                                <c:if test="${not empty fullnameError}">
+                                    <div class="invalid-feedback">${fullnameError}</div>
+                                </c:if>
                             </div>
                         </div>
 
@@ -191,7 +194,7 @@
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-phone"></i></span>
                                 <input type="text" class="form-control ${not empty phoneError ? 'is-invalid' : ''}" 
-                                       id="phone" name="phone" value="${phone}">
+                                       id="phone" name="phone" value="${phone}" required>
                                 <c:if test="${not empty phoneError}">
                                     <div class="invalid-feedback">${phoneError}</div>
                                 </c:if>
@@ -202,7 +205,11 @@
                             <label for="address" class="form-label">Address</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-home"></i></span>
-                                <input type="text" class="form-control" id="address" name="address" value="${address}" >
+                                <input type="text" class="form-control ${not empty addressError ? 'is-invalid' : ''}" id="address" name="address" value="${address}" required>
+                                <c:if test="${not empty addressError}">
+                                    <div class="invalid-feedback">${addressError}</div>
+                                </c:if>
+
                             </div>
                         </div>
 

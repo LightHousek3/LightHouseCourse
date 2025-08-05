@@ -49,7 +49,9 @@ public class Course {
         this.videos = new ArrayList<>();
     }
 
-    public Course(String name, String description, double price, String imageUrl, String duration, String level, String approvalStatus, List<Instructor> instructors, List<Category> categories, List<Lesson> lessons, List<Video> videos) {
+    public Course(String name, String description, double price, String imageUrl, String duration, String level,
+            String approvalStatus, List<Instructor> instructors, List<Category> categories, List<Lesson> lessons,
+            List<Video> videos) {
         this.instructors = new ArrayList<>();
         this.categories = new ArrayList<>();
         this.lessons = new ArrayList<>();
@@ -67,7 +69,8 @@ public class Course {
         this.videos = videos;
     }
 
-    public Course(String name, String description, double price, String imageUrl, String duration, String level, String approvalStatus) {
+    public Course(String name, String description, double price, String imageUrl, String duration, String level,
+            String approvalStatus) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -257,6 +260,20 @@ public class Course {
 
     public void setEnrollmentCount(int enrollmentCount) {
         this.enrollmentCount = enrollmentCount;
+    }
+
+    /**
+     * Set the instructor for this course (as the first and only instructor).
+     *
+     * @param instructor The instructor to set.
+     */
+    public void setInstructor(Instructor instructor) {
+        if (this.instructors == null) {
+            this.instructors = new ArrayList<>();
+        } else {
+            this.instructors.clear(); // Chỉ giữ một instructor duy nhất
+        }
+        this.instructors.add(instructor);
     }
 
     public int getDurationNumber() {

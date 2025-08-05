@@ -441,22 +441,22 @@ VALUES
 -- Insert Courses
 INSERT INTO Courses (Name, Description, Price, ImageUrl, Duration, Level, ApprovalStatus, SubmissionDate, ApprovalDate)
 VALUES
-('Complete Web Development Bootcamp', 'Learn HTML, CSS, JavaScript, React, Node.js and more to become a full-stack web developer', 1500000, 'assets/imgs/courses/Complete-Web-Development-Bootcamp.png', '12 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('Python for Data Science', 'Master Python for data analysis and visualization with pandas, numpy, and matplotlib', 1200000, 'assets/imgs/courses/Python-For-Data-Science.png', '8 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('React Native Mobile Apps', 'Build cross-platform mobile apps for iOS and Android using React Native', 1100050, 'assets/imgs/courses/React-Native-Mobile-Apps.png', '10 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('Game Development with Unity', 'Learn to build interactive 2D and 3D games using Unity game engine and C#', 1700000, 'assets/imgs/courses/Game-Development-Unity.png', '6 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('UI/UX Design Principles', 'Master the principles of user interface and user experience design', 1000050, 'assets/imgs/courses/UIUX-Design-Principles.png', '8 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('Advanced JavaScript', 'Deep dive into JavaScript concepts like closures, prototypes, and async programming', 1300000, 'assets/imgs/courses/Advanced-JavaScript.png', '10 weeks', 'Advanced', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('Machine Learning Fundamentals', 'Introduction to core machine learning algorithms and techniques', 1400000, 'assets/imgs/courses/Machine-Learning-Fundamentals.png', '12 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -5, GETDATE())),
-('iOS App Development with Swift', 'Learn to build iOS applications using Swift and SwiftUI', 950000, 'assets/imgs/courses/iOS-App-Development-with-Swift.png', '10 weeks', 'Intermediate', 'approved', DATEADD(month, -1, GETDATE()), DATEADD(month, -1, GETDATE())),
-('SQL Database Mastery', 'Master SQL for database management, queries, and optimization', 890000, 'assets/imgs/courses/database-mastery.png', '6 weeks', 'Beginner', 'approved', DATEADD(month, -3, GETDATE()), DATEADD(month, -3, GETDATE())),
-('DevOps Engineering', 'Learn CI/CD, Docker, Kubernetes and cloud deployment', 1600000, 'assets/imgs/courses/devops.png', '10 weeks', 'Advanced', 'approved', DATEADD(month, -4, GETDATE()), DATEADD(month, -4, GETDATE())),
-('Ethical Hacking', 'Learn penetration testing and cyber security fundamentals', 1750000, 'assets/imgs/courses/ethical-hacking.png', '8 weeks', 'Intermediate', 'approved', DATEADD(month, -2, GETDATE()), DATEADD(month, -2, GETDATE())),
-('Deep Learning with TensorFlow', 'Master deep neural networks using TensorFlow and Keras', 1500000, 'assets/imgs/courses/deep-learning.png', '12 weeks', 'Advanced', 'approved', DATEADD(month, -6, GETDATE()), DATEADD(month, -6, GETDATE())),
+('Complete Web Development Bootcamp', 'Learn HTML, CSS, JavaScript, React, Node.js and more to become a full-stack web developer', 1500000, 'assets/imgs/courses/Complete-Web-Development-Bootcamp.png', '12 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -4, GETDATE())),
+('Python for Data Science', 'Master Python for data analysis and visualization with pandas, numpy, and matplotlib', 1200000, 'assets/imgs/courses/Python-For-Data-Science.png', '8 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -4, GETDATE())),
+('React Native Mobile Apps', 'Build cross-platform mobile apps for iOS and Android using React Native', 1100050, 'assets/imgs/courses/React-Native-Mobile-Apps.png', '10 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -4, GETDATE())),
+('Game Development with Unity', 'Learn to build interactive 2D and 3D games using Unity game engine and C#', 1700000, 'assets/imgs/courses/Game-Development-Unity.png', '6 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -4, GETDATE())),
+('UI/UX Design Principles', 'Master the principles of user interface and user experience design', 1000050, 'assets/imgs/courses/UIUX-Design-Principles.png', '8 weeks', 'Beginner', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -4, GETDATE())),
+('Advanced JavaScript', 'Deep dive into JavaScript concepts like closures, prototypes, and async programming', 1300000, 'assets/imgs/courses/Advanced-JavaScript.png', '10 weeks', 'Advanced', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -4, GETDATE())),
+('Machine Learning Fundamentals', 'Introduction to core machine learning algorithms and techniques', 1400000, 'assets/imgs/courses/Machine-Learning-Fundamentals.png', '12 weeks', 'Intermediate', 'approved', DATEADD(month, -5, GETDATE()), DATEADD(month, -4, GETDATE())),
+('iOS App Development with Swift', 'Learn to build iOS applications using Swift and SwiftUI', 950000, 'assets/imgs/courses/iOS-App-Development-with-Swift.png', '10 weeks', 'Intermediate', 'approved', DATEADD(month, -2, GETDATE()), DATEADD(month, -1, GETDATE())),
+('SQL Database Mastery', 'Master SQL for database management, queries, and optimization', 890000, 'assets/imgs/courses/database-mastery.png', '6 weeks', 'Beginner', 'approved', DATEADD(month, -3, GETDATE()), DATEADD(month, -2, GETDATE())),
+('DevOps Engineering', 'Learn CI/CD, Docker, Kubernetes and cloud deployment', 1600000, 'assets/imgs/courses/devops.png', '10 weeks', 'Advanced', 'approved', DATEADD(month, -4, GETDATE()), DATEADD(month, -3, GETDATE())),
+('Ethical Hacking', 'Learn penetration testing and cyber security fundamentals', 1750000, 'assets/imgs/courses/ethical-hacking.png', '8 weeks', 'Intermediate', 'approved', DATEADD(month, -2, GETDATE()), DATEADD(month, -1, GETDATE())),
+('Deep Learning with TensorFlow', 'Master deep neural networks using TensorFlow and Keras', 1500000, 'assets/imgs/courses/deep-learning.png', '12 weeks', 'Advanced', 'approved', DATEADD(month, -6, GETDATE()), DATEADD(month, -5, GETDATE())),
 ('Blockchain Development', 'Build decentralized applications with Ethereum and Solidity', 1800000, 'assets/imgs/courses/blockchain.png', '14 weeks', 'Advanced', 'pending', DATEADD(day, -15, GETDATE()), NULL),
-('Internet of Things Fundamentals', 'Learn to build connected devices using Arduino and Raspberry Pi', 1250000, 'assets/imgs/courses/iot.png', '8 weeks', 'Intermediate', 'pending', DATEADD(day, -20, GETDATE()), NULL),
-('Vue.js for Frontend Development', 'Master modern UI development with Vue.js', 980000, 'assets/imgs/courses/vuejs.png', '6 weeks', 'Intermediate', 'rejected', DATEADD(month, -1, GETDATE()), DATEADD(day, -25, GETDATE())),
-('Django Web Framework', 'Build robust web applications with Python and Django', 1100000, 'assets/imgs/courses/django.png', '8 weeks', 'Intermediate', 'pending', DATEADD(day, -10, GETDATE()), NULL);
+('Internet of Things Fundamentals', 'Learn to build connected devices using Arduino and Raspberry Pi', 1250000, 'assets/imgs/courses/iot.png', '8 weeks', 'Intermediate', 'rejected', DATEADD(day, -20, GETDATE()), NULL),
+('Vue.js for Frontend Development', 'Master modern UI development with Vue.js', 980000, 'assets/imgs/courses/vuejs.png', '6 weeks', 'Intermediate', 'approved', DATEADD(month, -1, GETDATE()), GETDATE()),
+('Django Web Framework', 'Build robust web applications with Python and Django', 1100000, 'assets/imgs/courses/django.png', '8 weeks', 'Intermediate', 'approved', DATEADD(day, -10, GETDATE()), GETDATE());
 
 -- Insert CourseCategory
 INSERT INTO CourseCategory (CourseID, CategoryID)
@@ -467,7 +467,7 @@ VALUES
 -- Insert CourseInstructors
 INSERT INTO CourseInstructors (CourseID, InstructorID)
 VALUES
-(1, 1), (2, 5), (3, 4), (4, 7), (5, 6), (6, 1), (6, 8), (7, 3), (7, 5), (8, 4), (9, 2), (9, 5), (10, 7), (11, 3), (12, 3), (12, 5), (13, 8), (14, 7), (15, 1), (15, 8), (16, 1), (16, 5);
+(1, 1), (2, 5), (3, 1), (4, 7), (5, 6), (6, 1), (6, 8), (7, 3), (7, 5), (8, 4), (9, 2), (9, 5), (10, 7), (11, 3), (12, 3), (12, 5), (13, 8), (14, 7), (15, 1), (15, 8), (16, 1), (16, 5);
 
 -- Insert Orders
 INSERT INTO Orders (CustomerID, OrderDate, TotalAmount, Status)
@@ -575,7 +575,20 @@ VALUES
 -- Insert Ratings
 INSERT INTO Ratings (CourseID, CustomerID, Stars, Comment)
 VALUES
-(11, 8, 5, 'Excellent cybersecurity content. Very relevant examples.');
+(1, 1, 5, 'Hey, I took the Complete Web Development Bootcamp and loved how it covered everything from HTML to Node.js!'),
+(1, 2, 4, 'The React section was super practical, and the projects helped me build a solid portfolio.'),
+(1, 5, 5, 'Excellent Course for Aspiring Full-Stack Developers.'),
+(2, 1, 5, 'Great Introduction to Python for Data Analysis.'),
+(3, 1, 4, 'Practical and Effective for Mobile App Development.'),
+(6, 3, 5, 'Excellent Deep Dive into Core JavaScript Concepts.'),
+(6, 6, 3, 'Decent Overview, but Lacks Depth in Some Areas.'),
+(6, 11, 4, 'Solid Course for Strengthening JavaScript Fundamentals.'),
+(9, 9, 5, 'Excellent Course for Building Real SQL Skills.'),
+(11, 8, 5, 'Excellent cybersecurity content. Very relevant examples.'),
+(12, 9, 5, 'Excellent course on UI/UX, very practical.'),
+(15, 7, 3, 'Good content, but the pace was a bit slow.'),
+(15, 10, 4, 'Informative course, but some sections were too theoretical.'),
+(16, 12, 5, 'Really engaging course, loved the hands-on projects.');
 
 -- Insert RefundRequests
 INSERT INTO RefundRequests (OrderID, CustomerID, RequestDate, Status, RefundAmount, Reason, ProcessedDate, AdminMessage, ProcessedBy, RefundPercentage)
@@ -595,101 +608,83 @@ VALUES
 INSERT INTO Discussions (CourseID, LessonID, AuthorID, AuthorType, Content, IsResolved)
 VALUES
 (1, 1, 1, 'customer', 'Can someone explain the difference between <div> and <span> tags?', 1),
-(1, 3, 2, 'customer', 'I don''t understand the difference between for...of and for...in loops', 0),
-(2, 13, 3, 'customer', 'I''m having trouble installing Python on Windows 11. Any suggestions?', 0),
-(2, 14, 1, 'customer', 'How do I efficiently filter rows in a DataFrame?', 1),
-(3, 21, 1, 'customer', 'Getting a bundler error when trying to run the app. Help needed!', 0),
-(4, 31, 2, 'customer', 'What''s the best approach for implementing player movement in Unity?', 1),
-(4, 35, 3, 'customer', 'How do I optimize my game for mobile devices?', 0),
-(5, 41, 2, 'customer', 'What color combinations work best for UI design?', 1),
-(6, 45, 3, 'customer', 'Can someone explain JavaScript closures with a simple example?', 0),
-(7, 13, 2, 'customer', 'My model has low accuracy. How can I improve it?', 0),
-(8, 14, 1, 'customer', 'When should I use SwiftUI instead of UIKit?', 1),
-(1, 5, 4, 'customer', 'How do we make a responsive design work on all screen sizes?', 0),
+(1, 2, 2, 'customer', 'How do we make a responsive design work on all screen sizes?', 0),
+(1, 3, 3, 'customer', 'I don''t understand the difference between for...of and for...in loops', 0),
 (1, 6, 5, 'customer', 'Is React better than Angular for beginners?', 1),
-(2, 16, 6, 'customer', 'Which visualization library is better - Matplotlib or Seaborn?', 0),
-(3, 23, 7, 'customer', 'My app crashes when I try to implement navigation. Any help?', 0),
-(4, 33, 8, 'customer', 'What''s the difference between rigid body and character controller?', 1),
-(5, 43, 9, 'customer', 'How do I conduct effective usability testing with limited resources?', 0),
-(6, 48, 10, 'customer', 'Can someone explain the concept of "this" in JavaScript?', 1),
-(7, 13, 11, 'customer', 'Which algorithm works best for image classification tasks?', 0),
-(9, 13, 12, 'customer', 'How do I optimize complex SQL queries?', 1),
+(2, 13, 1, 'customer', 'I''m having trouble installing Python on Windows 11. Any suggestions?', 0),
+(3, 21, 1, 'customer', 'Getting a bundler error when trying to run the app. Help needed!', 0),
 (3, 22, 1, 'customer', 'I''m struggling with state management in React Native. What''s the best approach for a complex app?', 0),
-(3, 24, 3, 'customer', 'How do I implement push notifications in React Native?', 0),
-(3, 25, 5, 'customer', 'My React Native app performs poorly on older Android devices. Any optimization tips?', 0),
-(3, 26, 2, 'customer', 'What''s the best way to handle image caching in React Native?', 1),
-(3, 27, 4, 'customer', 'I''m having issues with React Native animations. They seem choppy on Android.', 0),
-(3, 28, 6, 'customer', 'How can I implement deep linking in my React Native app?', 1),
-(3, 29, 8, 'customer', 'What''s the recommended approach for offline data storage in React Native?', 0),
-(3, 30, 10, 'customer', 'How do I handle different screen sizes in React Native?', 0),
-(8, 14, 3, 'customer', 'What are the main differences between UIKit and SwiftUI for beginners?', 0),
-(8, 15, 5, 'customer', 'How do I implement Core Data in a SwiftUI project?', 1),
-(8, 16, 7, 'customer', 'My Swift app crashes when parsing JSON from an API. How can I debug this?', 0),
-(8, 17, 9, 'customer', 'What''s the best practice for handling user authentication in iOS apps?', 0),
-(8, 18, 11, 'customer', 'How do I implement dark mode support in my Swift app?', 1),
-(8, 19, 13, 'customer', 'I''m having trouble with Auto Layout constraints. Any debugging tips?', 0),
-(6, 46, 12, 'customer', 'What is the difference between null and undefined in JavaScript?', 0),
-(6, 47, 14, 'customer', 'Can someone explain how prototype inheritance works in JavaScript?', 0),
-(6, 49, 8, 'customer', 'What''s the best way to handle errors in async JavaScript functions?', 0),
-(6, 50, 10, 'customer', 'Could someone explain the key array methods like map, filter, and reduce?', 0),
-(6, 51, 7, 'customer', 'How do you mock API calls when writing JavaScript tests?', 0),
-(15, 140, 11, 'customer', 'Should I learn Vue 2 or Vue 3 as a beginner?', 0),
-(15, 143, 13, 'customer', 'How does Vue''s reactivity system work under the hood?', 0),
-(15, 145, 9, 'customer', 'My Vuex mutations aren''t updating state, what am I doing wrong?', 0),
-(15, 148, 5, 'customer', 'What''s the best folder structure for a large Vue application?', 0),
-(15, 149, 4, 'customer', 'What are the best practices for deploying a Vue application?', 0),
-(16, 150, 2, 'customer', 'What''s the difference between a Django project and a Django app?', 0),
-(16, 152, 6, 'customer', 'How do I create custom template tags in Django?', 0),
-(16, 154, 3, 'customer', 'What are the best ways to customize the Django admin interface?', 0),
-(16, 156, 1, 'customer', 'What authentication options are available in Django REST Framework?', 0),
-(16, 158, 7, 'customer', 'What''s the recommended way to deploy a Django application?', 0);
+(3, 23, 1, 'customer', 'My app crashes when I try to implement navigation. Any help?', 0),
+(3, 24, 1, 'customer', 'How do I implement push notifications in React Native?', 0),
+(3, 25, 1, 'customer', 'My React Native app performs poorly on older Android devices. Any optimization tips?', 0),
+(3, 26, 1, 'customer', 'What''s the best way to handle image caching in React Native?', 1),
+(3, 27, 1, 'customer', 'I''m having issues with React Native animations. They seem choppy on Android.', 0),
+(3, 28, 1, 'customer', 'How can I implement deep linking in my React Native app?', 1),
+(3, 29, 1, 'customer', 'What''s the recommended approach for offline data storage in React Native?', 0),
+(3, 30, 1, 'customer', 'How do I handle different screen sizes in React Native?', 0),
+(4, 31, 4, 'customer', 'What''s the best approach for implementing player movement in Unity?', 1),
+(5, 41, 12, 'customer', 'What color combinations work best for UI design?', 1),
+(6, 49, 3, 'customer', 'Can someone explain JavaScript closures with a simple example?', 0),
+(6, 50, 6, 'customer', 'Can someone explain the concept of "this" in JavaScript?', 1),
+(6, 50, 3, 'customer', 'What is the difference between null and undefined in JavaScript?', 0),
+(6, 51, 6, 'customer', 'Can someone explain how prototype inheritance works in JavaScript?', 0),
+(6, 52, 11, 'customer', 'What''s the best way to handle errors in async JavaScript functions?', 0),
+(6, 53, 14, 'customer', 'Could someone explain the key array methods like map, filter, and reduce?', 0),
+(6, 54, 14, 'customer', 'How do you mock API calls when writing JavaScript tests?', 0),
+(4, 33, 4, 'customer', 'What''s the difference between rigid body and character controller?', 1),
+(9, 82, 9, 'customer', 'How do I optimize complex SQL queries?', 1),
+(15, 140, 7, 'customer', 'Should I learn Vue 2 or Vue 3 as a beginner?', 0),
+(15, 143, 10, 'customer', 'How does Vue''s reactivity system work under the hood?', 0),
+(15, 145, 7, 'customer', 'My Vuex mutations aren''t updating state, what am I doing wrong?', 0),
+(15, 148, 10, 'customer', 'What''s the best folder structure for a large Vue application?', 0),
+(15, 149, 10, 'customer', 'What are the best practices for deploying a Vue application?', 0),
+(16, 150, 12, 'customer', 'What''s the difference between a Django project and a Django app?', 0),
+(16, 152, 12, 'customer', 'How do I create custom template tags in Django?', 0),
+(16, 154, 12, 'customer', 'What are the best ways to customize the Django admin interface?', 0),
+(16, 156, 12, 'customer', 'What authentication options are available in Django REST Framework?', 0),
+(16, 158, 12, 'customer', 'What''s the recommended way to deploy a Django application?', 0);
 
--- Insert DiscussionReplies
+-- Insert DiscussionReplies (only for DiscussionID 1–36 to avoid foreign key violation)
 INSERT INTO DiscussionReplies (DiscussionID, AuthorID, AuthorType, Content)
 VALUES
 (1, 4, 'customer', '<div> is a block element while <span> is an inline element. Use <div> when you want a new line before and after the element, and <span> when you want to style text inline.'),
-(2, 4, 'customer', 'for...in loops iterate over the enumerable properties of an object, while for...of loops iterate over the values of an iterable object like arrays.'),
 (1, 2, 'customer', 'Also, <div> is commonly used for layout while <span> is used for styling small portions of text.'),
+(1, 1, 'customer', 'Great question! <div> is a block-level element that takes up the full width available and creates a new line before and after it. <span> is an inline element that only takes up as much width as necessary and doesn''t force new lines. Use <div> for layout sections and <span> for styling pieces of text within a block.'),
+(2, 4, 'customer', 'for...in loops iterate over the enumerable properties of an object, while for...of loops iterate over the values of an iterable object like arrays.'),
+(2, 1, 'customer', 'The for...of loop iterates over the values of iterable objects like arrays, strings, etc. The for...in loop iterates over the enumerable properties of an object. Be careful with for...in on arrays as it will include properties added to the array''s prototype!'),
 (3, 5, 'customer', 'Try downloading the latest installer from python.org and make sure to check "Add Python to PATH" during installation.'),
-(5, 2, 'customer', 'Check if your Metro bundler is running. You might need to restart it with "npx react-native start".'),
 (4, 5, 'customer', 'You can use df.loc[] for label-based filtering or df.query() for string expressions.'),
 (4, 3, 'customer', 'Thanks! df.query() worked perfectly for my needs.'),
+(5, 2, 'customer', 'Check if your Metro bundler is running. You might need to restart it with "npx react-native start".'),
 (6, 10, 'customer', 'For game UIs, keep controls intuitive and consistent. Use clear visual feedback for player actions and maintain a balanced HUD that doesn''t obstruct gameplay.'),
 (7, 10, 'customer', 'For mobile optimization: 1) Reduce texture sizes 2) Use LOD groups 3) Minimize draw calls 4) Use mobile-specific quality settings 5) Profile performance regularly'),
+(8, 15, 'customer', 'Make sure you''ve properly installed react-navigation and its dependencies. Check the navigator structure for common mistakes like missing screenOptions.'),
 (9, 4, 'customer', 'Closures are functions that remember their lexical environment. Example: function outer() { let x = 10; function inner() { console.log(x); } return inner; }'),
+(9, 1, 'customer', 'A closure is a function that remembers the variables from the scope where it was created, even after that scope has closed. Here''s a simple example: function createCounter() { let count = 0; return function() { return ++count; }; } const counter = createCounter(); console.log(counter()); // 1 console.log(counter()); // 2 The inner function "closes over" the count variable.'),
 (10, 5, 'customer', 'Try feature engineering, hyperparameter tuning, or using a more complex model. Also check if your data is imbalanced.'),
 (11, 4, 'customer', 'Use SwiftUI for new apps targeting iOS 13+ for faster development. UIKit is better for complex UI, backward compatibility, or specific controls not available in SwiftUI.'),
 (12, 4, 'customer', 'Use media queries in CSS to target different screen sizes. Start with a mobile-first approach and progressively enhance for larger screens.'),
+(12, 1, 'customer', 'Good question! For responsive design, use a combination of: 1) Media queries to apply different styles at different breakpoints 2) Flexbox or Grid for layout 3) Relative units like % or rem instead of fixed pixels 4) viewport units (vw, vh) and 5) the meta viewport tag in your HTML. Test on multiple devices as you develop.'),
 (13, 8, 'customer', 'For beginners, React often has a gentler learning curve compared to Angular, which has more concepts to master initially.'),
 (13, 3, 'customer', 'I agree. I found React much easier to get started with compared to Angular.'),
+(13, 1, 'customer', 'I generally recommend React for beginners because it has a simpler mental model and faster learning curve. Angular has more built-in features but comes with more complexity. React''s component model is very intuitive, and the community support is excellent for learning resources.'),
 (14, 5, 'customer', 'Both have their strengths. Matplotlib offers more control, while Seaborn provides more attractive visualizations with less code. Start with Seaborn for simple plots.'),
-(15, 4, 'customer', 'Make sure you''ve properly installed react-navigation and its dependencies. Check the navigator structure for common mistakes like missing screenOptions.'),
 (16, 10, 'customer', 'Rigid bodies are physics-based and affected by forces, while character controllers are designed specifically for character movement with manual control over physics.'),
 (17, 6, 'customer', 'For limited budgets, try guerrilla testing with 5-7 users, remote testing tools, or A/B testing on a live but limited audience segment.'),
 (18, 4, 'customer', 'The "this" keyword refers to the object it belongs to. In regular functions, "this" depends on how the function is called. In arrow functions, "this" retains the value from the enclosing context.'),
+(18, 1, 'customer', 'Great question about "this" in JavaScript! It refers to the object that is executing the current function. In regular functions, "this" is determined by how the function is called (its execution context). In arrow functions, "this" retains the value from the enclosing lexical scope, which makes them useful for callbacks inside methods.'),
 (19, 5, 'customer', 'For image classification, CNNs are the go-to. Specifically, architectures like ResNet, EfficientNet, or Vision Transformer work well depending on your needs and computational constraints.'),
 (20, 8, 'customer', 'For SQL optimization: 1) Use appropriate indexes 2) Avoid SELECT * 3) Use EXPLAIN to analyze your queries 4) Consider denormalization for read-heavy operations 5) Use stored procedures for complex operations'),
-(1, 1, 'customer', 'Great question! <div> is a block-level element that takes up the full width available and creates a new line before and after it. <span> is an inline element that only takes up as much width as necessary and doesn''t force new lines. Use <div> for layout sections and <span> for styling pieces of text within a block.'),
-(2, 1, 'customer', 'The for...of loop iterates over the values of iterable objects like arrays, strings, etc. The for...in loop iterates over the enumerable properties of an object. Be careful with for...in on arrays as it will include properties added to the array''s prototype!'),
-(12, 1, 'customer', 'Good question! For responsive design, use a combination of: 1) Media queries to apply different styles at different breakpoints 2) Flexbox or Grid for layout 3) Relative units like % or rem instead of fixed pixels 4) viewport units (vw, vh) and 5) the meta viewport tag in your HTML. Test on multiple devices as you develop.'),
-(13, 1, 'customer', 'I generally recommend React for beginners because it has a simpler mental model and faster learning curve. Angular has more built-in features but comes with more complexity. React''s component model is very intuitive, and the community support is excellent for learning resources.'),
-(9, 1, 'customer', 'A closure is a function that remembers the variables from the scope where it was created, even after that scope has closed. Here''s a simple example: function createCounter() { let count = 0; return function() { return ++count; }; } const counter = createCounter(); console.log(counter()); // 1 console.log(counter()); // 2 The inner function "closes over" the count variable.'),
-(18, 1, 'customer', 'Great question about "this" in JavaScript! It refers to the object that is executing the current function. In regular functions, "this" is determined by how the function is called (its execution context). In arrow functions, "this" retains the value from the enclosing lexical scope, which makes them useful for callbacks inside methods.'),
-(35, 1, 'customer', 'Null and undefined are both used to represent "no value" but in different ways. Undefined means a variable has been declared but not assigned a value, while null is an intentional assignment representing "no value" or "empty". For example, if you want to explicitly clear a variable, use null. If you check a property that doesn''t exist, you''ll get undefined.'),
-(36, 1, 'customer', 'The prototype chain in JavaScript is how inheritance works. Each object has a prototype (accessible via Object.getPrototypeOf() or the deprecated __proto__ property) from which it inherits properties. When you access a property, JavaScript first looks on the object itself, then its prototype, then its prototype''s prototype, and so on until it finds the property or reaches the end of the chain.'),
-(37, 1, 'customer', 'For handling errors in async functions, always use try/catch blocks. Example: async function fetchData() { try { const response = await api.getData(); return response; } catch (error) { console.error(''Failed to fetch data:'', error); // Handle error appropriately throw error; // Re-throw if needed } } You can also use .catch() with promises if you prefer that syntax.'),
-(38, 1, 'customer', 'Array methods explained: map() transforms each element and returns a new array of the same length; filter() creates a new array with elements that pass a test; reduce() accumulates values to a single result. Example: const numbers = [1, 2, 3, 4]; const doubled = numbers.map(x => x * 2); // [2, 4, 6, 8] const evens = numbers.filter(x => x % 2 === 0); // [2, 4] const sum = numbers.reduce((acc, x) => acc + x, 0); // 10'),
-(39, 1, 'customer', 'For mocking API calls in tests, you have several options: 1) Use Jest''s mock functions to replace fetch/axios, 2) Use libraries like axios-mock-adapter, 3) Use fetch-mock or similar, or 4) Use MSW (Mock Service Worker) for a more modern approach. The key is intercepting the network requests and providing controlled responses to test both success and error scenarios.'),
-(40, 1, 'customer', 'I recommend learning Vue 3 directly as it''s the future of Vue. The Composition API in Vue 3 offers better TypeScript support and code organization for complex applications. However, many existing projects and tutorials use Vue 2, so understanding both can be valuable. The core concepts are the same, so learning Vue 3 won''t make it difficult to work with Vue 2 code if needed.'),
-(41, 1, 'customer', 'Reactivity in Vue 3 uses the Composition API with ref() and reactive(). ref() is for primitive values (creating a reactive reference object with a .value property), while reactive() is for objects (creating a reactive proxy of the entire object). Vue needs these special functions to track property access and changes, which is how it knows when to update the DOM.'),
-(42, 1, 'customer', 'If your Vuex mutations aren''t updating state, check these common issues: 1) Make sure you''re using commit to call mutations, not direct state modification, 2) Verify mutation names match exactly, 3) Check if you''re modifying nested objects (Vue can''t detect these changes directly), 4) Use Vue devtools to see if mutations are being called, and 5) Ensure you''re not trying to modify state outside mutations.'),
-(43, 1, 'customer', 'For large Vue applications, I recommend: 1) Feature-based structure instead of type-based, 2) Modules for Vuex store, 3) Component registration for common components, 4) Router with lazy-loading, 5) Services for API calls, and 6) Composables (in Vue 3) for shared logic. Example structure: src/features/auth/, src/features/products/, src/components/common/, src/router/, src/store/, src/services/, etc.'),
-(44, 1, 'customer', 'To deploy a production Vue app: 1) Run npm run build to create optimized files, 2) Enable Vue Router''s history mode with proper server config, 3) Use dynamic imports for code-splitting (import() syntax), 4) Lazy load routes, 5) Configure proper cache headers for static assets, 6) Consider using a CDN for distribution, and 7) Use performance monitoring tools like Lighthouse to verify optimizations.'),
-(45, 1, 'customer', 'Great question! A Django project is the entire web application, containing multiple apps and configuration. A Django app is a self-contained module within a project that handles a specific functionality (e.g., blog, authentication, etc.). Projects can contain multiple apps, and apps can be reused across different projects. Think of a project as the website and apps as the features within it.'),
-(46, 1, 'customer', 'To create custom template tags in Django: 1) Create a templatetags package in your app with an __init__.py file, 2) Create a Python module (e.g., custom_tags.py), 3) Use @register.simple_tag or @register.inclusion_tag decorators, 4) Load your tags in templates with {% load custom_tags %}. Example: from django import template\nregister = template.Library()\n@register.simple_tag\ndef multiply(a, b):\n    return a * b'),
-(47, 1, 'customer', 'To customize Django admin: 1) Create a custom ModelAdmin class in admin.py, 2) Use list_display, list_filter, search_fields for customized lists, 3) Override get_urls() for custom views, 4) Use admin actions for batch operations, 5) Create custom templates in templates/admin/. Example: @admin.register(Product)\nclass ProductAdmin(admin.ModelAdmin):\n    list_display = [''name'', ''price'', ''in_stock'']\n    actions = [''mark_as_featured'']'),
-(48, 1, 'customer', 'For Django REST Framework authentication, I recommend: 1) Token authentication for mobile apps, 2) JWT for SPAs with refresh tokens, 3) Session auth for server-rendered Django apps, 4) OAuth2 for third-party integration. Always use permission_classes to restrict access based on user roles. For social auth, django-allauth or social-auth-app-django are excellent options.'),
-(49, 1, 'customer', 'For deploying Django: 1) Use Gunicorn/uWSGI as the app server, 2) Nginx as the web server, 3) PostgreSQL for the database, 4) Redis for caching, 5) Use environment variables for settings, 6) Collect static files with collectstatic, 7) Use a CDN for static files, and 8) Consider managed services like AWS RDS for databases. Docker containers are also excellent for consistent deployments.');
+(27, 1, 'customer', 'I recommend learning Vue 3 directly as it''s the future of Vue. The Composition API in Vue 3 offers better TypeScript support and code organization for complex applications. However, many existing projects and tutorials use Vue 2, so understanding both can be valuable. The core concepts are the same, so learning Vue 3 won''t make it difficult to work with Vue 2 code if needed.'),
+(28, 1, 'customer', 'Reactivity in Vue 3 uses the Composition API with ref() and reactive(). ref() is for primitive values (creating a reactive reference object with a .value property), while reactive() is for objects (creating a reactive proxy of the entire object). Vue needs these special functions to track property access and changes, which is how it knows when to update the DOM.'),
+(29, 1, 'customer', 'If your Vuex mutations aren''t updating state, check these common issues: 1) Make sure you''re using commit to call mutations, not direct state modification, 2) Verify mutation names match exactly, 3) Check if you''re modifying nested objects (Vue can''t detect these changes directly), 4) Use Vue devtools to see if mutations are being called, and 5) Ensure you''re not trying to modify state outside mutations.'),
+(30, 1, 'customer', 'For large Vue applications, I recommend: 1) Feature-based structure instead of type-based, 2) Modules for Vuex store, 3) Component registration for common components, 4) Router with lazy-loading, 5) Services for API calls, and 6) Composables (in Vue 3) for shared logic. Example structure: src/features/auth/, src/features/products/, src/components/common/, src/router/, src/store/, src/services/, etc.'),
+(31, 1, 'customer', 'To deploy a production Vue app: 1) Run npm run build to create optimized files, 2) Enable Vue Router''s history mode with proper server config, 3) Use dynamic imports for code-splitting (import() syntax), 4) Lazy load routes, 5) Configure proper cache headers for static assets, 6) Consider using a CDN for distribution, and 7) Use performance monitoring tools like Lighthouse to verify optimizations.'),
+(32, 1, 'customer', 'Great question! A Django project is the entire web application, containing multiple apps and configuration. A Django app is a self-contained module within a project that handles a specific functionality (e.g., blog, authentication, etc.). Projects can contain multiple apps, and apps can be reused across different projects. Think of a project as the website and apps as the features within it.'),
+(33, 1, 'customer', 'To create custom template tags in Django: 1) Create a templatetags package in your app with an __init__.py file, 2) Create a Python module (e.g., custom_tags.py), 3) Use @register.simple_tag or @register.inclusion_tag decorators, 4) Load your tags in templates with {% load custom_tags %}. Example: from django import template\nregister = template.Library()\n@register.simple_tag\ndef multiply(a, b):\n    return a * b'),
+(34, 1, 'customer', 'To customize Django admin: 1) Create a custom ModelAdmin class in admin.py, 2) Use list_display, list_filter, search_fields for customized lists, 3) Override get_urls() for custom views, 4) Use admin actions for batch operations, 5) Create custom templates in templates/admin/. Example: @admin.register(Product)\nclass ProductAdmin(admin.ModelAdmin):\n    list_display = [''name'', ''price'', ''in_stock'']\n    actions = [''mark_as_featured'']'),
+(35, 1, 'customer', 'For Django REST Framework authentication, I recommend: 1) Token authentication for mobile apps, 2) JWT for SPAs with refresh tokens, 3) Session auth for server-rendered Django apps, 4) OAuth2 for third-party integration. Always use permission_classes to restrict access based on user roles. For social auth, django-allauth or social-auth-app-django are excellent options.'),
+(36, 1, 'customer', 'For deploying Django: 1) Use Gunicorn/uWSGI as the app server, 2) Nginx as the web server, 3) PostgreSQL for the database, 4) Redis for caching, 5) Use environment variables for settings, 6) Collect static files with collectstatic, 7) Use a CDN for static files, and 8) Consider managed services like AWS RDS for databases. Docker containers are also excellent for consistent deployments.');
 
 -- Insert Videos
 INSERT INTO Videos (LessonID, Title, Description, VideoUrl, Duration)
@@ -1231,16 +1226,16 @@ VALUES
 -- Insert PaymentTransactions
 INSERT INTO PaymentTransactions (OrderID, RefundRequestID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo)
 VALUES
-(1, NULL, 'payment', 'PayPal', 'PAYID-MX123456', 'user@example.com'),
-(2, NULL, 'payment', 'Stripe', 'ch_3K123456789', '****1234'),
-(3, 2, 'refund', 'PayPal', 'REF-123456789', 'user@example.com'),
-(4, NULL, 'payment', 'Stripe', 'ch_3K123456790', '****5678'),
-(5, 3, 'refund', 'PayPal', 'REF-123456790', 'student3@example.com'),
-(6, 4, 'refund', 'Stripe', 're_3K123456791', '****9012'),
-(7, NULL, 'payment', 'PayPal', 'PAYID-MX123457', 'student5@example.com'),
-(8, 5, 'refund', 'Stripe', 're_3K123456792', '****3456'),
-(9, NULL, 'payment', 'PayPal', 'PAYID-MX123458', 'mike.smith@example.com'),
-(10, NULL, 'payment', 'Stripe', 'ch_3K123456793', '****7890');
+(1, NULL, 'payment', 'VNPAY', 'PAYID-MX123456', 'user@example.com'),
+(2, NULL, 'payment', 'VNPAY', 'ch_3K123456789', '****1234'),
+(3, 2, 'refund', 'VNPAY', 'REF-123456789', 'user@example.com'),
+(4, NULL, 'payment', 'VNPAY', 'ch_3K123456790', '****5678'),
+(5, 3, 'refund', 'VNPAY', 'REF-123456790', 'student3@example.com'),
+(6, 4, 'refund', 'VNPAY', 're_3K123456791', '****9012'),
+(7, NULL, 'payment', 'VNPAY', 'PAYID-MX123457', 'student5@example.com'),
+(8, 5, 'refund', 'VNPAY', 're_3K123456792', '****3456'),
+(9, NULL, 'payment', 'VNPAY', 'PAYID-MX123458', 'mike.smith@example.com'),
+(10, NULL, 'payment', 'VNPAY', 'ch_3K123456793', '****7890');
 
 -- Insert LessonItems
 INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID)
@@ -2215,20 +2210,126 @@ VALUES
 -- Insert into CourseProgress
 INSERT INTO CourseProgress (CustomerID, CourseID, LastAccessDate, CompletionPercentage, IsCompleted)
 VALUES
-(4, 4, GETDATE(), 50.0, 0), -- Customer 4, Course 4, 50% complete
-(5, 1, DATEADD(day, -2, GETDATE()), 75.0, 0), -- Customer 5, Course 1, 75% complete
-(5, 10, NULL, 0.0, 0), -- Customer 5, Course 10, 0% complete
-(6, 6, GETDATE(), 50.0, 0), -- Customer 6, Course 6, 50% complete
-(7, 15, DATEADD(day, -1, GETDATE()), 30.0, 0), -- Customer 7, Course 15, 30% complete
-(8, 11, DATEADD(day, -3, GETDATE()), 50.0, 0), -- Customer 8, Course 11, 50% complete
-(9, 9, DATEADD(day, -4, GETDATE()), 33.0, 0), -- Customer 9, Course 9, 33% complete
-(9, 12, DATEADD(day, -4, GETDATE()), 50.0, 0), -- Customer 9, Course 12, 50% complete
-(10, 15, GETDATE(), 80.0, 0), -- Customer 10, Course 15, 80% complete
-(11, 6, DATEADD(day, -2, GETDATE()), 100.0, 1), -- Customer 11, Course 6, 100% complete
-(12, 16, DATEADD(day, -1, GETDATE()), 30.0, 0); -- Customer 12, Course 16, 30% complete
+(1, 1, GETDATE(), 91.67, 0), -- Customer 1, Course 1, 91.67% complete
+(2, 1, GETDATE(), 83.33, 0), -- Customer 2, Course 1, 83.33% complete
+(3, 1, GETDATE(), 100.00, 1), -- Customer 3, Course 1, 100% complete
+(5, 1, DATEADD(day, -2, GETDATE()), 75.00, 0), -- Customer 5, Course 1, 75% complete
+(1, 2, DATEADD(day, -2, GETDATE()), 83.33, 0), -- Customer 1, Course 2, 83.33% complete
+(1, 3, GETDATE(), 93.33, 0), -- Customer 1, Course 3, 93.33% complete
+(4, 4, GETDATE(), 50.00, 0), -- Customer 4, Course 4, 50% complete
+(3, 6, GETDATE(), 93.33, 0), -- Customer 3, Course 6, 93.33% complete
+(6, 6, GETDATE(), 90.00, 0), -- Customer 6, Course 6, 90% complete
+(11, 6, DATEADD(day, -2, GETDATE()), 100.00, 1), -- Customer 11, Course 6, 100% complete
+(9, 9, DATEADD(day, -4, GETDATE()), 88.87, 0), -- Customer 9, Course 9, 88.87% complete
+(5, 10, NULL, 0.00, 0), -- Customer 5, Course 10, 0% complete
+(8, 11, DATEADD(day, -2, GETDATE()), 83.33, 0), -- Customer 8, Course 11, 83.33% complete
+(9, 12, DATEADD(day, -3, GETDATE()), 83.33, 0), -- Customer 9, Course 12, 83.33% complete
+(7, 15, DATEADD(day, -4, GETDATE()), 80.00, 0), -- Customer 7, Course 15, 80% complete
+(10, 15, DATEADD(day, -4, GETDATE()), 80.00, 0), -- Customer 10, Course 15, 80% complete
+(12, 16, DATEADD(day, -3, GETDATE()), 83.33, 0); -- Customer 12, Course 16, 83.33% complete
 
 -- Insert into LessonProgress
--- CourseID 4 (10 lessons, LessonID 1-10)
+-- CourseID 1 (12 lessons, LessonID 1-12)
+-- Customer 1, 91.67% (11/12 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(1, 1, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(1, 2, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(1, 3, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(1, 4, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(1, 5, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(1, 6, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(1, 7, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(1, 8, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(1, 9, 1, 100.0, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(1, 10, 1, 100.0, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())),
+(1, 11, 1, 100.0, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())),
+(1, 12, 0, 0.0, NULL, NULL);
+
+-- Insert into LessonProgress
+-- CourseID 1 (12 lessons, LessonID 1-12)
+-- Customer 1, 83.33% (10/12 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(2, 1, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(2, 2, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(2, 3, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(2, 4, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(2, 5, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(2, 6, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(2, 7, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(2, 8, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(2, 9, 1, 100.0, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(2, 10, 1, 100.0, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())),
+(2, 11, 0, 0.0, NULL, NULL),
+(2, 12, 0, 0.0, NULL, NULL);
+
+-- Insert into LessonProgress
+-- CourseID 1 (12 lessons, LessonID 1-12)
+-- Customer 3, 100% (12/12 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(3, 1, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(3, 2, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(3, 3, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(3, 4, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(3, 5, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(3, 6, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(3, 7, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(3, 8, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(3, 9, 1, 100.0, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(3, 10, 1, 100.0, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())),
+(3, 11, 1, 100.0, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())),
+(3, 12, 1, 100.0, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE()));
+
+-- Customer 5, Course 1, 75% (9/12 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(5, 1, 1, 100.0, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
+(5, 2, 1, 100.0, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
+(5, 3, 1, 100.0, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
+(5, 4, 1, 100.0, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
+(5, 5, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())),
+(5, 6, 1, 100.0, DATEADD(day, -10, GETDATE()), GETDATE()),
+(5, 7, 1, 100.0, DATEADD(day, -9, GETDATE()), GETDATE()),
+(5, 8, 1, 100.0, DATEADD(day, -8, GETDATE()), GETDATE()),
+(5, 9, 1, 100.0, DATEADD(day, -2, GETDATE()), GETDATE()),
+(5, 10, 0, 0.0, NULL, GETDATE()),
+(5, 11, 0, 0.0, NULL, GETDATE()),
+(5, 12, 0, 0.0, NULL, GETDATE());
+
+-- Insert into LessonProgress
+-- CourseID 2 (8 lessons, LessonID 13-20)
+-- Customer 1, 83.33% (7 lessons ans 2 items completed / 8 lessons)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(1, 13, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(1, 14, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(1, 15, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(1, 16, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(1, 17, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(1, 18, 1, 100.0, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(1, 19, 0, 66.67, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())),
+(1, 20, 0, 0, NULL, NULL);
+
+-- Insert into LessonProgress
+-- CourseID 3 (10 lessons, LessonID 21-30)
+-- Customer 1, 93.33% (10 lessons - 1 items completed / 10 lessons - 3 items)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(1, 21, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(1, 22, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(1, 23, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(1, 24, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(1, 25, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(1, 26, 1, 100.0, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(1, 27, 1, 100.0, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())),
+(1, 28, 1, 100.0, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())),
+(1, 29, 1, 100.0, GETDATE(), GETDATE()),
+(1, 30, 0, 33.33, NULL, GETDATE());
+
+-- Insert into LessonProgress
+-- CourseID 4 (10 lessons, LessonID 31-40)
 -- Customer 4, 50% (5/10 lessons completed)
 INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
@@ -2243,164 +2344,258 @@ VALUES
 (4, 39, 0, 0.0, NULL, GETDATE()),
 (4, 40, 0, 0.0, NULL, GETDATE());
 
--- Customer 5, Course 1, 75% (9/12 lessons completed)
+-- Insert into LessonProgress
+-- CourseID 6 (10 lessons, LessonID 49-58)
+-- Customer 3, 93.33% (10 lessons - 1 items completed / 10 lessons - 3 items)
 INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(5, 1, 1, 100.0, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
-(5, 2, 1, 100.0, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
-(5, 3, 1, 100.0, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
-(5, 4, 1, 100.0, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
-(5, 5, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())),
-(5, 6, 1, 100.0, DATEADD(day, -10, GETDATE()), GETDATE()),
-(5, 7, 1, 100.0, DATEADD(day, -9, GETDATE()), GETDATE()),
-(5, 8, 1, 100.0, DATEADD(day, -8, GETDATE()), GETDATE()),
-(5, 9, 1, 100.0, DATEADD(day, -7, GETDATE()), GETDATE()),
-(5, 10, 0, 0.0, NULL, GETDATE()),
-(5, 11, 0, 0.0, NULL, GETDATE()),
-(5, 12, 0, 0.0, NULL, GETDATE());
-
--- Customer 9, Course 9, 33% (3/9 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
-VALUES
-(9, 79, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())),
-(9, 80, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())),
-(9, 81, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
-(9, 82, 0, 0.0, NULL, GETDATE()),
-(9, 83, 0, 0.0, NULL, GETDATE()),
-(9, 84, 0, 0.0, NULL, GETDATE()),
-(9, 85, 0, 0.0, NULL, GETDATE()),
-(9, 86, 0, 0.0, NULL, GETDATE()),
-(9, 87, 0, 0.0, NULL, GETDATE());
-
--- Customer 9, Course 12, 50% (5/10 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
-VALUES
-(9, 110, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())),
-(9, 111, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())),
-(9, 112, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
-(9, 113, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -2, GETDATE())),
-(9, 114, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -2, GETDATE())),
-(9, 115, 0, 0.0, NULL, GETDATE()),
-(9, 116, 0, 0.0, NULL, GETDATE()),
-(9, 117, 0, 0.0, NULL, GETDATE()),
-(9, 118, 0, 0.0, NULL, GETDATE()),
-(9, 119, 0, 0.0, NULL, GETDATE());
+(3, 49, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(3, 50, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(3, 51, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(3, 52, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(3, 53, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(3, 54, 1, 100.0, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(3, 55, 1, 100.0, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())),
+(3, 56, 1, 100.0, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())),
+(3, 57, 1, 100.0, GETDATE(), GETDATE()),
+(3, 58, 0, 33.33, NULL, GETDATE());
 
 -- CourseID 6 (10 lessons, LessonID 49-58)
--- Customer 6, Course 6, 50% (5/10 lessons completed)
+-- Customer 6, Course 6, 90% (9/10 lessons completed)
 INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(6, 49, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
-(6, 50, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
-(6, 51, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
-(6, 52, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
-(6, 53, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
-(6, 54, 0, 0.0, NULL, GETDATE()),
-(6, 55, 0, 0.0, NULL, GETDATE()),
-(6, 56, 0, 0.0, NULL, GETDATE()),
-(6, 57, 0, 0.0, NULL, GETDATE()),
-(6, 58, 0, 0.0, NULL, GETDATE());
+(6, 49, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(6, 50, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(6, 51, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(6, 52, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(6, 53, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(6, 54, 1, 100.0, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(6, 55, 1, 100.0, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())),
+(6, 56, 1, 100.0, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())),
+(6, 57, 1, 100.0, GETDATE(), GETDATE()),
+(6, 58, 0, 0, NULL, NULL);
 
 -- Customer 11, Course 6, 100% (10/10 lessons completed)
 INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(11, 49, 1, 100.0, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())),
-(11, 50, 1, 100.0, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())),
-(11, 51, 1, 100.0, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())),
-(11, 52, 1, 100.0, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())),
-(11, 53, 1, 100.0, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())),
-(11, 54, 1, 100.0, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
-(11, 55, 1, 100.0, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
-(11, 56, 1, 100.0, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
-(11, 57, 1, 100.0, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
-(11, 58, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE()));
+(11, 49, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(11, 50, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(11, 51, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(11, 52, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(11, 53, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(11, 54, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(11, 55, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(11, 56, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(11, 57, 1, 100.0, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(11, 58, 1, 100.0, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE()));
 
--- CourseID 15 (10 lessons, LessonID 140-149)
--- Customer 7, Course 15, 30% (3/10 lessons completed)
+-- Customer 9, Course 9, 88.87% (8/9 lessons completed)
 INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(7, 140, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
-(7, 141, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
-(7, 142, 1, 100.0, DATEADD(day, -4, GETDATE()), GETDATE()),
-(7, 143, 0, 0.0, NULL, GETDATE()),
-(7, 144, 0, 0.0, NULL, GETDATE()),
-(7, 145, 0, 0.0, NULL, GETDATE()),
-(7, 146, 0, 0.0, NULL, GETDATE()),
-(7, 147, 0, 0.0, NULL, GETDATE()),
-(7, 148, 0, 0.0, NULL, GETDATE()),
-(7, 149, 0, 0.0, NULL, GETDATE());
-
--- Customer 10, Course 15, 75% (7.5/10 lessons, rounded to 8 lessons completed)
-INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
-VALUES
-(10, 140, 1, 100.0, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())),
-(10, 141, 1, 100.0, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())),
-(10, 142, 1, 100.0, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())),
-(10, 143, 1, 100.0, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())),
-(10, 144, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())),
-(10, 145, 1, 100.0, DATEADD(day, -10, GETDATE()), GETDATE()),
-(10, 146, 1, 100.0, DATEADD(day, -9, GETDATE()), GETDATE()),
-(10, 147, 1, 100.0, DATEADD(day, -8, GETDATE()), GETDATE()),
-(10, 148, 0, 0.0, NULL, GETDATE()),
-(10, 149, 0, 0.0, NULL, GETDATE());
+(9, 79, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(9, 80, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(9, 81, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(9, 82, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(9, 83, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(9, 84, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(9, 85, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(9, 86, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(9, 87, 0, 0.0, NULL, GETDATE());
 
 -- CourseID 11 (12 lessons, LessonID 98-109)
--- Customer 8, Course 11, 50% (6/12 lessons completed)
+-- Customer 8, Course 11, 50% (10/12 lessons completed)
 INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(8, 98, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())),
-(8, 99, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())),
-(8, 100, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())),
-(8, 101, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())),
-(8, 102, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())),
-(8, 103, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
-(8, 104, 0, 0.0, NULL, GETDATE()),
-(8, 105, 0, 0.0, NULL, GETDATE()),
-(8, 106, 0, 0.0, NULL, GETDATE()),
-(8, 107, 0, 0.0, NULL, GETDATE()),
+(8, 98, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(8, 99, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(8, 100, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(8, 101, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(8, 102, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(8, 103, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(8, 104, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(8, 105, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(8, 106, 1, 100.0, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(8, 107, 1, 100.0, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())),
 (8, 108, 0, 0.0, NULL, GETDATE()),
 (8, 109, 0, 0.0, NULL, GETDATE());
 
--- Customer 12, Course 16, 25% (2.5/10 lessons, rounded to 3 lessons completed)
+-- Customer 9, Course 12, 83.33% (8 + 1 item /10 lessons completed)
 INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
 VALUES
-(12, 150, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())),
-(12, 151, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())),
-(12, 152, 1, 100.0, DATEADD(day, -4, GETDATE()), GETDATE()),
-(12, 153, 0, 0.0, NULL, GETDATE()),
-(12, 154, 0, 0.0, NULL, GETDATE()),
-(12, 155, 0, 0.0, NULL, GETDATE()),
-(12, 156, 0, 0.0, NULL, GETDATE()),
-(12, 157, 0, 0.0, NULL, GETDATE()),
-(12, 158, 0, 0.0, NULL, GETDATE()),
-(12, 159, 0, 0.0, NULL, GETDATE());
+(9, 110, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(9, 111, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(9, 112, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(9, 113, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(9, 114, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(9, 115, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(9, 116, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(9, 117, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(9, 118, 0, 33.33, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(9, 119, 0, 0.0, NULL, NULL);
+
+-- CourseID 15 (10 lessons, LessonID 140-149)
+-- Customer 7, Course 15, 80% (8/10 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(7, 140, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(7, 141, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(7, 142, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(7, 143, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(7, 144, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(7, 145, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(7, 146, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(7, 147, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(7, 148, 0, 0.0, NULL, NULL),
+(7, 149, 0, 0.0, NULL, NULL);
+
+-- Customer 10, Course 15, 80% (8/10 lessons, rounded to 8 lessons completed)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(10, 140, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(10, 141, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(10, 142, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(10, 143, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(10, 144, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(10, 145, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(10, 146, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(10, 147, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(10, 148, 0, 0.0, NULL, NULL),
+(10, 149, 0, 0.0, NULL, NULL);
+
+-- Customer 12, Course 16, 83.33% (8 lessons + 1 items /10 lessons)
+INSERT INTO LessonProgress (CustomerID, LessonID, IsCompleted, CompletionPercentage, CompletionDate, LastAccessDate)
+VALUES
+(12, 150, 1, 100.0, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())),
+(12, 151, 1, 100.0, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())),
+(12, 152, 1, 100.0, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())),
+(12, 153, 1, 100.0, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())),
+(12, 154, 1, 100.0, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())),
+(12, 155, 1, 100.0, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())),
+(12, 156, 1, 100.0, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())),
+(12, 157, 1, 100.0, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())),
+(12, 158, 0, 33.33, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())),
+(12, 159, 0, 0.0, NULL, NULL);
 
 -- Insert into LessonItemProgress
--- Customer 4, Course 4, Lessons (10 lessons) 1-5 completed
+-- Customer 1, Course 1, Lessons (12 lessons) 1-11 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(4, 91, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 31
-(4, 92, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 31
-(4, 93, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 31
-(4, 94, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 32
-(4, 95, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 32
-(4, 96, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 32
-(4, 97, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 33
-(4, 98, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 33
-(4, 99, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 33
-(4, 100, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 34
-(4, 101, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 34
-(4, 102, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 34
-(4, 103, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 35
-(4, 104, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 35
-(4, 105, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 35
+(1, 1, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 1
+(1, 2, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 1
+(1, 3, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 1
+(1, 4, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 2
+(1, 5, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 2
+(1, 6, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 2
+(1, 7, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 3
+(1, 8, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 3
+(1, 9, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 3
+(1, 10, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 4
+(1, 11, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 4
+(1, 12, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 4
+(1, 13, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 5
+(1, 14, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 5
+(1, 15, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 5
+(1, 16, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 6
+(1, 17, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 6
+(1, 18, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 6
+(1, 19, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 7
+(1, 20, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 7
+(1, 21, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 7
+(1, 22, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 8
+(1, 23, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 8
+(1, 24, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 8
+(1, 25, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 9
+(1, 26, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 9
+(1, 27, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 9
+(1, 28, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 10
+(1, 29, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 10
+(1, 30, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 10
+(1, 31, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 11
+(1, 32, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 11
+(1, 33, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())); -- Quiz for Lesson 11
+
+-- Insert into LessonItemProgress
+-- Customer 2, Course 1, Lessons (12 lessons) 1-10 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(2, 1, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 1
+(2, 2, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 1
+(2, 3, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 1
+(2, 4, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 2
+(2, 5, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 2
+(2, 6, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 2
+(2, 7, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 3
+(2, 8, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 3
+(2, 9, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 3
+(2, 10, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 4
+(2, 11, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 4
+(2, 12, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 4
+(2, 13, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 5
+(2, 14, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 5
+(2, 15, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 5
+(2, 16, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 6
+(2, 17, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 6
+(2, 18, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 6
+(2, 19, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 7
+(2, 20, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 7
+(2, 21, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 7
+(2, 22, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 8
+(2, 23, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 8
+(2, 24, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 8
+(2, 25, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 9
+(2, 26, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 9
+(2, 27, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 9
+(2, 28, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 10
+(2, 29, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 10
+(2, 30, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())); -- Quiz for Lesson 10
+
+-- Insert into LessonItemProgress
+-- Customer 3, Course 1, Lessons (12 lessons) 1-12 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(3, 1, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 1
+(3, 2, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 1
+(3, 3, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 1
+(3, 4, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 2
+(3, 5, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 2
+(3, 6, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 2
+(3, 7, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 3
+(3, 8, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 3
+(3, 9, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 3
+(3, 10, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 4
+(3, 11, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 4
+(3, 12, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 4
+(3, 13, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 5
+(3, 14, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 5
+(3, 15, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 5
+(3, 16, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 6
+(3, 17, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 6
+(3, 18, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 6
+(3, 19, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 7
+(3, 20, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 7
+(3, 21, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 7
+(3, 22, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 8
+(3, 23, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 8
+(3, 24, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 8
+(3, 25, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 9
+(3, 26, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 9
+(3, 27, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 9
+(3, 28, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 10
+(3, 29, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 10
+(3, 30, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 10
+(3, 31, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 11
+(3, 32, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 11
+(3, 33, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 11
+(3, 34, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 12
+(3, 35, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 12
+(3, 36, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())); -- Quiz for Lesson 12
 
 -- Customer 5, Course 1, Lessons 1-9 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
 (5, 1, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 1
-(5, 2, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 1
-(5, 3, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 1
+(5, 2, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 1
+(5, 3, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 1
 (5, 4, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 2
 (5, 5, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 2
 (5, 6, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 2
@@ -2426,166 +2621,356 @@ VALUES
 (5, 26, 1, DATEADD(day, -7, GETDATE()), GETDATE()), -- Quiz for Lesson 9
 (5, 27, 1, DATEADD(day, -7, GETDATE()), GETDATE()); -- Material for Lesson 9
 
--- Customer 9, Course 9, Lessons (9 lesssons) 79-81 completed
+-- Insert into LessonItemProgress
+-- Customer 1, Course 2, Lessons (8 lessons) 1-7 and 2 items completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(9, 235, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 79
-(9, 236, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 79
-(9, 237, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 79
-(9, 238, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 80
-(9, 239, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 80
-(9, 240, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 80
-(9, 241, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 81
-(9, 242, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 81
-(9, 243, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())); -- Material for Lesson 81
+(1, 37, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 13
+(1, 38, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 13
+(1, 39, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 13
+(1, 40, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 14
+(1, 41, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 14
+(1, 42, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 14
+(1, 43, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 15
+(1, 44, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 15
+(1, 45, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 15
+(1, 46, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 16
+(1, 47, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 16
+(1, 48, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 16
+(1, 49, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 17
+(1, 50, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 17
+(1, 51, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 17
+(1, 52, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 18
+(1, 53, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 18
+(1, 54, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 18
+(1, 55, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 19
+(1, 56, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())); -- Material for Lesson 19
 
--- Customer 9, Course 12, Lessons (10 lesssons) 110-115 completed
+
+-- Insert into LessonItemProgress
+-- Customer 1, Course 3, Lessons (10 lessons) 1-10 and 1 item completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(9, 328, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 110
-(9, 329, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 110
-(9, 330, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 110
-(9, 331, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 111
-(9, 332, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 111
-(9, 333, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 111
-(9, 334, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 112
-(9, 335, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 112
-(9, 336, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 112
-(9, 337, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 113
-(9, 338, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 113
-(9, 339, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 113
-(9, 340, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 114
-(9, 341, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 114
-(9, 342, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())); -- Material for Lesson 114
+(1, 61, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 21
+(1, 62, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 21
+(1, 63, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 21
+(1, 64, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 22
+(1, 65, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 22
+(1, 66, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 22
+(1, 67, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 23
+(1, 68, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 23
+(1, 69, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 23
+(1, 70, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 24
+(1, 71, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 24
+(1, 72, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 24
+(1, 73, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 25
+(1, 74, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 25
+(1, 75, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 25
+(1, 76, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 26
+(1, 77, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 26
+(1, 78, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 26
+(1, 79, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 27
+(1, 80, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 27
+(1, 81, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 27
+(1, 82, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 28
+(1, 83, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 28
+(1, 84, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 28
+(1, 85, 1, GETDATE(), GETDATE()), -- Material for Lesson 29
+(1, 86, 1, GETDATE(), GETDATE()), -- Video for Lesson 29
+(1, 87, 1, GETDATE(), GETDATE()), -- Quiz for Lesson 29
+(1, 88, 1, GETDATE(), GETDATE()); -- Material for Lesson 30
+
+-- Insert into LessonItemProgress
+-- Customer 4, Course 4, Lessons (10 lessons) 1-5 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(4, 91, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 91
+(4, 92, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 91
+(4, 93, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 91
+(4, 94, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 92
+(4, 95, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 92
+(4, 96, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 92
+(4, 97, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 93
+(4, 98, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 93
+(4, 99, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 93
+(4, 100, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 94
+(4, 101, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 94
+(4, 102, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 94
+(4, 103, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 95
+(4, 104, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 95
+(4, 105, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 95
+
+-- Insert into LessonItemProgress
+-- Customer 3, Course 6, Lessons (10 lessons) 1-10 and 1 item completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(3, 145, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 49
+(3, 146, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 49
+(3, 147, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 49
+(3, 148, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 50
+(3, 149, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 50
+(3, 150, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 50
+(3, 151, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 51
+(3, 152, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 51
+(3, 153, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 51
+(3, 154, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 52
+(3, 155, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 52
+(3, 156, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 52
+(3, 157, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 53
+(3, 158, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 53
+(3, 159, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 53
+(3, 160, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 54
+(3, 161, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 54
+(3, 162, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 54
+(3, 163, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 55
+(3, 164, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 55
+(3, 165, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 55
+(3, 166, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 56
+(3, 167, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 56
+(3, 168, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 56
+(3, 169, 1, GETDATE(), GETDATE()), -- Material for Lesson 57
+(3, 170, 1, GETDATE(), GETDATE()), -- Video for Lesson 57
+(3, 171, 1, GETDATE(), GETDATE()), -- Quiz for Lesson 57
+(3, 172, 1, GETDATE(), GETDATE()); -- Material for Lesson 58
 
 -- Customer 6, Course 6, Lessons 49-53 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(6, 145, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 49
-(6, 146, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 49
-(6, 147, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 49
-(6, 148, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 50
-(6, 149, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 50
-(6, 150, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 50
-(6, 151, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 51
-(6, 152, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 51
-(6, 153, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 51
-(6, 154, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 52
-(6, 155, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 52
-(6, 156, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 52
-(6, 157, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 53
-(6, 158, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 53
-(6, 159, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 53
+(6, 145, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 49
+(6, 146, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 49
+(6, 147, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 49
+(6, 148, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 50
+(6, 149, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 50
+(6, 150, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 50
+(6, 151, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 51
+(6, 152, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 51
+(6, 153, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 51
+(6, 154, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 52
+(6, 155, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 52
+(6, 156, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 52
+(6, 157, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 53
+(6, 158, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 53
+(6, 159, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 53
+(6, 160, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 54
+(6, 161, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 54
+(6, 162, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 54
+(6, 163, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 55
+(6, 164, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 55
+(6, 165, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 55
+(6, 166, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 56
+(6, 167, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 56
+(6, 168, 1, DATEADD(day, -1, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 56
+(6, 169, 1, GETDATE(), GETDATE()), -- Video for Lesson 57
+(6, 170, 1, GETDATE(), GETDATE()), -- Quiz for Lesson 57
+(6, 171, 1, GETDATE(), GETDATE()); -- Material for Lesson 57
 
 -- Customer 11, Course 6, Lessons 49-58 completed, LessonItem 145-
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(11, 145, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 49
-(11, 146, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 49
-(11, 147, 1, DATEADD(day, -20, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 49
-(11, 148, 1, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 50
-(11, 149, 1, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 50
-(11, 150, 1, DATEADD(day, -19, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 50
-(11, 151, 1, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 51
-(11, 152, 1, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 51
-(11, 153, 1, DATEADD(day, -18, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 51
-(11, 154, 1, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 52
-(11, 155, 1, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 52
-(11, 156, 1, DATEADD(day, -17, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 52
-(11, 157, 1, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 53
-(11, 158, 1, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 53
-(11, 159, 1, DATEADD(day, -16, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 53
-(11, 160, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 54
-(11, 161, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 54
-(11, 162, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 54
-(11, 163, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 55
-(11, 164, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 55
-(11, 165, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 55
-(11, 166, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 56
-(11, 167, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 56
-(11, 168, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 56
-(11, 169, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 57
-(11, 170, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 57
-(11, 171, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 57
-(11, 172, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 58
-(11, 173, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 58
-(11, 174, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 58
+(11, 145, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 49
+(11, 146, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 49
+(11, 147, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 49
+(11, 148, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 50
+(11, 149, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 50
+(11, 150, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 50
+(11, 151, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 51
+(11, 152, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 51
+(11, 153, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 51
+(11, 154, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 52
+(11, 155, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 52
+(11, 156, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 52
+(11, 157, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 53
+(11, 158, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 53
+(11, 159, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 53
+(11, 160, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 54
+(11, 161, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 54
+(11, 162, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 54
+(11, 163, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 55
+(11, 164, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 55
+(11, 165, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 55
+(11, 166, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 56
+(11, 167, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 56
+(11, 168, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 56
+(11, 169, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 57
+(11, 170, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 57
+(11, 171, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 57
+(11, 172, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 58
+(11, 173, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 58
+(11, 174, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())); -- Material for Lesson 58
 
--- CourseID 15, LessonID 140-149, LessonItems 418-426
--- Customer 7, Course 15, Lessons 140-142 completed
+-- Customer 9, Course 9, Lessons (9 lesssons) 8 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(7, 418, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 140
-(7, 419, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 140
-(7, 420, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 140
-(7, 421, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 141
-(7, 422, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 141
-(7, 423, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 141
-(7, 424, 1, DATEADD(day, -4, GETDATE()), GETDATE()), -- Video for Lesson 142
-(7, 425, 1, DATEADD(day, -4, GETDATE()), GETDATE()), -- Quiz for Lesson 142
-(7, 426, 1, DATEADD(day, -4, GETDATE()), GETDATE()); -- Material for Lesson 142
+(9, 235, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 79
+(9, 236, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 79
+(9, 237, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 79
+(9, 238, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 80
+(9, 239, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 80
+(9, 240, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 80
+(9, 241, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 81
+(9, 242, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 81
+(9, 243, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 81
+(9, 244, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 79
+(9, 245, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 79
+(9, 246, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 79
+(9, 247, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 79
+(9, 248, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 79
+(9, 249, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 79
+(9, 250, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 79
+(9, 251, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 79
+(9, 252, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 79
+(9, 253, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 79
+(9, 254, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 79
+(9, 255, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 79
+(9, 256, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 79
+(9, 257, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 79
+(9, 258, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())); -- Material for Lesson 79
+
+-- Customer 9, Course 12, Lessons (10 lesssons) 110-115 completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(9, 328, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 110
+(9, 329, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 110
+(9, 330, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 110
+(9, 331, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 111
+(9, 332, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 111
+(9, 333, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 111
+(9, 334, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 112
+(9, 335, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 112
+(9, 336, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 112
+(9, 337, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 113
+(9, 338, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 113
+(9, 339, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 113
+(9, 340, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 114
+(9, 341, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 114
+(9, 342, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 114
+(9, 343, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 115
+(9, 344, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 115
+(9, 345, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 115
+(9, 346, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 116
+(9, 347, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 116
+(9, 348, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 116
+(9, 349, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 117
+(9, 350, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 117
+(9, 351, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 117
+(9, 352, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())); -- Video for Lesson 118
+
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(8, 292, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 98
+(8, 293, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 98
+(8, 294, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 98
+(8, 295, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 99
+(8, 296, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 99
+(8, 297, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 99
+(8, 298, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 100
+(8, 299, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 100
+(8, 300, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 100
+(8, 301, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 101
+(8, 302, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 101
+(8, 303, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 101
+(8, 304, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 102
+(8, 305, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 102
+(8, 306, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 102
+(8, 307, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 103
+(8, 308, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 103
+(8, 309, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 103
+(8, 310, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 104
+(8, 311, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 104
+(8, 312, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 104
+(8, 313, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 105
+(8, 314, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 105
+(8, 315, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 105
+(8, 316, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 106
+(8, 317, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 106
+(8, 318, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 106
+(8, 319, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 107
+(8, 320, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 107
+(8, 321, 1, DATEADD(day, -2, GETDATE()), DATEADD(day, -2, GETDATE())); -- Quiz for Lesson 107
+
+-- CourseID 15, LessonID 140-149, LessonItems 418-426
+-- Customer 7, Course 15, 8 lessons completed
+INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
+VALUES
+(7, 418, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 140
+(7, 419, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 140
+(7, 420, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 140
+(7, 421, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 141
+(7, 422, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 141
+(7, 423, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 141
+(7, 424, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 142
+(7, 425, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 142
+(7, 426, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 142
+(7, 427, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 143
+(7, 428, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 143
+(7, 429, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 143
+(7, 430, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 144
+(7, 431, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 144
+(7, 432, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 144
+(7, 433, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 145
+(7, 434, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 145
+(7, 435, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 145
+(7, 436, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 146
+(7, 437, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 146
+(7, 438, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 146
+(7, 439, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 147
+(7, 440, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 147
+(7, 441, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())); -- Quiz for Lesson 147
 
 -- Customer 10, Course 15, Lessons 140-147 completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(10, 418, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 140
-(10, 419, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 140
-(10, 420, 1, DATEADD(day, -15, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 140
-(10, 421, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 141
-(10, 422, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 141
-(10, 423, 1, DATEADD(day, -14, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 141
-(10, 424, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 142
-(10, 425, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 142
-(10, 426, 1, DATEADD(day, -13, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 142
-(10, 427, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 143
-(10, 428, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 143
-(10, 429, 1, DATEADD(day, -12, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 143
-(10, 430, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 144
-(10, 431, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 144
-(10, 432, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 144
-(10, 433, 1, DATEADD(day, -10, GETDATE()), GETDATE()), -- Video for Lesson 145
-(10, 434, 1, DATEADD(day, -10, GETDATE()), GETDATE()), -- Quiz for Lesson 145
-(10, 435, 1, DATEADD(day, -10, GETDATE()), GETDATE()), -- Material for Lesson 145
-(10, 436, 1, DATEADD(day, -9, GETDATE()), GETDATE()), -- Video for Lesson 146
-(10, 437, 1, DATEADD(day, -9, GETDATE()), GETDATE()), -- Quiz for Lesson 146
-(10, 438, 1, DATEADD(day, -9, GETDATE()), GETDATE()), -- Material for Lesson 146
-(10, 439, 1, DATEADD(day, -8, GETDATE()), GETDATE()), -- Video for Lesson 147
-(10, 440, 1, DATEADD(day, -8, GETDATE()), GETDATE()), -- Quiz for Lesson 147
-(10, 441, 1, DATEADD(day, -8, GETDATE()), GETDATE()); -- Material for Lesson 147
+(10, 418, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 140
+(10, 419, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 140
+(10, 420, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 140
+(10, 421, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 141
+(10, 422, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 141
+(10, 423, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 141
+(10, 424, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 142
+(10, 425, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 142
+(10, 426, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 142
+(10, 427, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 143
+(10, 428, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 143
+(10, 429, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 143
+(10, 430, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 144
+(10, 431, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 144
+(10, 432, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 144
+(10, 433, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 145
+(10, 434, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 145
+(10, 435, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 145
+(10, 436, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 146
+(10, 437, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 146
+(10, 438, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 146
+(10, 439, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 147
+(10, 440, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 147
+(10, 441, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())); -- Quiz for Lesson 147
 
--- CourseID 11, LessonID 98-109, LessonItems 292-327
--- Customer 8, Course 11, Lessons 292-309 completed
+-- Customer 12, Course 16, Lessons 1-8 + 1 item completed
 INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
 VALUES
-(8, 292, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 98
-(8, 293, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 98
-(8, 294, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 98
-(8, 295, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 99
-(8, 296, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 99
-(8, 297, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 99
-(8, 298, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Video for Lesson 100
-(8, 299, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Quiz for Lesson 100
-(8, 300, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -3, GETDATE())), -- Material for Lesson 100
-(8, 301, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 101
-(8, 302, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 101
-(8, 303, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 101
-(8, 304, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 102
-(8, 305, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 102
-(8, 306, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 102
-(8, 307, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 102
-(8, 308, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 102
-(8, 309, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())); -- Material for Lesson 102
-
--- Customer 12, Course 16, Lessons 150-152 completed
-INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, CompletionDate, LastAccessDate)
-VALUES
-(12, 448, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Video for Lesson 150
-(12, 449, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Quiz for Lesson 150
-(12, 450, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -2, GETDATE())), -- Material for Lesson 150
-(12, 451, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Video for Lesson 151
-(12, 452, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Quiz for Lesson 151
-(12, 453, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -1, GETDATE())), -- Material for Lesson 151
-(12, 454, 1, DATEADD(day, -4, GETDATE()), GETDATE()), -- Video for Lesson 152
-(12, 455, 1, DATEADD(day, -4, GETDATE()), GETDATE()), -- Quiz for Lesson 152
-(12, 456, 1, DATEADD(day, -4, GETDATE()), GETDATE()); -- Material for Lesson 152
+(12, 448, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Video for Lesson 150
+(12, 449, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Material for Lesson 150
+(12, 450, 1, DATEADD(day, -11, GETDATE()), DATEADD(day, -11, GETDATE())), -- Quiz for Lesson 150
+(12, 451, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Video for Lesson 151
+(12, 452, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Material for Lesson 151
+(12, 453, 1, DATEADD(day, -10, GETDATE()), DATEADD(day, -10, GETDATE())), -- Quiz for Lesson 151
+(12, 454, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Video for Lesson 152
+(12, 455, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Material for Lesson 152
+(12, 456, 1, DATEADD(day, -9, GETDATE()), DATEADD(day, -9, GETDATE())), -- Quiz for Lesson 152
+(12, 457, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Video for Lesson 153
+(12, 458, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Material for Lesson 153
+(12, 459, 1, DATEADD(day, -8, GETDATE()), DATEADD(day, -8, GETDATE())), -- Quiz for Lesson 153
+(12, 460, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Video for Lesson 154
+(12, 461, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Material for Lesson 154
+(12, 462, 1, DATEADD(day, -7, GETDATE()), DATEADD(day, -7, GETDATE())), -- Quiz for Lesson 154
+(12, 463, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Video for Lesson 155
+(12, 464, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Material for Lesson 155
+(12, 465, 1, DATEADD(day, -6, GETDATE()), DATEADD(day, -6, GETDATE())), -- Quiz for Lesson 155
+(12, 466, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Video for Lesson 156
+(12, 467, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Material for Lesson 156
+(12, 468, 1, DATEADD(day, -5, GETDATE()), DATEADD(day, -5, GETDATE())), -- Quiz for Lesson 156
+(12, 469, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Video for Lesson 157
+(12, 470, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Material for Lesson 157
+(12, 471, 1, DATEADD(day, -4, GETDATE()), DATEADD(day, -4, GETDATE())), -- Quiz for Lesson 157
+(12, 472, 1, DATEADD(day, -3, GETDATE()), DATEADD(day, -3, GETDATE())); -- Video for Lesson 158
 

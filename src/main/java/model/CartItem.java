@@ -18,12 +18,14 @@ public class CartItem {
     private int courseID;
     private double price;
     private Timestamp createdAt;
+    private boolean selected;
 
     // Additional fields for relationships
     private Course course;
     private Customer customer;
 
     public CartItem() {
+        this.selected = true;
     }
 
     public CartItem(int customerID, int courseID, double price) {
@@ -31,11 +33,13 @@ public class CartItem {
         this.courseID = courseID;
         this.price = price;
         this.createdAt = new Timestamp(System.currentTimeMillis());
+        this.selected = true;
     }
 
     public CartItem(Course course, double price) {
         this.course = course;
         this.price = price;
+        this.selected = true;
     }
 
     public CartItem(int cartItemId, int customerID, int courseID, double price, Timestamp createdAt) {
@@ -44,6 +48,7 @@ public class CartItem {
         this.courseID = courseID;
         this.price = price;
         this.createdAt = createdAt;
+        this.selected = true;
     }
 
     public int getCartItemId() {
@@ -86,6 +91,14 @@ public class CartItem {
         this.createdAt = createdAt;
     }
 
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
     public Course getCourse() {
         return course;
     }
@@ -116,6 +129,7 @@ public class CartItem {
                 + ", courseID=" + courseID
                 + ", price=" + price
                 + ", createdAt=" + createdAt
+                + ", selected=" + selected
                 + '}';
     }
 }

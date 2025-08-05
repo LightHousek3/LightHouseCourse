@@ -494,7 +494,7 @@ public class DiscussionDAO extends DBContext {
         try {
             conn = getConnection();
 
-            String sql = "SELECT d.*, c.Name as CourseName, u.FullName as UserName \n"
+            String sql = "SELECT d.*, c.Name as CourseName, u.FullName as AuthorName, u.Avatar as AuthorAvatar\n"
                     + "                    FROM Discussions d  \n"
                     + "                    JOIN Courses c ON d.CourseID = c.CourseID \n"
                     + "                    JOIN Customers u ON d.AuthorID = u.CustomerID \n"
@@ -509,7 +509,8 @@ public class DiscussionDAO extends DBContext {
             while (rs.next()) {
                 Discussion discussion = mapDiscussion(rs);
                 discussion.setCourseName(rs.getString("CourseName"));
-                discussion.setUserName(rs.getString("UserName"));
+                discussion.setAuthorName(rs.getString("AuthorName"));
+                discussion.setAuthorAvatar(rs.getString("AuthorAvatar"));
                 discussions.add(discussion);
             }
         } catch (SQLException e) {

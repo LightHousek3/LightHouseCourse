@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -418,6 +419,7 @@ public class CustomerDAO extends DBContext {
         customer.setAddress(rs.getString("Address"));
         customer.setAvatar(rs.getString("Avatar"));
         customer.setToken(rs.getString("Token"));
+        customer.setTokenExpires(rs.getTimestamp("TokenExpires"));
 
         // Handle potential null values for auth provider columns
         String authProvider = rs.getString("AuthProvider");
@@ -846,7 +848,7 @@ public class CustomerDAO extends DBContext {
      * @param expiryTime The expiration time for the token
      * @return true if update successful, false otherwise
      */
-    public boolean updatePasswordResetToken(String email, String token, java.sql.Timestamp expiryTime) {
+    public boolean updatePasswordResetToken(String email, String token, Timestamp expiryTime) {
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -997,7 +999,7 @@ public class CustomerDAO extends DBContext {
 
             rs = ps.executeQuery();
             if (rs.next()) {
-                java.sql.Timestamp lastRequest = rs.getTimestamp("LastTokenRequest");
+                Timestamp lastRequest = rs.getTimestamp("LastTokenRequest");
 
                 if (lastRequest == null) {
                     return 0;

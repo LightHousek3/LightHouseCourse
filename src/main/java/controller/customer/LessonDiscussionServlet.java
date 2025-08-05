@@ -18,23 +18,29 @@ import java.io.PrintWriter;
 import java.util.List;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import dao.InstructorDAO;
+import dao.SuperUserDAO;
 import model.Customer;
+import model.Instructor;
+import model.SuperUser;
 
 @WebServlet(urlPatterns = {
-        "/lesson/discussions/*", // GET: Get discussions for a lesson
-        "/lesson/discussion/create", // POST: Create a new discussion
-        "/lesson/discussion/reply", // POST: Add a reply to a discussion
-        "/lesson/discussion/update", // POST: Update a discussion
-        "/lesson/discussion/delete", // POST: Delete a discussion
-        "/lesson/discussion/reply/update", // POST: Update a reply
-        "/lesson/discussion/reply/delete" // POST: Delete a reply
+    "/lesson/discussions/*", // GET: Get discussions for a lesson
+    "/lesson/discussion/create", // POST: Create a new discussion
+    "/lesson/discussion/reply", // POST: Add a reply to a discussion
+    "/lesson/discussion/update", // POST: Update a discussion
+    "/lesson/discussion/delete", // POST: Delete a discussion
+    "/lesson/discussion/reply/update", // POST: Update a reply
+    "/lesson/discussion/reply/delete" // POST: Delete a reply
 })
 public class LessonDiscussionServlet extends HttpServlet {
 
     private DiscussionDAO discussionDAO;
     private DiscussionReplyDAO replyDAO;
     private LessonDAO lessonDAO;
-    private CustomerDAO CustomerDAO;
+    private CustomerDAO customerDAO;
+    private InstructorDAO instructorDAO;
+    private SuperUserDAO superUserDAO;
 
     @Override
     public void init() throws ServletException {
@@ -42,7 +48,9 @@ public class LessonDiscussionServlet extends HttpServlet {
         discussionDAO = new DiscussionDAO();
         replyDAO = new DiscussionReplyDAO();
         lessonDAO = new LessonDAO();
-        CustomerDAO = new CustomerDAO();
+        customerDAO = new CustomerDAO();
+        instructorDAO = new InstructorDAO();
+        superUserDAO = new SuperUserDAO();
     }
 
     @Override
@@ -81,7 +89,7 @@ public class LessonDiscussionServlet extends HttpServlet {
         String servletPath = request.getServletPath();
         if (null == servletPath) {
             sendJsonError(response, HttpServletResponse.SC_NOT_FOUND, "Unknown endpoint.");
-        } else
+        } else {
             switch (servletPath) {
                 case "/lesson/discussion/create":
                     handleCreateDiscussion(request, response, currentUser);
@@ -105,6 +113,7 @@ public class LessonDiscussionServlet extends HttpServlet {
                     sendJsonError(response, HttpServletResponse.SC_NOT_FOUND, "Unknown endpoint.");
                     break;
             }
+        }
     }
 
     /**
@@ -129,10 +138,20 @@ public class LessonDiscussionServlet extends HttpServlet {
 
             // Add user information to each reply
             for (DiscussionReply reply : replies) {
-                Customer replyUser = CustomerDAO.getCustomerById(reply.getAuthorID());
-                if (replyUser != null) {
-                    reply.setUserName(replyUser.getFullName());
+                if (reply.getAuthorType().equals("customer")) {
+                    Customer customer = customerDAO.getCustomerById(reply.getAuthorID());
+                    if (customer != null) {
+                        reply.setAuthorName(customer.getFullName());
+                        reply.setAuthorAvatar(customer.getAvatar());
+                    }
+                } else {
+                    Instructor instructor = instructorDAO.getFullNameAndAvatarByInsId(reply.getAuthorID());
+                    if (instructor != null) {
+                        reply.setAuthorName(instructor.getFullName());
+                        reply.setAuthorAvatar(instructor.getAvatar());
+                    }
                 }
+
             }
 
             discussion.setReplies(replies);
@@ -153,9 +172,6 @@ public class LessonDiscussionServlet extends HttpServlet {
             int lessonId = Integer.parseInt(request.getParameter("lessonId"));
             int courseId = Integer.parseInt(request.getParameter("courseId"));
             String content = request.getParameter("content");
-            System.out.println(" lessonID" + lessonId);
-            System.out.println(" courseId" + courseId);
-            System.out.println(" content" + content);
 
             // Basic validation
             if (content == null || content.trim().isEmpty()) {
@@ -170,7 +186,7 @@ public class LessonDiscussionServlet extends HttpServlet {
             if (discussionId > 0) {
                 // Successfully created
                 discussion = discussionDAO.getDiscussionById(discussionId);
-                discussion.setUserName(currentUser.getFullName());
+                discussion.setAuthorName(currentUser.getFullName());
 
                 JsonObject jsonResponse = new JsonObject();
                 jsonResponse.addProperty("success", true);
@@ -219,7 +235,7 @@ public class LessonDiscussionServlet extends HttpServlet {
             if (success) {
                 // Get the complete reply with ID
                 reply = replyDAO.getReplyById(reply.getReplyID());
-                reply.setUserName(currentUser.getFullName());
+                reply.setAuthorName(currentUser.getFullName());
 
                 JsonObject jsonResponse = new JsonObject();
                 jsonResponse.addProperty("success", true);
@@ -330,7 +346,7 @@ public class LessonDiscussionServlet extends HttpServlet {
             if (success) {
                 // Get the updated reply
                 DiscussionReply reply = replyDAO.getReplyById(replyId);
-                reply.setUserName(currentUser.getFullName());
+                reply.setAuthorName(currentUser.getFullName());
 
                 JsonObject jsonResponse = new JsonObject();
                 jsonResponse.addProperty("success", true);
@@ -379,8 +395,8 @@ public class LessonDiscussionServlet extends HttpServlet {
 
     /**
      * Create a JSON object for a discussion
-     * 
-     * @param discussion  The discussion
+     *
+     * @param discussion The discussion
      * @param currentUser The current user
      * @return A JSON object
      */
@@ -395,13 +411,14 @@ public class LessonDiscussionServlet extends HttpServlet {
         json.addProperty("createdAt", discussion.getCreatedAt() != null ? discussion.getCreatedAt().toString() : null);
         json.addProperty("updatedAt", discussion.getUpdatedAt() != null ? discussion.getUpdatedAt().toString() : null);
         json.addProperty("isResolved", discussion.isResolved());
-        json.addProperty("userName", discussion.getAuthorName() != null ? discussion.getAuthorName() : "Unknown");
+        json.addProperty("authorName", discussion.getAuthorName() != null ? discussion.getAuthorName() : "Unknown");
+        json.addProperty("authorAvatar", discussion.getAuthorAvatar()!= null ? discussion.getAuthorAvatar() : "/assets/imgs/avatars/default-user.png");
         json.addProperty("replyCount", discussion.getReplyCount());
 
         // Add isAuthor flag to indicate if the current user is the author
-        boolean isAuthor = currentUser != null &&
-                discussion.getAuthorID() == currentUser.getCustomerID() &&
-                "customer".equals(discussion.getAuthorType());
+        boolean isAuthor = currentUser != null
+                && discussion.getAuthorID() == currentUser.getCustomerID()
+                && "customer".equals(discussion.getAuthorType());
         json.addProperty("isAuthor", isAuthor);
 
         // Add replies if available
@@ -418,7 +435,7 @@ public class LessonDiscussionServlet extends HttpServlet {
 
     /**
      * Create a JSON array for a list of discussions
-     * 
+     *
      * @param discussions The list of discussions
      * @param currentUser The current user
      * @return A JSON object with the discussions array
@@ -438,7 +455,7 @@ public class LessonDiscussionServlet extends HttpServlet {
 
     /**
      * Create a JSON object for a reply
-     * 
+     *
      * @param reply The reply
      * @return A JSON object
      */
@@ -448,8 +465,8 @@ public class LessonDiscussionServlet extends HttpServlet {
 
     /**
      * Create a JSON object for a reply
-     * 
-     * @param reply       The reply
+     *
+     * @param reply The reply
      * @param currentUser The current user
      * @return A JSON object
      */
@@ -462,13 +479,14 @@ public class LessonDiscussionServlet extends HttpServlet {
         json.addProperty("content", reply.getContent());
         json.addProperty("createdAt", reply.getCreatedAt() != null ? reply.getCreatedAt().toString() : null);
         json.addProperty("updatedAt", reply.getUpdatedAt() != null ? reply.getUpdatedAt().toString() : null);
-        json.addProperty("userName", reply.getAuthorName() != null ? reply.getAuthorName() : "Unknown");
+        json.addProperty("authorName", reply.getAuthorName() != null ? reply.getAuthorName() : "Unknown");
+        json.addProperty("authorAvatar", reply.getAuthorAvatar()!= null ? reply.getAuthorAvatar() : "/assets/imgs/avatars/default-user.png");
         json.addProperty("isInstructorReply", "instructor".equals(reply.getAuthorType()));
 
         // Add isAuthor flag to indicate if the current user is the author
-        boolean isAuthor = currentUser != null &&
-                reply.getAuthorID() == currentUser.getCustomerID() &&
-                "customer".equals(reply.getAuthorType());
+        boolean isAuthor = currentUser != null
+                && reply.getAuthorID() == currentUser.getCustomerID()
+                && "customer".equals(reply.getAuthorType());
         json.addProperty("isAuthor", isAuthor);
 
         return json;
@@ -476,10 +494,10 @@ public class LessonDiscussionServlet extends HttpServlet {
 
     /**
      * Send a JSON error response
-     * 
+     *
      * @param response The HTTP response
-     * @param status   The HTTP status code
-     * @param message  The error message
+     * @param status The HTTP status code
+     * @param message The error message
      * @throws IOException If an I/O error occurs
      */
     private void sendJsonError(HttpServletResponse response, int status, String message) throws IOException {
@@ -498,15 +516,14 @@ public class LessonDiscussionServlet extends HttpServlet {
 
     /**
      * Send a JSON response
-     * 
+     *
      * @param response The HTTP response
-     * @param json     The JSON object to send
+     * @param json The JSON object to send
      * @throws IOException If an I/O error occurs
      */
     private void sendJsonResponse(HttpServletResponse response, JsonObject json) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-
         PrintWriter out = response.getWriter();
         out.print(json.toString());
         out.flush();
@@ -514,7 +531,7 @@ public class LessonDiscussionServlet extends HttpServlet {
 
     /**
      * Get the customer from the session
-     * 
+     *
      * @param request The HTTP request
      * @return The customer, or null if not logged in
      */
@@ -528,8 +545,8 @@ public class LessonDiscussionServlet extends HttpServlet {
 
     /**
      * Redirect to the login page
-     * 
-     * @param request  The HTTP request
+     *
+     * @param request The HTTP request
      * @param response The HTTP response
      * @throws IOException If an I/O error occurs
      */

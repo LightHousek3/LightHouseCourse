@@ -10,6 +10,7 @@ import java.util.List;
 import dao.CourseDAO;
 import dao.CategoryDAO;
 import dao.CourseProgressDAO;
+import dao.InstructorDAO;
 import dao.OrderDAO;
 import dao.RefundRequestDAO;
 import dao.RatingDAO;
@@ -19,17 +20,17 @@ import java.util.ArrayList;
 import model.Course;
 import model.Category;
 import util.Validator;
-import java.util.Collections;
 import model.Rating;
-import java.util.Comparator;
 import model.CourseProgress;
 import model.Customer;
+import model.Instructor;
 import model.OrderDetail;
 
 /**
  * Course controller for showing course details and my courses.
  */
-@WebServlet(name = "CustomerCourseServlet", urlPatterns = { "/courses", "/course/*", "/my-courses" })
+@WebServlet(name = "CustomerCourseServlet", urlPatterns = { "/courses", "/course/*", "/my-courses",
+        "/course/instructor-info" })
 public class CustomerCourseServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
@@ -38,6 +39,7 @@ public class CustomerCourseServlet extends HttpServlet {
     private RefundRequestDAO refundRequestDAO;
     private RatingDAO ratingDAO;
     private CourseProgressDAO progressDAO;
+    private InstructorDAO instructorDAO;
 
     @Override
     public void init() throws ServletException {
@@ -48,6 +50,7 @@ public class CustomerCourseServlet extends HttpServlet {
         refundRequestDAO = new RefundRequestDAO();
         ratingDAO = new RatingDAO();
         progressDAO = new CourseProgressDAO();
+        instructorDAO = new dao.InstructorDAO();
     }
 
     /**
@@ -86,6 +89,10 @@ public class CustomerCourseServlet extends HttpServlet {
                 break;
             case "/my-courses":
                 showPurchasedCourses(request, response);
+                break;
+            case "/course/instructor-info":
+                showInstructorInfo(request, response);
+                break;
         }
     }
 
@@ -243,6 +250,64 @@ public class CustomerCourseServlet extends HttpServlet {
             // Log the exception
             getServletContext().log("Error in CustomerCourseServlet", e);
         }
+    }
+
+    private void showInstructorInfo(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String instructorIdParam = request.getParameter("instructorId");
+        if (!Validator.isValidNumber(instructorIdParam)) {
+            response.sendRedirect(request.getContextPath() + "/courses");
+            return;
+        }
+
+        int instructorId = Integer.parseInt(instructorIdParam);
+        Instructor instructor = instructorDAO.getInstructorById(instructorId);
+
+        if (instructor == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Instructor not found.");
+            return;
+        }
+        
+        // Get instructor's courses
+        List<Course> courses = courseDAO.getPublishedCoursesByInstructorId(instructorId);
+        
+        // Calculate statistics
+        int totalCourses = courses.size();
+        double totalRating = 0;
+        int ratingCount = 0;
+
+        for (Course course : courses) {
+            double avgRating = ratingDAO.getAverageRatingForCourse(course.getCourseID());
+            int courseRatingCount = ratingDAO.getRatingCountForCourse(course.getCourseID());
+
+            if (courseRatingCount > 0) {
+                totalRating += (avgRating * courseRatingCount);
+                ratingCount += courseRatingCount;
+            }
+
+            // Set course rating data
+            course.setAverageRating(avgRating);
+            course.setRatingCount(courseRatingCount);
+        }
+
+        double averageRating = ratingCount > 0 ? totalRating / ratingCount : 0;
+        
+        int totalStudents = orderDAO.getTotalStudentsByInstructorId(instructorId);
+
+        instructor.setTotalStudents(totalStudents);
+
+        // Set attributes for the JSP
+        request.setAttribute("selectedUser", instructor);
+        request.setAttribute("averageRating", averageRating);
+        request.setAttribute("ratingCount", ratingCount);
+        request.setAttribute("totalStudents", totalStudents);
+        request.setAttribute("courses", courses);
+        request.setAttribute("totalCourses", totalCourses);
+        request.setAttribute("ratingCount", ratingCount);
+
+        request.getRequestDispatcher("/WEB-INF/views/customer/manage-courses/view-instructor-information.jsp")
+                .forward(request, response);
     }
 
     /**

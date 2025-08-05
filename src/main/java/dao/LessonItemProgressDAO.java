@@ -431,6 +431,57 @@ public class LessonItemProgressDAO extends DBContext {
 
         return completed;
     }
+    
+    /**
+     * Update access time for a lesson item
+     *
+     * @param customerId   The customer ID
+     * @param lessonItemId The lesson item ID
+     * @return true if successful, false otherwise
+     */
+    public boolean updateLessonItemAccess(int customerId, int lessonItemId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean success = false;
+
+        try {
+            conn = getConnection();
+
+            // First check if entry exists
+            String checkSql = "SELECT * FROM LessonItemProgress WHERE CustomerID = ? AND LessonItemID = ?";
+            ps = conn.prepareStatement(checkSql);
+            ps.setInt(1, customerId);
+            ps.setInt(2, lessonItemId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                // Update existing entry
+                ps.close();
+                String updateSql = "UPDATE LessonItemProgress SET LastAccessDate = ? WHERE CustomerID = ? AND LessonItemID = ?";
+                ps = conn.prepareStatement(updateSql);
+                ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+                ps.setInt(2, customerId);
+                ps.setInt(3, lessonItemId);
+            } else {
+                // Insert new entry
+                ps.close();
+                String insertSql = "INSERT INTO LessonItemProgress (CustomerID, LessonItemID, IsCompleted, LastAccessDate) VALUES (?, ?, 0, ?)";
+                ps = conn.prepareStatement(insertSql);
+                ps.setInt(1, customerId);
+                ps.setInt(2, lessonItemId);
+                ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+            }
+
+            int affectedRows = ps.executeUpdate();
+            success = (affectedRows > 0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(null, ps, conn);
+        }
+
+        return success;
+    }
 
     /**
      * Mark a lesson item as complete by a user.

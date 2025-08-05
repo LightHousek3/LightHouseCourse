@@ -95,6 +95,39 @@ public class CourseDAO extends DBContext {
 
         return course;
     }
+    
+    /**
+     * Get a course by ID and status.
+     *
+     * @param courseId The course ID
+     * @return The course with approved status, or null if not found
+     */
+    public Course getCourseByIdWithApprovalStatus(int courseId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Course course = null;
+        String sql = "SELECT c.* FROM Courses c WHERE c.CourseID = ? and c.ApprovalStatus = 'approved'";
+
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, courseId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                course = mapCourse(rs);
+                
+                 // Get course instructors
+                List<Instructor> instructors = getInstructorsForCourse(courseId);
+                course.setInstructors(instructors);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getCourseByIdWithApprovalStatus: " + e.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return course;
+    }
 
     /**
      * Get categories for a course
@@ -143,7 +176,7 @@ public class CourseDAO extends DBContext {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<Instructor> instructors = new ArrayList<>();
-        String sql = "SELECT i.*, su.FullName, su.Email FROM Instructors i "
+        String sql = "SELECT i.*, su.FullName, su.Email, su.Avatar FROM Instructors i "
                 + "JOIN CourseInstructors ci ON i.InstructorID = ci.InstructorID "
                 + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
                 + "WHERE ci.CourseID = ?";
@@ -166,9 +199,10 @@ public class CourseDAO extends DBContext {
                     instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
                 }
 
-                // Set name and email directly from SuperUser data
-                instructor.setName(rs.getString("FullName"));
+                // Set name, email and avatar directly from SuperUser data
+                instructor.setFullName(rs.getString("FullName"));
                 instructor.setEmail(rs.getString("Email"));
+                instructor.setAvatar(rs.getString("Avatar"));
 
                 instructors.add(instructor);
             }
@@ -255,10 +289,10 @@ public class CourseDAO extends DBContext {
             String sql;
             // Use a simpler query that works on all SQL Server versions
             if (limit > 0) {
-                sql = "SELECT TOP " + limit + " * FROM Courses ORDER BY " + orderClause + " " + direction;
+                sql = "SELECT TOP " + limit + " * FROM Courses WHERE ApprovalStatus = 'approved' ORDER BY " + orderClause + " " + direction;
                 ps = conn.prepareStatement(sql);
             } else {
-                sql = "SELECT * FROM Courses ORDER BY " + orderClause + " " + direction;
+                sql = "SELECT * FROM Courses WHERE ApprovalStatus = 'approved' ORDER BY " + orderClause + " " + direction;
                 ps = conn.prepareStatement(sql);
             }
 
@@ -1109,6 +1143,43 @@ public class CourseDAO extends DBContext {
 
         return courses;
     }
+    
+    /**
+     * Get published courses by instructor ID.
+     *
+     * @param instructorId The instructor ID
+     * @return List of published courses by the instructor
+     */
+    public List<Course> getPublishedCoursesByInstructorId(int instructorId) {
+        List<Course> courses = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT c.* FROM Courses c " +
+                    "JOIN CourseInstructors ci ON c.CourseID = ci.CourseID " +
+                    "WHERE ci.InstructorID = ? " +
+                    "AND c.ApprovalStatus = 'APPROVED' " +
+                    "ORDER BY c.SubmissionDate DESC";
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Course course = mapCourse(rs);
+                courses.add(course);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return courses;
+    }
 
     /**
      * Counts the number of enrollments for a course
@@ -1836,13 +1907,13 @@ public class CourseDAO extends DBContext {
                 // Search by name and category
                 sql = "SELECT c.* FROM Courses c "
                         + "INNER JOIN CourseCategory cc ON c.CourseID = cc.CourseID "
-                        + "WHERE c.Name LIKE ? AND cc.CategoryID = ?";
+                        + "WHERE c.Name LIKE ? AND cc.CategoryID = ? AND c.ApprovalStatus = 'approved'";
                 ps = conn.prepareStatement(sql);
                 ps.setString(1, "%" + keyword + "%");
                 ps.setInt(2, categoryId);
             } else {
                 // Search by name only
-                sql = "SELECT * FROM Courses WHERE Name LIKE ?";
+                sql = "SELECT * FROM Courses WHERE Name LIKE ? AND ApprovalStatus = 'approved'";
                 ps = conn.prepareStatement(sql);
                 ps.setString(1, "%" + keyword + "%");
             }
@@ -1883,7 +1954,7 @@ public class CourseDAO extends DBContext {
             conn = getConnection();
             String sql = "SELECT c.* FROM Courses c "
                     + "INNER JOIN CourseCategory cc ON c.CourseID = cc.CourseID "
-                    + "WHERE cc.CategoryID = ?";
+                    + "WHERE cc.CategoryID = ? AND c.ApprovalStatus = 'approved'";
 
             ps = conn.prepareStatement(sql);
             ps.setInt(1, categoryId);

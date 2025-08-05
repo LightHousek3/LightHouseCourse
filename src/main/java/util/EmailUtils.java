@@ -10,8 +10,6 @@ import javax.mail.internet.*;
  */
 public class EmailUtils {
 
-    private static String code;
-
     public static void sendVerificationCode(String recipientEmail, String verificationCode)
             throws MessagingException {
 

@@ -40,12 +40,12 @@ import model.LessonProgress;
  * Learning controller for handling course learning pages.
  */
 @WebServlet(name = "LearningServlet", urlPatterns = {
-        "/learning/*",
-        "/learning/lesson/*",
-        "/learning/video/*",
-        "/learning/material/*",
-        "/learning/quiz/*",
-        "/api/learning/*"
+    "/learning/*",
+    "/learning/lesson/*",
+    "/learning/video/*",
+    "/learning/material/*",
+    "/learning/quiz/*",
+    "/api/learning/*"
 })
 public class CustomerLearningServlet extends HttpServlet {
 
@@ -167,9 +167,8 @@ public class CustomerLearningServlet extends HttpServlet {
     }
 
     /**
-     * Shows the main course learning page.
-     * When accessed via /learning/{courseID}, directly redirects to the last
-     * accessed lesson item
+     * Shows the main course learning page. When accessed via
+     * /learning/{courseID}, directly redirects to the last accessed lesson item
      * rather than showing the course overview page.
      */
     private void showCourseLearning(HttpServletRequest request, HttpServletResponse response, Customer customer)
@@ -179,7 +178,7 @@ public class CustomerLearningServlet extends HttpServlet {
         Course course = getCourse(courseId);
         checkCourseAccess(customer, course, request, response);
 
-        loadAndPrepareCourse(course, customer);
+        loadAndPrepareCourse(course);
 
         // Find the last progress point directly
         Map<String, Object> lastProgressPoint = findLastProgressPoint(customer.getCustomerID(), course);
@@ -202,10 +201,8 @@ public class CustomerLearningServlet extends HttpServlet {
             }
         }
 
-        // If we reach here, there are no lessons in the course
-        // Fall back to showing course overview
-        CourseProgress progress = getOrCreateCourseProgress(customer.getCustomerID(), courseId);
-        setRequestAttributes(request, course, null, progress);
+        // If we reach here, there are no lessons in the course fall back to showing course overview
+        setRequestAttributes(request, course, null, null);
         request.getRequestDispatcher(JSP_PATH).forward(request, response);
     }
 
@@ -251,12 +248,12 @@ public class CustomerLearningServlet extends HttpServlet {
         Course course = getCourse(currentLesson.getCourseID());
         checkCourseAccess(customer, course, request, response);
 
-        loadAndPrepareCourse(course, customer);
+        loadAndPrepareCourse(course);
         currentLesson = findLessonInCourse(course, lessonId);
 
         // Get the lesson item
         LessonItem currentLessonItem = getLessonItem(contentType, contentId);
-
+        
         // Check if user can access this content (previous lessons must be completed)
         if (!canAccessLesson(customer.getCustomerID(), course, currentLesson)) {
             Map<String, Object> lastProgressPoint = findLastProgressPoint(customer.getCustomerID(), course);
@@ -273,45 +270,37 @@ public class CustomerLearningServlet extends HttpServlet {
             }
         }
 
-        // Check if user can access this specific item (previous items in the lesson
-        // must be completed)
+        // Check if user can access this specific item (previous items in the lesson must be completed)
         if (!canAccessLessonItem(customer.getCustomerID(), currentLesson, currentLessonItem)) {
-            LessonItem lastAccessibleItem = findLastAccessibleLessonItem(customer.getCustomerID(), currentLesson);
+            
+            Map<String, Object> lastProgressPoint = findLastProgressPoint(customer.getCustomerID(), course);
 
-            if (lastAccessibleItem != null) {
-                String itemType = lastAccessibleItem.getItemType().toLowerCase();
-                int itemId = lastAccessibleItem.getItemID();
-
-                request.getSession().setAttribute("errorMessage", ERROR_LESSONITEM_LOCKED);
+            if (lastProgressPoint != null) {
+                String itemType = (String) lastProgressPoint.get("type");
+                int itemId = (int) lastProgressPoint.get("id");
+                System.out.println("itemType: " + itemType);
+                System.out.println("itemId: " + itemId);
+                request.getSession().setAttribute("errorMessage", ERROR_LESSON_LOCKED);
 
                 response.sendRedirect(
                         request.getContextPath() + "/learning/" + itemType + "/" + itemId);
                 return;
-            }
+            }            
         }
 
-        showContentItem(request, response, customer, contentType, contentId, content, lessonId);
+        showContentItem(request, response, customer, contentType, content, course, currentLesson, currentLessonItem);
     }
 
     /**
      * Shows a content item with navigation and completion tracking.
      */
     private void showContentItem(HttpServletRequest request, HttpServletResponse response,
-            Customer customer, String contentType, int contentId, Object content, int lessonId)
+            Customer customer, String contentType, Object content, Course course, Lesson currentLesson, LessonItem currentLessonItem)
             throws ServletException, IOException, ResourceNotFoundException, AccessDeniedException {
-
-        Lesson currentLesson = getLesson(lessonId);
-        Course course = getCourse(currentLesson.getCourseID());
-        checkCourseAccess(customer, course, request, response);
-
-        LessonItem currentLessonItem = getLessonItem(contentType, contentId);
-
-        loadAndPrepareCourse(course, customer);
-        currentLesson = findLessonInCourse(course, lessonId);
 
         // Update video access tracking if applicable
         if (contentType.equals("video")) {
-            updateVideoAccess(customer.getCustomerID(), currentLesson, contentId);
+            lessonItemProgressDAO.updateLessonItemAccess(customer.getCustomerID(), currentLessonItem.getLessonItemID());
         }
 
         // Create completion maps
@@ -561,8 +550,8 @@ public class CustomerLearningServlet extends HttpServlet {
     }
 
     /**
-     * Checks if the customer has access to the course.
-     * The logic considers the most recent order for the course.
+     * Checks if the customer has access to the course. The logic considers the
+     * most recent order for the course.
      */
     private void checkCourseAccess(Customer customer, Course course, HttpServletRequest request,
             HttpServletResponse response) throws IOException, AccessDeniedException {
@@ -596,7 +585,7 @@ public class CustomerLearningServlet extends HttpServlet {
     /**
      * Loads course content and adds lesson items.
      */
-    private void loadAndPrepareCourse(Course course, Customer customer) {
+    private void loadAndPrepareCourse(Course course) {
         // Load lessons if not already loaded
         if (course.getLessons() == null || course.getLessons().isEmpty()) {
             List<Lesson> lessons = lessonDAO.getLessonsByCourseId(course.getCourseID());
@@ -624,7 +613,7 @@ public class CustomerLearningServlet extends HttpServlet {
         if (progress == null) {
             progress = new CourseProgress(customerId, courseId);
             progress.setCompletionPercentage(BigDecimal.ZERO);
-            progressDAO.saveCourseProgress(progress);
+            progressDAO.insertCourseProgress(progress);
         }
         return progress;
     }
@@ -639,85 +628,6 @@ public class CustomerLearningServlet extends HttpServlet {
 
         if (currentLesson != null) {
             request.setAttribute("currentLesson", currentLesson);
-        }
-    }
-
-    /**
-     * Sets request attributes including completion maps.
-     */
-    private void setRequestAttributes(HttpServletRequest request, Course course, Lesson currentLesson,
-            CourseProgress progress, CompletionMaps maps) {
-
-        setRequestAttributes(request, course, currentLesson, progress);
-
-        request.setAttribute("videoCompletedMap", maps.videoMap);
-        request.setAttribute("materialCompletedMap", maps.materialMap);
-        request.setAttribute("quizCompletedMap", maps.quizMap);
-
-        if (currentLesson != null) {
-            boolean areAllVideosCompletedInLesson = checkAllItemsCompleted(currentLesson.getLessonItems(),
-                    maps.videoMap, "video");
-            boolean areMaterialsCompletedInLesson = checkAllItemsCompleted(currentLesson.getLessonItems(),
-                    maps.materialMap, "material");
-            boolean areQuizzesCompletedInLesson = checkAllItemsCompleted(currentLesson.getLessonItems(), maps.quizMap,
-                    "quiz");
-            boolean areAllContentCompletedInLesson = areAllVideosCompletedInLesson && areMaterialsCompletedInLesson
-                    && areQuizzesCompletedInLesson;
-
-            request.setAttribute("areAllVideosCompletedInLesson", areAllVideosCompletedInLesson);
-            request.setAttribute("areAllContentCompletedInLesson", areAllContentCompletedInLesson);
-        }
-    }
-
-    /**
-     * Finds a lesson in a course by ID.
-     */
-    private Lesson findLessonInCourse(Course course, int lessonId) {
-        for (Lesson lesson : course.getLessons()) {
-            if (lesson.getLessonID() == lessonId) {
-                return lesson;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Tries to redirect to the first item in a lesson.
-     *
-     * @return true if redirection was performed, false otherwise
-     */
-    private boolean redirectToFirstItemIfAvailable(HttpServletRequest request,
-            HttpServletResponse response, Lesson lesson, Course course) throws IOException {
-
-        if (lesson == null || lesson.getLessonItems() == null || lesson.getLessonItems().isEmpty()) {
-            return false;
-        }
-
-        LessonItem firstItem = lesson.getLessonItems().get(0);
-        if (firstItem != null && firstItem.getItem() != null) {
-            String itemType = firstItem.getItemType().toLowerCase();
-            int itemId = firstItem.getItemID();
-            response.sendRedirect(
-                    request.getContextPath() + "/learning/" + itemType + "/" + itemId);
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Updates video access tracking.
-     */
-    private void updateVideoAccess(int customerId, Lesson lesson, int videoId) {
-        if (lesson.getLessonItems() != null) {
-            for (LessonItem item : lesson.getLessonItems()) {
-                if (item != null && item.getItemType() != null
-                        && item.getItemType().equalsIgnoreCase("video")
-                        && item.getItemID() == videoId) {
-                    progressDAO.updateLessonItemAccess(customerId, item.getLessonItemID());
-                    break;
-                }
-            }
         }
     }
 
@@ -756,13 +666,11 @@ public class CustomerLearningServlet extends HttpServlet {
         if (lessonItems == null || lessonItems.isEmpty()) {
             return true;
         }
-
         for (LessonItem item : lessonItems) {
             if (item != null && !lessonItemProgressDAO.isItemCompleted(customerId, item.getLessonItemID())) {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -776,7 +684,6 @@ public class CustomerLearningServlet extends HttpServlet {
         while ((line = reader.readLine()) != null) {
             jsonBody.append(line);
         }
-
         return new JsonParser().parse(jsonBody.toString()).getAsJsonObject();
     }
 
@@ -813,7 +720,6 @@ public class CustomerLearningServlet extends HttpServlet {
                 break;
             }
         }
-
         return null;
     }
 
@@ -851,7 +757,6 @@ public class CustomerLearningServlet extends HttpServlet {
                 break;
             }
         }
-
         return null;
     }
 
@@ -886,7 +791,6 @@ public class CustomerLearningServlet extends HttpServlet {
                 e.printStackTrace();
             }
         }
-
         return result;
     }
 
@@ -911,7 +815,6 @@ public class CustomerLearningServlet extends HttpServlet {
                     if (item == null) {
                         continue;
                     }
-
                     loadItemContent(item);
                 }
             }
@@ -996,11 +899,8 @@ public class CustomerLearningServlet extends HttpServlet {
             return true;
         }
 
-        boolean hasItemsOfType = false;
-
         for (LessonItem item : itemList) {
             if (item != null && item.getItemType().equalsIgnoreCase(itemType)) {
-                hasItemsOfType = true;
                 int itemId = item.getItemID();
                 if (!completionMap.getOrDefault(itemId, false)) {
                     return false;
@@ -1072,8 +972,8 @@ public class CustomerLearningServlet extends HttpServlet {
 
         return null;
     }
-
-    /**
+    
+     /**
      * Check if a user can access a specific lesson.
      * This enforces sequential learning - users must complete lessons in order.
      */
@@ -1110,9 +1010,8 @@ public class CustomerLearningServlet extends HttpServlet {
     }
 
     /**
-     * Check if a user can access a specific lesson item.
-     * This enforces sequential learning - users must complete items in order within
-     * a lesson.
+     * Check if a user can access a specific lesson item. This enforces
+     * sequential learning - users must complete items in order within a lesson.
      */
     private boolean canAccessLessonItem(int customerId, Lesson lesson, LessonItem targetItem) {
         if (lesson == null || lesson.getLessonItems() == null || targetItem == null) {
@@ -1128,8 +1027,7 @@ public class CustomerLearningServlet extends HttpServlet {
         for (int i = 0; i < lesson.getLessonItems().size(); i++) {
             LessonItem item = lesson.getLessonItems().get(i);
 
-            // Once we reach our target item, we've verified all previous items are
-            // completed
+            // Once we reach our target item, we've verified all previous items are completed
             if (item.getLessonItemID() == targetItem.getLessonItemID()) {
                 return true;
             }
@@ -1141,6 +1039,18 @@ public class CustomerLearningServlet extends HttpServlet {
         }
 
         return false; // Target item not found in lesson
+    }
+
+    /**
+     * Finds a lesson in a course by ID.
+     */
+    private Lesson findLessonInCourse(Course course, int lessonId) {
+        for (Lesson lesson : course.getLessons()) {
+            if (lesson.getLessonID() == lessonId) {
+                return lesson;
+            }
+        }
+        return null;
     }
 
     /**

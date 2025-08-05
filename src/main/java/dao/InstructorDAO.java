@@ -88,7 +88,8 @@ public class InstructorDAO extends DBContext {
                 instructor.setAvatar(rs.getString("Avatar"));
                 // Get statistical info
                 instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
-                instructor.setTotalStudents(countStudentsForInstructor(instructor.getInstructorID()));
+                OrderDAO orderDAO = new OrderDAO();
+                instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.getInstructorID()));
 
                 return instructor;
             }
@@ -202,11 +203,13 @@ public class InstructorDAO extends DBContext {
         try {
             // Count unique customers who have made progress in courses taught by this
             // instructor
-            String query = "SELECT COUNT(DISTINCT cp.CustomerID) as total "
-                    + "FROM CourseProgress cp "
-                    + "JOIN CourseInstructors ci ON cp.CourseID = ci.CourseID "
+            String query = "SELECT COUNT(DISTINCT lp.CustomerID) AS total "
+                    + "FROM CourseInstructors ci "
+                    + "JOIN Lessons l ON ci.CourseID = l.CourseID "
+                    + "JOIN LessonProgress lp ON lp.LessonID = l.LessonID "
                     + "WHERE ci.InstructorID = ?";
 
+            conn = getConnection();
             PreparedStatement countPs = conn.prepareStatement(query);
             countPs.setInt(1, instructorId);
             ResultSet countRs = countPs.executeQuery();
@@ -314,8 +317,11 @@ public class InstructorDAO extends DBContext {
 
     public Instructor getInstructorById(int instructorId) {
         try {
-            String query = "SELECT i.InstructorID, i.Biography, i.Specialization, i.ApprovalDate "
-                    + "FROM Instructors i WHERE i.InstructorID = ?";
+            String query = "SELECT i.InstructorID, i.SuperUserID, i.Biography, i.Specialization, "
+                    + "i.ApprovalDate, su.FullName, su.Email, su.Username, su.Phone, su.Address, su.Avatar "
+                    + "FROM Instructors i "
+                    + "JOIN SuperUsers su ON i.SuperUserID = su.SuperUserID "
+                    + "WHERE i.InstructorID = ?";
             conn = getConnection();
             ps = conn.prepareStatement(query);
             ps.setInt(1, instructorId);
@@ -323,9 +329,22 @@ public class InstructorDAO extends DBContext {
             if (rs.next()) {
                 Instructor instructor = new Instructor();
                 instructor.setInstructorID(rs.getInt("InstructorID"));
+                instructor.setSuperUserID(rs.getInt("SuperUserID"));
                 instructor.setBiography(rs.getString("Biography"));
                 instructor.setSpecialization(rs.getString("Specialization"));
                 instructor.setApprovalDate(rs.getTimestamp("ApprovalDate"));
+                instructor.setFullName(rs.getString("FullName"));
+                instructor.setEmail(rs.getString("Email"));
+                instructor.setUsername(rs.getString("Username"));
+                instructor.setPhone(rs.getString("Phone"));
+                instructor.setAddress(rs.getString("Address"));
+                instructor.setAvatar(rs.getString("Avatar"));
+
+                // Thêm thống kê nếu cần
+                instructor.setTotalCourses(countCoursesForInstructor(instructor.getInstructorID()));
+                OrderDAO orderDAO = new OrderDAO();
+                instructor.setTotalStudents(orderDAO.getTotalStudentsByInstructorId(instructor.getInstructorID()));
+
                 return instructor;
             }
         } catch (SQLException ex) {
@@ -336,9 +355,33 @@ public class InstructorDAO extends DBContext {
         return null;
     }
 
+    public Instructor getFullNameAndAvatarByInsId(int instructorId) {
+        try {
+            String query = "select s.FullName, s.Avatar\n"
+                    + "from Instructors i\n"
+                    + "join SuperUsers s on s.SuperUserID = i.SuperUserID\n"
+                    + "where i.InstructorID = ?";
+            conn = getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, instructorId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Instructor instructor = new Instructor();
+                instructor.setFullName(rs.getString("FullName"));
+                instructor.setAvatar(rs.getString("Avatar"));
+                return instructor;
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error getInsAndSupByInsId: " + ex.getMessage());
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+        return null;
+    }
+
     public boolean usernameExists(String username) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from
-                                                                       // nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        // nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     public boolean emailExists(String email) {
@@ -347,7 +390,8 @@ public class InstructorDAO extends DBContext {
     }
 
     /**
-     * Find an instructor by their user ID (alias for getInstructorBySuperUserId)
+     * Find an instructor by their user ID (alias for
+     * getInstructorBySuperUserId)
      *
      * @param superUserId The ID of the super user who is an instructor
      * @return Instructor object or null if not found

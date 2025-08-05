@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import dao.OrderDAO;
 import dao.CartItemDAO;
+import dao.CategoryDAO;
 import dao.CourseDAO;
 import dao.CourseProgressDAO;
 import dao.PaymentTransactionDAO;
@@ -17,6 +18,7 @@ import dao.RefundRequestDAO;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import model.CartItem;
+import model.Category;
 import model.Order;
 import model.OrderDetail;
 import model.Customer;
@@ -38,8 +40,8 @@ public class OrderServlet extends HttpServlet {
     private OrderDAO orderDAO;
     private CourseDAO courseDAO;
     private CourseProgressDAO progressDAO;
-    private RefundRequestDAO refundDAO;
     private CartItemDAO cartItemDAO;
+    private CategoryDAO categoryDAO;
 
     @Override
     public void init() throws ServletException {
@@ -47,7 +49,7 @@ public class OrderServlet extends HttpServlet {
         orderDAO = new OrderDAO();
         courseDAO = new CourseDAO();
         progressDAO = new CourseProgressDAO();
-        refundDAO = new RefundRequestDAO();
+        categoryDAO = new CategoryDAO();
         cartItemDAO = new CartItemDAO();
     }
 
@@ -55,6 +57,10 @@ public class OrderServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String servletPath = request.getServletPath();
+        
+        // Get categories for sidebar
+        List<Category> categories = categoryDAO.getAllCategories();
+        request.setAttribute("categories", categories);
 
         if (servletPath.equals("/order/checkout")) {
             showCheckout(request, response);
@@ -91,7 +97,7 @@ public class OrderServlet extends HttpServlet {
         String courseIdParam = request.getParameter("courseId");
         if (courseIdParam != null && Validator.isValidNumber(courseIdParam)) {
             int courseId = Integer.parseInt(courseIdParam);
-            Course course = courseDAO.getCourseById(courseId);
+            Course course = courseDAO.getCourseByIdWithApprovalStatus(courseId);
 
             if (course == null) {
                 response.sendRedirect(request.getContextPath() + "/courses?error=course_not_found");
@@ -115,12 +121,19 @@ public class OrderServlet extends HttpServlet {
                 return;
             }
 
-            // Check if user already purchased any course in the cart
+            // Check if there are any selected items
+            if (cart.isNothingSelected()) {
+                request.setAttribute("error", "Please select at least one course to checkout.");
+                request.getRequestDispatcher("/WEB-INF/views/customer/cart/cart.jsp").forward(request, response);
+                return;
+            }
+
+            // Check if user already purchased any course in the selected items
             StringBuilder alreadyPurchasedCourses = new StringBuilder();
             boolean hasAlreadyPurchasedCourses = false;
 
-            // Check each course in the cart
-            for (CartItem item : cart.getItems()) {
+            // Check each selected course in the cart
+            for (CartItem item : cart.getSelectedItems()) {
                 int courseId = item.getCourse().getCourseID();
                 boolean alreadyPurchased = orderDAO.hasCustomerPurchasedCourse(customer.getCustomerID(), courseId);
 
@@ -138,7 +151,7 @@ public class OrderServlet extends HttpServlet {
             if (hasAlreadyPurchasedCourses) {
                 request.setAttribute("error",
                         "You have already purchased the following course(s): " + alreadyPurchasedCourses.toString()
-                        + ". Please remove them from your cart before proceeding.");
+                        + ". Please deselect them from your cart before proceeding.");
                 request.getRequestDispatcher("/WEB-INF/views/customer/cart/cart.jsp").forward(request, response);
                 return;
             }
@@ -196,28 +209,24 @@ public class OrderServlet extends HttpServlet {
         if (courseIdParam != null && Validator.isValidNumber(courseIdParam)) {
             // Direct course checkout
             int courseId = Integer.parseInt(courseIdParam);
-
-            // Get course from database
-            Course course = courseDAO.getCourseById(courseId);
-
+            Course course = courseDAO.getCourseByIdWithApprovalStatus(courseId);
+            
             if (course == null) {
-                // Course not found
                 response.sendRedirect(request.getContextPath() + "/courses?error=course_not_found");
                 return;
             }
 
             // Check if user already purchased this course
             boolean alreadyPurchased = orderDAO.hasCustomerPurchasedCourse(customer.getCustomerID(), courseId);
-
             if (alreadyPurchased) {
-                // User already purchased this course
-                response.sendRedirect(request.getContextPath() + "/course/" + courseId + "?error=already_purchased");
+                request.setAttribute("error", "You have already purchased this course: " + course.getName());
+                request.getRequestDispatcher("/WEB-INF/views/customer/order/checkout.jsp").forward(request, response);
                 return;
             }
 
-            // Create order detail for this course
+            // Create order detail
             OrderDetail detail = new OrderDetail();
-            detail.setCourseID(course.getCourseID());
+            detail.setCourseID(courseId);
             detail.setPrice(course.getPrice());
             details.add(detail);
 
@@ -225,8 +234,9 @@ public class OrderServlet extends HttpServlet {
             totalAmount = course.getPrice();
             order.setTotalAmount(totalAmount);
 
-            // Set course attribute for error handling
+            // Set course for display in checkout page
             request.setAttribute("course", course);
+
             request.setAttribute("isDirectCheckout", true);
 
         } else {
@@ -239,12 +249,20 @@ public class OrderServlet extends HttpServlet {
                 return;
             }
 
+            // Check if there are any selected items
+            if (cart.isNothingSelected()) {
+                // Redirect to cart page with message
+                request.setAttribute("error", "Please select at least one course to checkout.");
+                request.getRequestDispatcher("/WEB-INF/views/customer/order/checkout.jsp").forward(request, response);
+                return;
+            }
+
             // Check if user already purchased any course in the cart
             StringBuilder alreadyPurchasedCourses = new StringBuilder();
             boolean hasAlreadyPurchasedCourses = false;
 
-            // First, check if any course is already purchased
-            for (CartItem item : cart.getItems()) {
+            // First, check if any selected course is already purchased
+            for (CartItem item : cart.getSelectedItems()) {
                 int courseId = item.getCourse().getCourseID();
                 boolean alreadyPurchased = orderDAO.hasCustomerPurchasedCourse(customer.getCustomerID(), courseId);
 
@@ -262,13 +280,13 @@ public class OrderServlet extends HttpServlet {
             if (hasAlreadyPurchasedCourses) {
                 request.setAttribute("error",
                         "You have already purchased the following course(s): " + alreadyPurchasedCourses.toString()
-                        + ". Please remove them from your cart before proceeding.");
+                        + ". Please deselect them before proceeding.");
                 request.getRequestDispatcher("/WEB-INF/views/customer/order/checkout.jsp").forward(request, response);
                 return;
             }
 
-            // Create order details from cart items
-            for (CartItem item : cart.getItems()) {
+            // Create order details from selected cart items
+            for (CartItem item : cart.getSelectedItems()) {
                 OrderDetail detail = new OrderDetail();
                 detail.setCourseID(item.getCourse().getCourseID());
                 detail.setPrice(item.getPrice());
@@ -276,7 +294,7 @@ public class OrderServlet extends HttpServlet {
             }
 
             // Set total amount
-            totalAmount = cart.getTotalPrice();
+            totalAmount = cart.getSelectedTotalPrice();
             order.setTotalAmount(totalAmount);
 
             request.setAttribute("isDirectCheckout", false);
@@ -292,12 +310,19 @@ public class OrderServlet extends HttpServlet {
             session.setAttribute("pendingOrderId", orderId);
 
             if (courseIdParam == null) {
-                // If this was a cart checkout, clear the cart
+                // If this was a cart checkout, remove the selected items from cart
                 CartUtil cart = (CartUtil) session.getAttribute("cart");
                 if (cart != null) {
-                    cart.clear();
-                    // Clear cart items from the database for this user
-                    cartItemDAO.clearCart(customer.getCustomerID());
+                    // Remove selected items from cart
+                    List<CartItem> selectedItems = cart.getSelectedItems();
+                    for (CartItem item : selectedItems) {
+                        int courseId = item.getCourse().getCourseID();
+                        cart.removeItem(courseId);
+                        // Remove from database
+                        if (customer != null) {
+                            cartItemDAO.removeFromCart(customer.getCustomerID(), courseId);
+                        }
+                    }
                 }
             }
 
@@ -348,7 +373,6 @@ public class OrderServlet extends HttpServlet {
 
         // Clear the pending order from session
         session.removeAttribute("pendingOrderId");
-
         // Check if payment was successful (00 is the success code from VNPay)
         if ("00".equals(vnp_ResponseCode)) {
             // Update order status to completed

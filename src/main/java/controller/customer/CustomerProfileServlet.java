@@ -4,7 +4,9 @@
  */
 package controller.customer;
 
+import dao.CategoryDAO;
 import dao.CustomerDAO;
+import dao.SuperUserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,6 +14,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
+import model.Category;
 import model.Customer;
 import util.PasswordEncrypt;
 import util.Validator;
@@ -20,11 +24,15 @@ import util.Validator;
 public class CustomerProfileServlet extends HttpServlet {
 
     private CustomerDAO customerDAO;
+    private CategoryDAO categoryDAO;
+    private SuperUserDAO superUserDAO;
 
     @Override
     public void init() throws ServletException {
         super.init();
         customerDAO = new CustomerDAO();
+        categoryDAO = new CategoryDAO();
+        superUserDAO = new SuperUserDAO();
     }
 
     /**
@@ -57,6 +65,10 @@ public class CustomerProfileServlet extends HttpServlet {
             request.setAttribute("user", user); // Fallback to session user
         }
 
+        // Get categories for sidebar
+        List<Category> categories = categoryDAO.getAllCategories();
+        request.setAttribute("categories", categories);
+
         // Forward to profile JSP
         request.getRequestDispatcher("/WEB-INF/views/customer/manage-profile/view-profile.jsp").forward(request, response);
     }
@@ -87,6 +99,10 @@ public class CustomerProfileServlet extends HttpServlet {
         // Validation flags
         boolean hasError = false;
 
+        // Get categories for sidebar
+        List<Category> categories = categoryDAO.getAllCategories();
+        request.setAttribute("categories", categories);
+
         // Update profile
         if ("updateProfile".equals(action)) {
             // Get form data
@@ -104,25 +120,11 @@ public class CustomerProfileServlet extends HttpServlet {
             // Password remains the same
             String password = currentUser.getPassword();
 
-            // Create a user object with updated info
-            Customer updatedCustomer = new Customer();
-            updatedCustomer.setCustomerID(currentUser.getCustomerID());
-            updatedCustomer.setUsername(currentUser.getUsername());
-            updatedCustomer.setEmail(email);
-            updatedCustomer.setActive(currentUser.isActive());
-            updatedCustomer.setFullName(fullName);
-            updatedCustomer.setPhone(phone);
-            updatedCustomer.setAddress(address);
-            updatedCustomer.setAuthProvider(currentUser.getAuthProvider());
-            updatedCustomer.setAuthProviderId(currentUser.getAuthProviderId());
-            updatedCustomer.setAvatar(avatar);
-            updatedCustomer.setPassword(password);
-
             // Validate email
             if (!Validator.isValidEmail(email)) {
                 request.setAttribute("emailError", "Please enter a valid email address");
                 hasError = true;
-            } else if (!email.equals(currentUser.getEmail()) && customerDAO.emailExists(email)) {
+            } else if (!email.equals(currentUser.getEmail()) && customerDAO.emailExists(email) || superUserDAO.emailExists(email)) {
                 request.setAttribute("emailError", "Email already exists");
                 hasError = true;
             }
@@ -144,8 +146,21 @@ public class CustomerProfileServlet extends HttpServlet {
                 request.setAttribute("addressError", "Address cannot be empty");
                 hasError = true;
             }
-
+            
             if (!hasError) {
+                // Create a user object with updated info
+                Customer updatedCustomer = new Customer();
+                updatedCustomer.setCustomerID(currentUser.getCustomerID());
+                updatedCustomer.setUsername(currentUser.getUsername());
+                updatedCustomer.setEmail(email.trim());
+                updatedCustomer.setActive(currentUser.isActive());
+                updatedCustomer.setFullName(fullName.trim());
+                updatedCustomer.setPhone(phone.trim());
+                updatedCustomer.setAddress(address.trim());
+                updatedCustomer.setAuthProvider(currentUser.getAuthProvider());
+                updatedCustomer.setAuthProviderId(currentUser.getAuthProviderId());
+                updatedCustomer.setAvatar(avatar);
+                updatedCustomer.setPassword(password);
                 // Update user in database
                 boolean updateSuccess = customerDAO.updateCustomer(updatedCustomer);
                 if (updateSuccess) {

@@ -348,16 +348,6 @@
                         </button>
                         <div class="d-none d-lg-block">
                             <h2 class="m-0"><i class="fas fa-lock"></i> Change Password</h2>
-                            <div>
-                                <nav aria-label="breadcrumb" class="breadcrumb-nav">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a
-                                                href="${pageContext.request.contextPath}/instructor/profile">My Profile</a>
-                                        </li>
-                                        <li class="breadcrumb-item active" aria-current="page">Change Password</li>
-                                    </ol>
-                                </nav>
-                            </div>
                         </div>
                         <div class="header-actions row">
                             <a href="${pageContext.request.contextPath}/instructor/profile" class="col-md-6 col-sm-12 btn btn-lg btn-primary">
@@ -379,8 +369,6 @@
                                 <input type="hidden" name="action" value="changePassword">
 
                                 <!-- Password Change Section -->
-                                <div class="form-section">
-                                    <h3 class="section-title"><i class="fas fa-key me-2"></i> Change Password</h3>
 
                                     <div class="row g-3">
                                         <div class="col-12">
@@ -444,13 +432,13 @@
                                 </div>
 
                                 <!-- Form Actions -->
-                                <div class="form-actions">
+                                <div class="form-actions m-0 mb-4 me-3">
                                     <a href="${pageContext.request.contextPath}/instructor/profile"
                                        class="btn btn-md btn-cancel">
                                         <i class="fas fa-times me-2"></i> Cancel
                                     </a>
                                     <button type="submit" class="btn btn-md btn-submit">
-                                        <i class="fas fa-key me-2"></i> Change Password
+                                        <i class="fas fa-key me-2"></i> Save
                                     </button>
                                 </div>
                             </form>
