@@ -11,12 +11,12 @@
                 <style>
                     body {
                         background-color: var(--bg-light);
-                        overflow: hidden;
+                        overflow-x: hidden;
                     }
 
                     .learning-container {
                         display: flex;
-                        height: calc(100vh - 56px);
+                        height: calc(100vh - 92px);
                         overflow: hidden;
                         border-top: 1px solid var(--primary-color);
                     }
@@ -166,7 +166,6 @@
                         overflow-y: auto;
                         scrollbar-width: thin;
                         scrollbar-color: var(--primary-light) var(--bg-light);
-                        padding-bottom: 35px;
                     }
 
                     .course-outline::-webkit-scrollbar {
@@ -305,8 +304,6 @@
                         color: var(--text-dark);
                         transition: background linear 0.1s;
                     }
-
-                    .content-link:not(.locked):hover {}
 
                     .content-link.active {
                         position: relative;
@@ -583,6 +580,10 @@
 
                     .mark-complete-button.completed {
                         background-color: var(--text-medium);
+                    }
+                    
+                    .course-outline-modal {
+                        display: none;
                     }
 
                     /* Responsive Design */
@@ -1829,14 +1830,14 @@
                                     newLink.href = `${pageContext.request.contextPath}/learning/\${itemType}/\${itemId}`;
                                     newLink.className = 'content-link';
                                     newLink.innerHTML = `
-<span class="content-icon">
-    <i class="\${itemIcon}"></i>
-</span>
-<span class="content-title">\${itemTitle}</span>
-<span class="content-status">
-    \${itemStatus.replace('<i class="fas fa-lock"></i>', '')}
-</span>
-`;
+                                        <span class="content-icon">
+                                            <i class="\${itemIcon}"></i>
+                                        </span>
+                                        <span class="content-title">\${itemTitle}</span>
+                                        <span class="content-status">
+                                            \${itemStatus.replace('<i class="fas fa-lock"></i>', '')}
+                                        </span>
+                                        `;
 
                                     // Replace the locked span with the new link
                                     nextContentItem.replaceChild(newLink, lockedLink);

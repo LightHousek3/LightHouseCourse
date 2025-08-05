@@ -26,7 +26,7 @@ import util.PasswordEncrypt;
  *
  * @author admin
  */
-@WebServlet(name = "AuthServlet", urlPatterns = {"/login", "/logout"})
+@WebServlet(name = "AuthServlet", urlPatterns = { "/login", "/logout" })
 public class AuthServlet extends HttpServlet {
 
     private SuperUserDAO superUserDAO;
@@ -42,10 +42,10 @@ public class AuthServlet extends HttpServlet {
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -87,7 +87,7 @@ public class AuthServlet extends HttpServlet {
                     default:
                         // Check remember-me cookie for login page
                         checkRememberMeCookie(request);
-                        
+
                         // Display login form
                         request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
                 }
@@ -108,10 +108,10 @@ public class AuthServlet extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -131,10 +131,10 @@ public class AuthServlet extends HttpServlet {
     /**
      * Process user login.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     private void processLogin(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -163,13 +163,13 @@ public class AuthServlet extends HttpServlet {
             // Create session and add superuser
             HttpSession session = request.getSession();
             session.setAttribute("user", superUser);
-            
+
             // Set session timeout if remember me is checked
             if (rememberMe != null && rememberMe.equals("on")) {
                 // Set session timeout to 7 days (in seconds)
                 session.setMaxInactiveInterval(7 * 24 * 60 * 60);
             }
-            
+
             // Redirect based on role
             if (superUser.isAdmin()) {
                 response.sendRedirect(request.getContextPath() + "/admin/dashboard");
@@ -195,7 +195,7 @@ public class AuthServlet extends HttpServlet {
             // Create session and add customer
             HttpSession session = request.getSession();
             session.setAttribute("user", customer);
-            
+
             // Set session timeout if remember me is checked
             if (rememberMe != null && rememberMe.equals("on")) {
                 // Set session timeout to 7 days (in seconds)
@@ -217,16 +217,17 @@ public class AuthServlet extends HttpServlet {
         request.setAttribute("savedUsername", username);
         request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
     }
-    
+
     /**
      * Handle remember-me cookies management
      * 
-     * @param request The servlet request
-     * @param response The servlet response
+     * @param request    The servlet request
+     * @param response   The servlet response
      * @param rememberMe The remember-me parameter value
-     * @param username The username for remember-me cookie
+     * @param username   The username for remember-me cookie
      */
-    private void handleRememberMeCookies(HttpServletRequest request, HttpServletResponse response, String rememberMe, String username) {
+    private void handleRememberMeCookies(HttpServletRequest request, HttpServletResponse response, String rememberMe,
+            String username) {
         // Clear existing cookies if remember-me is not checked
         if (rememberMe == null || !rememberMe.equals("on")) {
             Cookie[] cookies = request.getCookies();
@@ -240,15 +241,16 @@ public class AuthServlet extends HttpServlet {
                 }
             }
         } else {
-            // Set remember-me cookies when checkbox is checked (regardless of login success)
+            // Set remember-me cookies when checkbox is checked (regardless of login
+            // success)
             Cookie usernameCookie = new Cookie("username", username);
             Cookie rememberCookie = new Cookie("isRemember", "checked");
-            
+
             // Set cookie expiration to 7 days
             int maxAge = 7 * 24 * 60 * 60; // 7 days
             usernameCookie.setMaxAge(maxAge);
             rememberCookie.setMaxAge(maxAge);
-            
+
             response.addCookie(usernameCookie);
             response.addCookie(rememberCookie);
         }
@@ -270,7 +272,7 @@ public class AuthServlet extends HttpServlet {
         if (session != null) {
             session.invalidate();
         }
-        
+
         // Clear all remember-me cookies
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -290,11 +292,11 @@ public class AuthServlet extends HttpServlet {
     /**
      * Handle Google login process.
      *
-     * @param code The authorization code from Google
-     * @param request The servlet request
+     * @param code     The authorization code from Google
+     * @param request  The servlet request
      * @param response The servlet response
      * @throws ServletException If a servlet-specific error occurs
-     * @throws IOException If an I/O error occurs
+     * @throws IOException      If an I/O error occurs
      */
     private void handleGoogleLogin(String code, HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -326,9 +328,9 @@ public class AuthServlet extends HttpServlet {
 
                     // Redirect to home
                     response.sendRedirect(request.getContextPath() + "/home");
-
                 } else {
-                    request.setAttribute("error", "Failed to process Google login");
+                    request.setAttribute("error",
+                            "Your account has been disabled. Please contact support for assistance.");
                     request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
                 }
             } else {
@@ -345,11 +347,11 @@ public class AuthServlet extends HttpServlet {
     /**
      * Handle Facebook login process.
      *
-     * @param code The authorization code from Facebook
-     * @param request The servlet request
+     * @param code     The authorization code from Facebook
+     * @param request  The servlet request
      * @param response The servlet response
      * @throws ServletException If a servlet-specific error occurs
-     * @throws IOException If an I/O error occurs
+     * @throws IOException      If an I/O error occurs
      */
     private void handleFacebookLogin(String code, HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -382,7 +384,8 @@ public class AuthServlet extends HttpServlet {
                     // Redirect to home
                     response.sendRedirect(request.getContextPath() + "/home");
                 } else {
-                    request.setAttribute("error", "Failed to process Facebook login");
+                    request.setAttribute("error",
+                            "Your account has been disabled. Please contact support for assistance.");
                     request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
                 }
             } else {
@@ -398,6 +401,7 @@ public class AuthServlet extends HttpServlet {
 
     /**
      * Check and process remember-me cookie for login form
+     * 
      * @param request The servlet request
      */
     private void checkRememberMeCookie(HttpServletRequest request) {
@@ -405,7 +409,7 @@ public class AuthServlet extends HttpServlet {
         if (cookies != null) {
             String savedUsername = null;
             boolean isRemembered = false;
-            
+
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals("username")) {
                     savedUsername = cookie.getValue();
@@ -414,7 +418,7 @@ public class AuthServlet extends HttpServlet {
                     isRemembered = true;
                 }
             }
-            
+
             if (savedUsername != null && isRemembered) {
                 // Set username as a request attribute to be displayed in the form
                 request.setAttribute("savedUsername", savedUsername);

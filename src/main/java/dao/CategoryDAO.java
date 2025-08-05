@@ -219,13 +219,6 @@ public class CategoryDAO extends DBContext {
         try {
             conn = getConnection();
 
-            // First, delete associations in CourseCategory
-            String deleteCategoryCoursesSql = "DELETE FROM CourseCategory WHERE CategoryID = ?";
-            ps = conn.prepareStatement(deleteCategoryCoursesSql);
-            ps.setInt(1, categoryId);
-            ps.executeUpdate();
-            ps.close();
-
             // Then delete the category
             String deleteCategorySql = "DELETE FROM Categories WHERE CategoryID = ?";
             ps = conn.prepareStatement(deleteCategorySql);

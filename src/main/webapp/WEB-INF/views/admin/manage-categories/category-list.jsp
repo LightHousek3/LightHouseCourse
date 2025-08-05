@@ -1,15 +1,12 @@
-<%-- 
-    Document   : category-list
-    Created on : Jun 13, 2025, 3:48:25 PM
-    Author     : NhiDTYCE-180492
---%>
+<%-- Document : category-list Created on : Jun 13, 2025, 3:48:25 PM Author : NhiDTYCE-180492 --%>
 
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
-<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <fmt:setLocale value="vi_VN" />
 <!DOCTYPE html>
 <html lang="en">
+
     <head>
         <title>Manage Categories</title>
         <jsp:include page="../common/head.jsp" />
@@ -36,7 +33,8 @@
                 margin-right: 15px;
             }
 
-            .table th, .table td {
+            .table th,
+            .table td {
                 vertical-align: middle !important;
             }
 
@@ -71,6 +69,7 @@
             }
         </style>
     </head>
+
     <body>
         <!-- Admin Sidebar -->
         <c:set var="activeMenu" value="categories" scope="request" />
@@ -84,10 +83,41 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <h2 class="m-0 d-none d-lg-block">Manage Categories</h2>
-                <a href="${pageContext.request.contextPath}/admin/categories?action=create" class="btn btn-lg btn-primary">
+                <a href="${pageContext.request.contextPath}/admin/categories?action=create"
+                   class="btn btn-lg btn-primary">
                     <i class="fas fa-plus me-2"></i> Add New Category
                 </a>
             </div>
+            <c:if test="${not empty message}">
+                <div class="alert alert-info">${message}</div>
+            </c:if>
+
+            <!-- Success/Error Messages -->
+            <c:if test="${param.success == 'added'}">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Category has been added successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+            <c:if test="${param.success == 'updated'}">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Category has been updated successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+            <c:if test="${param.success == 'deleted'}">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Category has been deleted successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+            <c:if test="${param.error == 'delete_failed'}">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error:</strong> Unable to delete category. The category may have related
+                    records.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-danger">${error}</div>
@@ -103,31 +133,6 @@
                         </c:if>
                     </div>
                     <div class="card-body">
-                        <c:if test="${not empty message}">
-                            <div class="alert alert-info">${message}</div>
-                        </c:if>
-
-                        <!-- Success/Error Messages -->
-                        <c:if test="${param.success == 'added'}">
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                Category has been added successfully!
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </c:if>
-                        <c:if test="${param.success == 'updated'}">
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                Category has been updated successfully!
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </c:if>
-                        <c:if test="${param.success == 'deleted'}">
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                Category has been deleted successfully!
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </c:if>
-
-
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
                                 <thead class="table-light">
@@ -146,12 +151,11 @@
                                             <td>${category.description}</td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="${pageContext.request.contextPath}/admin/categories?action=edit&id=${category.categoryID}&page=${currentPage}" 
-                                                       class="btn btn btn-warning" 
-                                                       title="Edit Category">
+                                                    <a href="${pageContext.request.contextPath}/admin/categories?action=edit&id=${category.categoryID}&page=${currentPage}"
+                                                       class="btn btn btn-warning" title="Edit Category">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button class="btn btn-sm btn-danger" 
+                                                    <button class="btn btn-sm btn-danger"
                                                             onclick="confirmDelete(${category.categoryID}, ${currentPage})"
                                                             title="Delete Category">
                                                         <i class="fas fa-trash-alt"></i>
@@ -165,7 +169,7 @@
                                             <td colspan="4" class="text-center py-4">
                                                 <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                                 <p class="text-muted mb-0">No categories found.</p>
-                                                <a href="${pageContext.request.contextPath}/admin/categories?action=create" 
+                                                <a href="${pageContext.request.contextPath}/admin/categories?action=create"
                                                    class="btn btn-primary btn-sm mt-2">
                                                     <i class="fas fa-plus"></i> Add First Category
                                                 </a>
@@ -182,7 +186,8 @@
                                         <!-- First Page -->
                                         <c:if test="${currentPage > 1}">
                                             <li class="page-item">
-                                                <a class="page-link btn btn-outline-primary" href="?page=1" title="First Page">
+                                                <a class="page-link btn btn-outline-primary" href="?page=1"
+                                                   title="First Page">
                                                     <i class="fas fa-angle-double-left"></i>
                                                 </a>
                                             </li>
@@ -204,11 +209,13 @@
                                         <!-- Show ellipsis if there are pages before startPage -->
                                         <c:if test="${startPage > 1}">
                                             <li class="page-item">
-                                                <a class="page-link btn btn-outline-primary" href="?page=1">1</a>
+                                                <a class="page-link btn btn-outline-primary"
+                                                   href="?page=1">1</a>
                                             </li>
                                             <c:if test="${startPage > 2}">
                                                 <li class="page-item disabled">
-                                                    <span class="page-link btn btn-outline-primary">...</span>
+                                                    <span
+                                                        class="page-link btn btn-outline-primary">...</span>
                                                 </li>
                                             </c:if>
                                         </c:if>
@@ -221,7 +228,8 @@
                                                         <span class="page-link btn btn-primary">${i}</span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <a class="page-link btn btn-outline-primary" href="?page=${i}">${i}</a>
+                                                        <a class="page-link btn btn-outline-primary"
+                                                           href="?page=${i}">${i}</a>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </li>
@@ -231,18 +239,21 @@
                                         <c:if test="${endPage < totalPages}">
                                             <c:if test="${endPage < totalPages - 1}">
                                                 <li class="page-item disabled">
-                                                    <span class="page-link btn btn-outline-primary">...</span>
+                                                    <span
+                                                        class="page-link btn btn-outline-primary">...</span>
                                                 </li>
                                             </c:if>
                                             <li class="page-item">
-                                                <a class="page-link btn btn-outline-primary" href="?page=${totalPages}">${totalPages}</a>
+                                                <a class="page-link btn btn-outline-primary"
+                                                   href="?page=${totalPages}">${totalPages}</a>
                                             </li>
                                         </c:if>
 
                                         <!-- Last Page -->
                                         <c:if test="${currentPage < totalPages}">
                                             <li class="page-item">
-                                                <a class="page-link btn btn-outline-primary" href="?page=${totalPages}" title="Last Page">
+                                                <a class="page-link btn btn-outline-primary"
+                                                   href="?page=${totalPages}" title="Last Page">
                                                     <i class="fas fa-angle-double-right"></i>
                                                 </a>
                                             </li>
@@ -254,7 +265,7 @@
                                 <div class="text-center mt-3">
                                     <small class="text-muted">
                                         <i class="fas fa-info-circle"></i>
-                                        Displaying ${itemsPerPage} items per page | 
+                                        Displaying ${itemsPerPage} items per page |
                                         Page ${currentPage} of ${totalPages}
                                     </small>
                                 </div>
@@ -265,11 +276,49 @@
             </div>
         </div>
 
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1"
+             aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Deletion</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this category?</p>
+                        <p class="text-danger"><small>This action cannot be undone.</small></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-md btn-secondary"
+                                data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-md btn-danger" id="confirmDeleteBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <jsp:include page="../common/scripts.jsp" />
 
         <script>
+            // Variables to store category ID and current page for deletion
+            let categoryToDelete = null;
+            let currentPageForDelete = null;
+
             function confirmDelete(categoryId, currentPage) {
-                if (confirm("Are you sure you want to delete this category?")) {
+                // Store the values for use in the modal
+                categoryToDelete = categoryId;
+                currentPageForDelete = currentPage;
+
+                // Show the modal
+                const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                deleteModal.show();
+            }
+
+            // Handle the delete confirmation from the modal
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+                if (categoryToDelete !== null) {
                     const form = document.createElement("form");
                     form.method = "POST";
                     form.action = "${pageContext.request.contextPath}/admin/categories";
@@ -282,12 +331,12 @@
                     const idInput = document.createElement("input");
                     idInput.type = "hidden";
                     idInput.name = "categoryId";
-                    idInput.value = categoryId;
+                    idInput.value = categoryToDelete;
 
                     const pageInput = document.createElement("input");
                     pageInput.type = "hidden";
                     pageInput.name = "currentPage";
-                    pageInput.value = currentPage;
+                    pageInput.value = currentPageForDelete;
 
                     form.appendChild(actionInput);
                     form.appendChild(idInput);
@@ -295,7 +344,11 @@
                     document.body.appendChild(form);
                     form.submit();
                 }
-            }
+
+                // Close the modal
+                const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+                deleteModal.hide();
+            });
 
             // Auto-hide success messages after 5 seconds
             document.addEventListener('DOMContentLoaded', function () {
@@ -321,4 +374,5 @@
         </script>
 
     </body>
+
 </html>

@@ -49,7 +49,8 @@
                         </a>
                     </c:if>
                     <c:if test="${isPendingView}">
-                        <a href="${pageContext.request.contextPath}/admin/courses" class="btn btn-lg btn-primary">
+                        <a href="${pageContext.request.contextPath}/admin/courses"
+                           class="btn btn-lg btn-primary">
                             <i class="fas fa-arrow-left me-2"></i> Back
                         </a>
                     </c:if>
@@ -62,28 +63,30 @@
                     ${sessionScope.message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-                <c:remove var="message" scope="session"/>
+                <c:remove var="message" scope="session" />
             </c:if>
             <c:if test="${not empty sessionScope.error}">
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     ${sessionScope.error}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-                <c:remove var="error" scope="session"/>
+                <c:remove var="error" scope="session" />
             </c:if>
 
             <c:if test="${not isPendingView}">
                 <!-- Search Section -->
                 <div class="card mb-3">
                     <div class="card-body">
-                        <form action="${pageContext.request.contextPath}/admin/courses/search" method="get" class="row g-3">
+                        <form action="${pageContext.request.contextPath}/admin/courses/search" method="get"
+                              class="row g-3">
                             <div class="col-md-6">
                                 <label for="searchKeyword" class="form-label">Search Courses</label>
                                 <input type="text" class="form-control" id="searchKeyword" name="keyword"
                                        value="${param.keyword}" placeholder="Course name or instructor" required>
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-md btn-outline-primary w-100">Search</button>
+                                <button type="submit"
+                                        class="btn btn-md btn-outline-primary w-100">Search</button>
                             </div>
                         </form>
                     </div>
@@ -92,388 +95,395 @@
                 <!-- Filter & Sort Section -->
                 <div class="card mb-4">
                     <div class="card-body">
-                        <form action="${pageContext.request.contextPath}/admin/courses/filter" method="get" class="row g-3">
+                        <form action="${pageContext.request.contextPath}/admin/courses/filter" method="get"
+                              class="row g-3">
                             <!-- Preserve keyword from search when filtering -->
-                            <input type="hidden" id="filterKeyword" name="keyword" value="${param.keyword}"/>
+                            <input type="hidden" id="filterKeyword" name="keyword" value="${param.keyword}" />
                             <div class="col-md-3">
                                 <label for="categoryFilter" class="form-label">Category</label>
                                 <select class="form-select" id="categoryFilter" name="category">
                                     <option value="">All Categories</option>
                                     <c:forEach var="category" items="${categories}">
-                                        <option value="${category.categoryID}"
-                                                ${param.category eq category.categoryID ? 'selected' : '' }>
-                                            ${category.name}
+                                        <option value="${category.categoryID}" ${param.category eq
+                                                         category.categoryID ? 'selected' : '' }>
+                                                    ${category.name}
+                                                </option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="statusFilter" class="form-label">Status</label>
+                                    <select class="form-select" id="statusFilter" name="status">
+                                        <option value="">All</option>
+                                        <option value="pending" ${param.status eq 'pending' || isPendingView
+                                                                  ? 'selected' : '' }>Pending</option>
+                                        <option value="approved" ${param.status eq 'approved' ? 'selected' : '' }>
+                                            Approved</option>
+                                        <option value="rejected" ${param.status eq 'rejected' ? 'selected' : '' }>
+                                            Rejected</option>
+                                        <option value="banned" ${param.status eq 'banned' ? 'selected' : '' }>Banned
                                         </option>
-                                    </c:forEach>
-                                </select>
-                            </div>
+                                    </select>
+                                </div>
 
-                            <div class="col-md-3">
-                                <label for="statusFilter" class="form-label">Status</label>
-                                <select class="form-select" id="statusFilter" name="status">
-                                    <option value="">All</option>
-                                    <option value="pending" ${param.status eq 'pending' || isPendingView ? 'selected' : '' }>Pending</option>
-                                    <option value="approved" ${param.status eq 'approved' ? 'selected' : '' }>Approved</option>
-                                    <option value="rejected" ${param.status eq 'rejected' ? 'selected' : '' }>Rejected</option>
-                                    <option value="banned" ${param.status eq 'banned' ? 'selected' : '' }>Banned</option>
-                                </select>
-                            </div>
+                                <div class="col-md-3">
+                                    <label for="sortBy" class="form-label">Sort By</label>
+                                    <select class="form-select" id="sortBy" name="sort">
+                                        <option value="id" ${param.sort eq 'id' ? 'selected' : '' }>ID</option>
+                                        <option value="name" ${param.sort eq 'name' ? 'selected' : '' }>Name
+                                        </option>
+                                        <option value="price" ${param.sort eq 'price' ? 'selected' : '' }>Price
+                                        </option>
+                                        <option value="date" ${param.sort eq 'date' ? 'selected' : '' }>Date Added
+                                        </option>
+                                    </select>
+                                </div>
 
-                            <div class="col-md-3">
-                                <label for="sortBy" class="form-label">Sort By</label>
-                                <select class="form-select" id="sortBy" name="sort">
-                                    <option value="id" ${param.sort eq 'id' ? 'selected' : '' }>ID</option>
-                                    <option value="name" ${param.sort eq 'name' ? 'selected' : '' }>Name</option>
-                                    <option value="price" ${param.sort eq 'price' ? 'selected' : '' }>Price</option>
-                                    <option value="date" ${param.sort eq 'date' ? 'selected' : '' }>Date Added</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-md btn-outline-success w-100">Apply Filter</button>
-                            </div>
-                        </form>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-md btn-outline-success w-100">Apply
+                                        Filter</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            </c:if>
+                </c:if>
 
 
-            <!-- Course List -->
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Image</th>
-                                    <th>Course Name</th>
-                                    <th>Instructor</th>
-                                    <th>Price</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <c:forEach var="course" items="${courses}">
+                <!-- Course List -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
                                     <tr>
-                                        <td>${course.courseID}</td>
-                                        <td>
-                                            <img src="${pageContext.request.contextPath}/${course.imageUrl}"
-                                                 alt="${course.name}" class="course-img">
-                                        </td>
-                                        <td>${course.name}</td>
-                                        <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                            data-bs-toggle="tooltip">
-                                            <c:forEach var="i" items="${course.instructors}" varStatus="status">
-                                                ${i.fullName}<c:if test="${!status.last}">, </c:if>
-                                            </c:forEach>
-                                        </td>
-                                        <td>
-                                            <fmt:formatNumber value="${course.price}" type="number" groupingUsed="true" />đ
-                                        </td>
-                                        <td>
-                                            <c:choose>
-                                                <c:when test="${course.approvalStatus eq 'banned'}">
-                                                    <span class="status-badge status-banned">Banned</span>
-                                                </c:when>
-                                                <c:when test="${course.approvalStatus eq 'pending'}">
-                                                    <span class="status-badge status-pending">Pending</span>
-                                                </c:when>
-                                                <c:when test="${course.approvalStatus eq 'approved'}">
-                                                    <span class="status-badge status-approved">Approved</span>
-                                                </c:when>
-                                                <c:when test="${course.approvalStatus eq 'rejected'}">
-                                                    <span class="status-badge status-rejected">Rejected</span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <span class="status-badge status-cus">Unknown</span>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group">
-                                                <a href="${pageContext.request.contextPath}/admin/course/view/${course.courseID}"
-                                                   class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-
-                                                <c:if test="${course.approvalStatus eq 'pending'}">
-                                                    <button 
-                                                        type="submit"
-                                                        class="btn btn-sm btn-outline-success"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#approveCourseModal"
-                                                        data-course-id="${course.courseID}"
-                                                        data-name="${course.name}"
-                                                        >
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-
-                                                    <a href="${pageContext.request.contextPath}/admin/course/reject/${course.courseID}"
-                                                       class="btn btn-sm btn-outline-danger">
-                                                        <i class="fas fa-times"></i>
-                                                    </a>
-                                                </c:if>
-                                                <c:if test="${course.approvalStatus eq 'approved'}">
-                                                    <button 
-                                                        type="submit"
-                                                        class="btn btn-sm btn-outline-warning"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#banCourseModal"
-                                                        data-course-id="${course.courseID}"
-                                                        data-name="${course.name}"
-                                                        >
-                                                        <i class="fas fa-ban"></i>
-                                                    </button>
-                                                </c:if>
-                                                <c:if test="${course.approvalStatus eq 'banned'}">
-                                                    <button 
-                                                        type="submit"
-                                                        class="btn btn-sm btn-outline-primary"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#unbanCourseModal"
-                                                        data-course-id="${course.courseID}"
-                                                        data-name="${course.name}"
-                                                        >
-                                                        <i class="fas fa-undo"></i>
-                                                    </button>
-                                                </c:if>
-                                            </div>
-                                        </td>
+                                        <th>ID</th>
+                                        <th>Image</th>
+                                        <th>Course Name</th>
+                                        <th>Instructor</th>
+                                        <th>Price</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
-                                </c:forEach>
-
-                                <c:if test="${empty courses}">
-                                    <tr>
-                                        <td colspan="9" class="text-center py-5">
-                                            <i class="fas fa-exclamation-circle text-muted fa-2x mb-3"></i>
-                                            <p class="mb-0">
+                                </thead>
+                                <tbody>
+                                    <c:forEach var="course" items="${courses}">
+                                        <tr>
+                                            <td>${course.courseID}</td>
+                                            <td>
+                                                <img src="${pageContext.request.contextPath}/${course.imageUrl}"
+                                                     alt="${course.name}" class="course-img">
+                                            </td>
+                                            <td>${course.name}</td>
+                                            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                                data-bs-toggle="tooltip">
+                                                <c:forEach var="i" items="${course.instructors}" varStatus="status">
+                                                    ${i.fullName}<c:if test="${!status.last}">, </c:if>
+                                                </c:forEach>
+                                            </td>
+                                            <td>
+                                                <fmt:formatNumber value="${course.price}" type="number"
+                                                                  groupingUsed="true" />đ
+                                            </td>
+                                            <td>
                                                 <c:choose>
-                                                    <c:when test="${isPendingView}">
-                                                        No pending course approval requests found.
+                                                    <c:when test="${course.approvalStatus eq 'banned'}">
+                                                        <span class="status-badge status-banned">Banned</span>
                                                     </c:when>
-                                                    <c:when test="${searchView}">
-                                                        No courses found. Please adjust your keyword search.
+                                                    <c:when test="${course.approvalStatus eq 'pending'}">
+                                                        <span class="status-badge status-pending">Pending</span>
+                                                    </c:when>
+                                                    <c:when test="${course.approvalStatus eq 'approved'}">
+                                                        <span class="status-badge status-approved">Approved</span>
+                                                    </c:when>
+                                                    <c:when test="${course.approvalStatus eq 'rejected'}">
+                                                        <span class="status-badge status-rejected">Rejected</span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        No courses found. Please adjust your filters.
+                                                        <span class="status-badge status-cus">Unknown</span>
                                                     </c:otherwise>
                                                 </c:choose>
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </c:if>
-                            </tbody>
-                        </table>
-                    </div>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="${pageContext.request.contextPath}/admin/course/view/${course.courseID}"
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
 
-                    <c:if test="${totalPages > 1}">
-                        <nav>
-                            <ul class="pagination justify-content-center">
-                                <c:if test="${currentPage > 1}">
-                                    <li class="page-item">
-                                        <c:choose>
-                                            <c:when test="${isPendingView}">
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/course/pending?page=${currentPage - 1}">&laquo;</a>
-                                            </c:when>
-                                            <c:when test="${searchView}">
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${currentPage - 1}">&laquo;</a>
-                                            </c:when>
-                                            <c:when test="${filterView}">
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${currentPage - 1}">&laquo;</a>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses?page=${currentPage - 1}">&laquo;</a>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </li>
-                                </c:if>
+                                                    <c:if test="${course.approvalStatus eq 'pending'}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-success"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#approveCourseModal"
+                                                                data-course-id="${course.courseID}"
+                                                                data-name="${course.name}">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
 
-                                <c:forEach begin="1" end="${totalPages}" var="i">
-                                    <li class="page-item ${i == currentPage ? 'active' : ''}">
-                                        <c:choose>
-                                            <c:when test="${isPendingView}">
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/course/pending?page=${i}">${i}</a>
-                                            </c:when>
-                                            <c:when test="${searchView}">
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${i}">${i}</a>
-                                            </c:when>
-                                            <c:when test="${filterView}">
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${i}">${i}</a>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses?page=${i}">${i}</a>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </li>
-                                </c:forEach>
+                                                        <a href="${pageContext.request.contextPath}/admin/course/reject/${course.courseID}"
+                                                           class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-times"></i>
+                                                        </a>
+                                                    </c:if>
+                                                    <c:if test="${course.approvalStatus eq 'approved'}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-warning"
+                                                                data-bs-toggle="modal" data-bs-target="#banCourseModal"
+                                                                data-course-id="${course.courseID}"
+                                                                data-name="${course.name}">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    </c:if>
+                                                    <c:if test="${course.approvalStatus eq 'banned'}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#unbanCourseModal"
+                                                                data-course-id="${course.courseID}"
+                                                                data-name="${course.name}">
+                                                            <i class="fas fa-undo"></i>
+                                                        </button>
+                                                    </c:if>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
 
-                                <c:if test="${currentPage < totalPages}">
-                                    <li class="page-item">
-                                        <c:choose>
-                                            <c:when test="${isPendingView}">
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/course/pending?page=${currentPage + 1}">&raquo;</a>
-                                            </c:when>
-                                            <c:when test="${searchView}">
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${currentPage + 1}">&raquo;</a>
-                                            </c:when>
-                                            <c:when test="${filterView}">
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${currentPage + 1}">&raquo;</a>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <a class="page-link btn btn-outline-primary" href="${pageContext.request.contextPath}/admin/courses?page=${currentPage + 1}">&raquo;</a>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </li>
-                                </c:if>
-                            </ul>
-                        </nav>
-                    </c:if>
-                </div>
-            </div>
-        </div>
-        <!-- Modal ban course -->
-        <div class="modal fade"
-             id="banCourseModal"
-             tabindex="-1"
-             aria-labelledby="banCourse"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"
-                            id="banCourse">
-                            Confirm Ban <strong>Course</strong></h5>
-                        <button type="button" class="btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close">
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to ban this course with name <strong id="banCourseName"></strong> ?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button"
-                                class="btn btn-md btn-secondary"
-                                data-bs-dismiss="modal">Cancel</button>
-                        <form method="post" action="${pageContext.request.contextPath}/admin/course/ban" style="display: inline;">
-                            <input type="hidden" name="courseID" id="banCourseID" />
-                            <button type="submit" class="btn btn-md btn-warning text-white">Ban</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Modal unban course -->
-        <div class="modal fade"
-             id="unbanCourseModal"
-             tabindex="-1"
-             aria-labelledby="unbanCourse"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"
-                            id="unbanCourse">
-                            Confirm Unban <strong>Course</strong></h5>
-                        <button type="button" class="btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close">
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to unban this course with name <strong id="unbanCourseName"></strong> ?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button"
-                                class="btn btn-md btn-secondary"
-                                data-bs-dismiss="modal">Cancel</button>
-                        <form method="post" action="${pageContext.request.contextPath}/admin/course/unban" style="display: inline;">
-                            <input type="hidden" name="courseID" id="unbanCourseID" />
-                            <button type="submit" class="btn btn-md btn-primary text-white">Unban</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Modal approve course -->
-        <div class="modal fade"
-             id="approveCourseModal"
-             tabindex="-1"
-             aria-labelledby="approveCourse"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"
-                            id="approveCourse">
-                            Confirm Approve <strong>Course</strong></h5>
-                        <button type="button" class="btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close">
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to approve this course with name <strong id="approveCourseName"></strong> ?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button"
-                                class="btn btn-md btn-secondary"
-                                data-bs-dismiss="modal">Cancel</button>
-                        <form method="post" action="${pageContext.request.contextPath}/admin/course/approve" style="display: inline;">
-                            <input type="hidden" name="courseID" id="approveCourseID" />
-                            <button type="submit" class="btn btn-md btn-primary text-white">Approve</button>
-                        </form>
+                                    <c:if test="${empty courses}">
+                                        <tr>
+                                            <td colspan="9" class="text-center py-5">
+                                                <i class="fas fa-exclamation-circle text-muted fa-2x mb-3"></i>
+                                                <p class="mb-0">
+                                                    <c:choose>
+                                                        <c:when test="${isPendingView}">
+                                                            No pending course approval requests found.
+                                                        </c:when>
+                                                        <c:when test="${searchView}">
+                                                            No courses found. Please adjust your keyword search.
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            No courses found. Please adjust your filters.
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </c:if>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <c:if test="${totalPages > 1}">
+                            <nav>
+                                <ul class="pagination justify-content-center">
+                                    <c:if test="${currentPage > 1}">
+                                        <li class="page-item">
+                                            <c:choose>
+                                                <c:when test="${isPendingView}">
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/course/pending?page=${currentPage - 1}">&laquo;</a>
+                                                </c:when>
+                                                <c:when test="${searchView}">
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${currentPage - 1}">&laquo;</a>
+                                                </c:when>
+                                                <c:when test="${filterView}">
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${currentPage - 1}">&laquo;</a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/courses?page=${currentPage - 1}">&laquo;</a>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </li>
+                                    </c:if>
+
+                                    <c:forEach begin="1" end="${totalPages}" var="i">
+                                        <li class="page-item ${i == currentPage ? 'active' : ''}">
+                                            <c:choose>
+                                                <c:when test="${isPendingView}">
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/course/pending?page=${i}">${i}</a>
+                                                </c:when>
+                                                <c:when test="${searchView}">
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${i}">${i}</a>
+                                                </c:when>
+                                                <c:when test="${filterView}">
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${i}">${i}</a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/courses?page=${i}">${i}</a>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </li>
+                                    </c:forEach>
+
+                                    <c:if test="${currentPage < totalPages}">
+                                        <li class="page-item">
+                                            <c:choose>
+                                                <c:when test="${isPendingView}">
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/course/pending?page=${currentPage + 1}">&raquo;</a>
+                                                </c:when>
+                                                <c:when test="${searchView}">
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/courses/search?keyword=${keyword}&page=${currentPage + 1}">&raquo;</a>
+                                                </c:when>
+                                                <c:when test="${filterView}">
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/courses/filter?keyword=${param.keyword}&category=${param.category}&status=${param.status}&sort=${param.sort}&page=${currentPage + 1}">&raquo;</a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <a class="page-link btn btn-outline-primary"
+                                                       href="${pageContext.request.contextPath}/admin/courses?page=${currentPage + 1}">&raquo;</a>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </li>
+                                    </c:if>
+                                </ul>
+                            </nav>
+                        </c:if>
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- Bootstrap Bundle with Popper -->
-        <jsp:include page="../common/scripts.jsp" />
+            <!-- Modal ban course -->
+            <div class="modal fade" id="banCourseModal" tabindex="-1" aria-labelledby="banCourse"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-white">
+                            <h5 class="modal-title" id="banCourse">
+                                Confirm Ban Course</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close">
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to ban this course?</p>
+                            <p class="text-danger"><small>This will make the course unavailable to all
+                                    users.</small></p>
+                            <div class="mt-3 p-3 bg-light rounded">
+                                <p class="mb-0"><strong>Course name:</strong> <span id="banCourseName"></span></p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-md btn-secondary"
+                                    data-bs-dismiss="modal">Cancel</button>
+                            <form method="post" action="${pageContext.request.contextPath}/admin/course/ban"
+                                  style="display: inline;">
+                                <input type="hidden" name="courseID" id="banCourseID" />
+                                <button type="submit" class="btn btn-md btn-warning text-white">Ban Course</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal unban course -->
+            <div class="modal fade" id="unbanCourseModal" tabindex="-1" aria-labelledby="unbanCourse"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="unbanCourse">
+                                Confirm Unban Course</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close">
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to unban this course?</p>
+                            <p class="text-info"><small>This will make the course available to users again.</small>
+                            </p>
+                            <div class="mt-3 p-3 bg-light rounded">
+                                <p class="mb-0"><strong>Course name:</strong> <span id="unbanCourseName"></span></p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-md btn-secondary"
+                                    data-bs-dismiss="modal">Cancel</button>
+                            <form method="post" action="${pageContext.request.contextPath}/admin/course/unban"
+                                  style="display: inline;">
+                                <input type="hidden" name="courseID" id="unbanCourseID" />
+                                <button type="submit" class="btn btn-md btn-primary text-white">Unban</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal approve course -->
+            <div class="modal fade" id="approveCourseModal" tabindex="-1" aria-labelledby="approveCourse"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="approveCourse">
+                                Confirm Approve <strong>Course</strong></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to approve this course with name <strong
+                                id="approveCourseName"></strong> ?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-md btn-secondary"
+                                    data-bs-dismiss="modal">Cancel</button>
+                            <form method="post" action="${pageContext.request.contextPath}/admin/course/approve"
+                                  style="display: inline;">
+                                <input type="hidden" name="courseID" id="approveCourseID" />
+                                <button type="submit" class="btn btn-md btn-primary text-white">Approve</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Bootstrap Bundle with Popper -->
+            <jsp:include page="../common/scripts.jsp" />
 
-        <script>
-            {
-                const searchInput = document.getElementById('searchKeyword');
-                const hiddenFilterInput = document.getElementById('filterKeyword');
+            <script>
+                {
+                    const searchInput = document.getElementById('searchKeyword');
+                    const hiddenFilterInput = document.getElementById('filterKeyword');
 
-                if (searchInput && hiddenFilterInput) {
-                    searchInput.addEventListener('input', () => {
-                        hiddenFilterInput.value = searchInput.value;
-                    });
+                    if (searchInput && hiddenFilterInput) {
+                        searchInput.addEventListener('input', () => {
+                            hiddenFilterInput.value = searchInput.value;
+                        });
+                    }
                 }
-            }
 
-            // Auto dismiss alerts after 5 seconds
-            setTimeout(function () {
-                document.querySelectorAll('.alert').forEach(function (alert) {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
+                // Auto dismiss alerts after 5 seconds
+                setTimeout(function () {
+                    document.querySelectorAll('.alert').forEach(function (alert) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    });
+                }, 5000);
+
+                // Mở modal ban course
+                document.getElementById('banCourseModal').addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    document.getElementById('banCourseID').value = button.dataset.courseId;
+                    document.getElementById('banCourseName').innerHTML = button.dataset.name;
                 });
-            }, 5000);
 
-            // Mở modal ban course
-            document.getElementById('banCourseModal').addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                document.getElementById('banCourseID').value = button.dataset.courseId;
-                document.getElementById('banCourseName').innerHTML = button.dataset.name;
-            });
+                // Mở modal unban course
+                document.getElementById('unbanCourseModal').addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    document.getElementById('unbanCourseID').value = button.dataset.courseId;
+                    document.getElementById('unbanCourseName').innerHTML = button.dataset.name;
+                });
 
-            // Mở modal unban course
-            document.getElementById('unbanCourseModal').addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                document.getElementById('unbanCourseID').value = button.dataset.courseId;
-                document.getElementById('unbanCourseName').innerHTML = button.dataset.name;
-            });
+                // Mở modal approve course
+                document.getElementById('approveCourseModal').addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    document.getElementById('approveCourseID').value = button.dataset.courseId;
+                    document.getElementById('approveCourseName').innerHTML = button.dataset.name;
+                });
+            </script>
 
-            // Mở modal approve course
-            document.getElementById('approveCourseModal').addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                document.getElementById('approveCourseID').value = button.dataset.courseId;
-                document.getElementById('approveCourseName').innerHTML = button.dataset.name;
-            });
-        </script>
+        </body>
 
-    </body>
-
-</html>
+    </html>

@@ -223,8 +223,8 @@ public class AdminCustomerServlet extends HttpServlet {
             hasError = true;
         }
 
-        // Validate phone (optional)
-        if (phone != null && !phone.trim().isEmpty() && !Validator.isValidPhone(phone)) {
+        // Validate phone
+        if (!Validator.isValidPhone(phone)) {
             request.setAttribute("phoneError", "Please enter a valid phone number (10-11 digits)");
             hasError = true;
         }
@@ -337,7 +337,7 @@ public class AdminCustomerServlet extends HttpServlet {
             hasError = true;
         }
 
-        // Validate phone (optional)
+        // Validate phone
         if (!Validator.isValidPhone(phone)) {
             request.setAttribute("phoneError", "Please enter a valid phone number (10-11 digits)");
             hasError = true;

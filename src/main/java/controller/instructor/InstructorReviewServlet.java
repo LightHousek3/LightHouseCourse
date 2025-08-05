@@ -115,7 +115,7 @@ public class InstructorReviewServlet extends HttpServlet {
 
         // Get current page
         int page = 1;
-        int pageSize = 3;
+        int pageSize = 6;
         String pageParam = request.getParameter("page");
         if (pageParam != null && !pageParam.isEmpty()) {
             try {

@@ -130,7 +130,7 @@
                                                             test="${not empty course.instructors && not empty course.instructors[0]}">
                                                             <c:forEach var="instructor" items="${course.instructors}"
                                                                 varStatus="status">
-                                                                ${instructor.name}<c:if test="${!status.last}">, </c:if>
+                                                                ${instructor.fullName}<c:if test="${!status.last}">, </c:if>
                                                             </c:forEach>
                                                         </c:when>
                                                         <c:otherwise>
@@ -143,7 +143,7 @@
                                                 <div class="progress-container">
                                                     <div class="progress mt-2 mb-2">
                                                         <fmt:formatNumber var="progressValue"
-                                                            value="${progress.completionPercentage}" pattern="0" />
+                                                            value="${progress.completionPercentage}" pattern="0.##" />
                                                         <fmt:formatNumber var="progressRounded"
                                                             value="${(progressValue - progressValue % 10)}"
                                                             pattern="0" />
@@ -155,10 +155,10 @@
                                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                                         <small class="text-muted">${progressValue}%
                                                             complete</small>
-                                                        <c:if test="${progressValue < 100}">
+                                                        <c:if test="${progressValue < 100.00}">
                                                             <span class="badge bg-warning text-dark">In Progress</span>
                                                         </c:if>
-                                                        <c:if test="${progressValue eq 100}">
+                                                        <c:if test="${progressValue eq 100.00}">
                                                             <span class="badge bg-success">Completed</span>
                                                         </c:if>
                                                     </div>

@@ -13,6 +13,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import model.SuperUser;
 import service.EmailService;
@@ -253,8 +254,8 @@ public class AdminSuperUserServlet extends HttpServlet {
             hasError = true;
         }
 
-        // Validate phone (optional)
-        if (phone != null && !phone.trim().isEmpty() && !Validator.isValidPhone(phone)) {
+        // Validate phone
+        if (!Validator.isValidPhone(phone)) {
             request.setAttribute("phoneError", "Please enter a valid phone number (10-11 digits)");
             hasError = true;
         }
@@ -343,6 +344,8 @@ public class AdminSuperUserServlet extends HttpServlet {
             }
         }
 
+        HttpSession session = request.getSession();
+        session.setAttribute("role", newSuperUser.getRole() != null ? (newSuperUser.getRole().equals("admin") ? "Admin" : "Instructor") : "Unknown");
         if (userId > 0) {
             response.sendRedirect(request.getContextPath() + "/admin/superusers?success=added");
         } else {
@@ -420,15 +423,13 @@ public class AdminSuperUserServlet extends HttpServlet {
         }
 
         // Validate password (only if being changed)
-        if (password != null && !password.trim().isEmpty() && !password.equals(existingSuperUser.getPassword())) {
-            if (!Validator.isValidPassword(password)) {
-                request.setAttribute("passwordError", "Password must be at least 6 characters");
-                hasError = true;
-            }
+        if (!Validator.isValidPassword(password)) {
+            request.setAttribute("passwordError", "Password must be at least 6 characters");
+            hasError = true;
         }
 
-        // Validate phone (optional)
-        if (phone != null && !phone.trim().isEmpty() && !Validator.isValidPhone(phone)) {
+        // Validate phone
+        if (!Validator.isValidPhone(phone)) {
             request.setAttribute("phoneError", "Please enter a valid phone number (10-11 digits)");
             hasError = true;
         }
@@ -546,6 +547,8 @@ public class AdminSuperUserServlet extends HttpServlet {
                 }
             }
 
+            HttpSession session = request.getSession();
+            session.setAttribute("role", originalRole != null ? (originalRole.equals("admin") ? "Instructor" : "Admin") : "Unknown");
             if (updated) {
                 response.sendRedirect(request.getContextPath() + "/admin/superusers?success=updated");
             } else {
@@ -582,6 +585,8 @@ public class AdminSuperUserServlet extends HttpServlet {
             // Delete superuser
             boolean deleted = superUserDAO.deleteSuperUser(superUserId);
 
+            HttpSession session = request.getSession();
+            session.setAttribute("role", existingSuperUser.getRole() != null ? (existingSuperUser.getRole().equals("admin") ? "Admin" : "Instructor") : "Unknown");
             if (deleted) {
                 response.sendRedirect(request.getContextPath() + "/admin/superusers?success=deleted");
             } else {
@@ -617,6 +622,8 @@ public class AdminSuperUserServlet extends HttpServlet {
             superUser.setActive(!superUser.isActive());
             boolean updated = superUserDAO.updateSuperUser(superUser);
 
+            HttpSession session = request.getSession();
+            session.setAttribute("role", superUser.getRole() != null ? (superUser.getRole().equals("admin") ? "Admin" : "Instructor") : "Unknown");
             if (updated) {
                 response.sendRedirect(request.getContextPath() + "/admin/superusers?success=status_changed");
             } else {

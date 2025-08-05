@@ -481,6 +481,23 @@
                             </a>
                         </div>
                     </div>
+                    <c:if test="${param.success eq 'updated'}">
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Profile updated successfully!
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                        </div>
+                    </c:if>
+
+                    <c:if test="${param.success eq 'password_changed'}">
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Password changed successfully!
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                        </div>
+                    </c:if>
 
                     <c:choose>
                         <c:when test="${empty instructor}">
@@ -494,10 +511,10 @@
                                 <div class="profile-header">
                                     <c:choose>
                                         <c:when test="${not empty avatar}">
-                                            <img src="${pageContext.request.contextPath}${avatar}" alt="${instructor.fullName}" class="profile-avatar">
+                                            <img src="${pageContext.request.contextPath}${avatar}" alt="${instructor.fullName}" class="profile-avatar" referrerpolicy="no-referrer">
                                         </c:when>
                                         <c:otherwise>
-                                            <img src="${pageContext.request.contextPath}/assets/imgs/avatars/default-user.png" alt="${instructor.fullName}" class="profile-avatar">
+                                            <img src="${pageContext.request.contextPath}/assets/imgs/avatars/default-user.png" alt="${instructor.fullName}" class="profile-avatar" referrerpolicy="no-referrer">
                                         </c:otherwise>
                                     </c:choose>
                                     <h3 class="profile-name">${instructor.fullName}</h3>
@@ -663,27 +680,6 @@
                                                                 </c:choose>
                                                             </div>
                                                         </div>
-
-                                                    <li class="info-item">
-                                                        <div class="info-icon">
-                                                            <i class="fas fa-toggle-on"></i>
-                                                        </div>
-                                                        <div class="info-content">
-                                                            <div class="info-label">Status</div>
-                                                            <div class="info-value">
-                                                                <c:choose>
-                                                                    <c:when test="${selectedInstructor.isActive}">
-                                                                        <span
-                                                                            class="status-badge status-active">Active</span>
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        <span
-                                                                            class="status-badge status-inactive">Inactive</span>
-                                                                    </c:otherwise>
-                                                                </c:choose>
-                                                            </div>
-                                                        </div>
-                                                    </li>
                                                 </ul>
                                             </div>
                                         </div>
