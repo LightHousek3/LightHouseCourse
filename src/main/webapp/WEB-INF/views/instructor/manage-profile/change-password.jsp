@@ -1,8 +1,4 @@
-<%-- 
-    Document   : change-password
-    Created on : Jul 1, 2025, 3:02:26 PM
-    Author     : NhiDTY-CE180492
---%>
+<%-- Document : change-password Created on : Jul 1, 2025, 3:02:26 PM Author : NhiDTY-CE180492 --%>
 
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -14,7 +10,6 @@
         <title>Change Password - LightHouse Instructor</title>
         <jsp:include page="../common/head.jsp" />
         <style>
-
             .fa-lock {
                 color: #0808f9;
             }
@@ -157,7 +152,8 @@
             }
 
             .btn-submit {
-                background: #e91e63;  /* Màu hồng */
+                background: #e91e63;
+                /* Màu hồng */
                 border: none;
                 padding: 10px 20px;
                 border-radius: 8px;
@@ -167,7 +163,8 @@
             }
 
             .btn-submit:hover {
-                background: #c2185b;  /* Màu hồng đậm hơn khi hover */
+                background: #c2185b;
+                /* Màu hồng đậm hơn khi hover */
                 color: white;
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
@@ -178,14 +175,16 @@
                 font-weight: 500;
                 padding: 8px 16px;
                 border-radius: 6px;
-                background: linear-gradient(60deg, #e91e63, #c2185b) !important;  /* Gradient hồng */
+                background: linear-gradient(60deg, #e91e63, #c2185b) !important;
+                /* Gradient hồng */
                 color: white !important;
                 border: none !important;
                 transition: all 0.3s ease;
             }
 
             .header-actions .btn:hover {
-                background: linear-gradient(60deg, #c2185b, #ad1457) !important;  /* Gradient hồng đậm hơn */
+                background: linear-gradient(60deg, #c2185b, #ad1457) !important;
+                /* Gradient hồng đậm hơn */
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
             }
@@ -274,7 +273,7 @@
                 border-radius: 8px;
                 padding: 20px;
                 margin-bottom: 20px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
 
             .instructor-header h2 {
@@ -329,7 +328,8 @@
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2"></i>
                             ${successMessage}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
                         </div>
                     </c:if>
 
@@ -337,7 +337,8 @@
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             ${errorMessage}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
                         </div>
                     </c:if>
 
@@ -350,7 +351,8 @@
                             <h2 class="m-0"><i class="fas fa-lock"></i> Change Password</h2>
                         </div>
                         <div class="header-actions row">
-                            <a href="${pageContext.request.contextPath}/instructor/profile" class="col-md-6 col-sm-12 btn btn-lg btn-primary">
+                            <a href="${pageContext.request.contextPath}/instructor/profile"
+                               class="col-md-6 col-sm-12 btn btn-lg btn-primary">
                                 <i class="fas fa-arrow-left me-2"></i> Back to Profile
                             </a>
                             <a href="${pageContext.request.contextPath}/instructor/profile/change"
@@ -364,237 +366,275 @@
                     <div class="content-card">
                         <div class="card-body">
 
-                            <form action="${pageContext.request.contextPath}/instructor/profile" method="post"
-                                  id="changePasswordForm">
+                            <form action="${pageContext.request.contextPath}/instructor/profile"
+                                  method="post" id="changePasswordForm">
                                 <input type="hidden" name="action" value="changePassword">
 
                                 <!-- Password Change Section -->
 
-                                    <div class="row g-3">
-                                        <div class="col-12">
-                                            <label for="currentPassword" class="form-label">Current Password <span class="required">*</span></label>
-                                            <div class="input-group">
-                                                <input type="password"
-                                                       class="form-control ${not empty currentPasswordError ? 'is-invalid' : ''}"
-                                                       id="currentPassword" name="currentPassword"
-                                                       placeholder="Enter your current password" required>
-                                                <button class="btn btn-outline-secondary" type="button" id="toggleCurrentPassword">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label for="currentPassword" class="form-label">Current Password
+                                            <span class="required">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password"
+                                                   class="form-control ${not empty currentPasswordError ? 'is-invalid' : ''}"
+                                                   id="currentPassword" name="currentPassword"
+                                                   placeholder="Enter your current password" required>
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                    id="toggleCurrentPassword">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        <c:if test="${not empty currentPasswordError}">
+                                            <div class="invalid-feedback">
+                                                ${currentPasswordError}
                                             </div>
-                                            <c:if test="${not empty currentPasswordError}">
-                                                <div class="invalid-feedback">
-                                                    ${currentPasswordError}
-                                                </div>
-                                            </c:if>
+                                        </c:if>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="newPassword" class="form-label">New Password <span
+                                                class="required">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password"
+                                                   class="form-control ${not empty newPasswordError ? 'is-invalid' : ''}"
+                                                   id="newPassword" name="newPassword"
+                                                   placeholder="Enter your new password" required>
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                    id="toggleNewPassword">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
                                         </div>
 
-                                        <div class="col-12">
-                                            <label for="newPassword" class="form-label">New Password <span class="required">*</span></label>
-                                            <div class="input-group">
-                                                <input type="password"
-                                                       class="form-control ${not empty newPasswordError ? 'is-invalid' : ''}"
-                                                       id="newPassword" name="newPassword"
-                                                       placeholder="Enter your new password" required>
-                                                <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                        <small class="text-muted">Password must be at least 6
+                                            characters.</small>
+
+
+                                        <c:if test="${not empty newPasswordError}">
+                                            <div class="invalid-feedback">
+                                                ${newPasswordError}
                                             </div>
+                                        </c:if>
+                                    </div>
 
-                                            <small class="text-muted">Password must be at least 6 characters.</small>
-
-
-                                            <c:if test="${not empty newPasswordError}">
-                                                <div class="invalid-feedback">
-                                                    ${newPasswordError}
-                                                </div>
-                                            </c:if>
+                                    <div class="col-12">
+                                        <label for="confirmPassword" class="form-label">Confirm New Password
+                                            <span class="required">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password"
+                                                   class="form-control ${not empty confirmPasswordError ? 'is-invalid' : ''}"
+                                                   id="confirmPassword" name="confirmPassword"
+                                                   placeholder="Confirm your new password" required>
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                    id="toggleConfirmPassword">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
                                         </div>
-
-                                        <div class="col-12">
-                                            <label for="confirmPassword" class="form-label">Confirm New Password <span class="required">*</span></label>
-                                            <div class="input-group">
-                                                <input type="password"
-                                                       class="form-control ${not empty confirmPasswordError ? 'is-invalid' : ''}"
-                                                       id="confirmPassword" name="confirmPassword"
-                                                       placeholder="Confirm your new password" required>
-                                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                        <c:if test="${not empty confirmPasswordError}">
+                                            <div class="invalid-feedback">
+                                                ${confirmPasswordError}
                                             </div>
-                                            <c:if test="${not empty confirmPasswordError}">
-                                                <div class="invalid-feedback">
-                                                    ${confirmPasswordError}
-                                                </div>
-                                            </c:if>
-                                        </div>
+                                        </c:if>
                                     </div>
                                 </div>
-
-                                <!-- Form Actions -->
-                                <div class="form-actions m-0 mb-4 me-3">
-                                    <a href="${pageContext.request.contextPath}/instructor/profile"
-                                       class="btn btn-md btn-cancel">
-                                        <i class="fas fa-times me-2"></i> Cancel
-                                    </a>
-                                    <button type="submit" class="btn btn-md btn-submit">
-                                        <i class="fas fa-key me-2"></i> Save
-                                    </button>
-                                </div>
-                            </form>
                         </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions m-0 mb-4 me-3">
+                            <a href="${pageContext.request.contextPath}/instructor/profile"
+                               class="btn btn-md btn-cancel">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-md btn-submit">
+                                <i class="fas fa-key me-2"></i> Save
+                            </button>
+                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
 
-        <jsp:include page="../common/scripts.jsp" />
+    <jsp:include page="../common/scripts.jsp" />
 
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                // Password visibility toggle functionality
-                function setupPasswordToggle(inputId, toggleId) {
-                    const input = document.getElementById(inputId);
-                    const toggle = document.getElementById(toggleId);
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Password visibility toggle functionality
+            function setupPasswordToggle(inputId, toggleId) {
+                const input = document.getElementById(inputId);
+                const toggle = document.getElementById(toggleId);
 
-                    if (input && toggle) {
-                        toggle.addEventListener('click', function () {
-                            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                            input.setAttribute('type', type);
+                if (input && toggle) {
+                    toggle.addEventListener('click', function () {
+                        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                        input.setAttribute('type', type);
 
-                            const icon = toggle.querySelector('i');
-                            icon.classList.toggle('fa-eye');
-                            icon.classList.toggle('fa-eye-slash');
-                        });
-                    }
+                        const icon = toggle.querySelector('i');
+                        icon.classList.toggle('fa-eye');
+                        icon.classList.toggle('fa-eye-slash');
+                    });
                 }
+            }
 
-                // Setup password toggles
-                setupPasswordToggle('currentPassword', 'toggleCurrentPassword');
-                setupPasswordToggle('newPassword', 'toggleNewPassword');
-                setupPasswordToggle('confirmPassword', 'toggleConfirmPassword');
+            // Setup password toggles
+            setupPasswordToggle('currentPassword', 'toggleCurrentPassword');
+            setupPasswordToggle('newPassword', 'toggleNewPassword');
+            setupPasswordToggle('confirmPassword', 'toggleConfirmPassword');
 
-                // Password strength checker
-                const newPasswordInput = document.getElementById('newPassword');
-                const passwordStrength = document.getElementById('passwordStrength');
-                const passwordStrengthBar = document.getElementById('passwordStrengthBar');
-                const requirements = {
-                    length: document.getElementById('req-length')
-                };
+            // Password strength checker
+            const newPasswordInput = document.getElementById('newPassword');
+            const passwordStrength = document.getElementById('passwordStrength');
+            const passwordStrengthBar = document.getElementById('passwordStrengthBar');
+            const requirements = {
+                length: document.getElementById('req-length')
+            };
 
-                if (newPasswordInput) {
-                    newPasswordInput.addEventListener('input', function () {
-                        const password = this.value;
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function () {
+                    const password = this.value;
 
-                        if (password.length === 0) {
-                            passwordStrength.style.display = 'none';
-                            return;
-                        }
+                    if (password.length === 0) {
+                        passwordStrength.style.display = 'none';
+                        return;
+                    }
 
-                        passwordStrength.style.display = 'block';
+                    passwordStrength.style.display = 'block';
 
-                        // Check requirements
-                        const checks = {
-                            length: password.length >= 6
-                        };
+                    // Check requirements
+                    const checks = {
+                        length: password.length >= 6
+                    };
 
-                        // Update requirement indicators
-                        Object.keys(checks).forEach(key => {
-                            if (requirements[key]) {
-                                if (checks[key]) {
-                                    requirements[key].classList.add('valid');
-                                } else {
-                                    requirements[key].classList.remove('valid');
-                                }
+                    // Update requirement indicators
+                    Object.keys(checks).forEach(key => {
+                        if (requirements[key]) {
+                            if (checks[key]) {
+                                requirements[key].classList.add('valid');
+                            } else {
+                                requirements[key].classList.remove('valid');
                             }
-                        });
-
-                        // Calculate strength
-                        const validChecks = Object.values(checks).filter(Boolean).length;
-                        let strengthClass = '';
-
-                        if (validChecks <= 2) {
-                            strengthClass = 'strength-weak';
-                        } else if (validChecks === 3) {
-                            strengthClass = 'strength-fair';
-                        } else if (validChecks === 4) {
-                            strengthClass = 'strength-good';
-                        } else {
-                            strengthClass = 'strength-strong';
                         }
-
-                        passwordStrengthBar.className = 'password-strength-bar ' + strengthClass;
                     });
-                }
 
-                // Password confirmation validation
-                const confirmPasswordInput = document.getElementById('confirmPassword');
-                if (newPasswordInput && confirmPasswordInput) {
-                    function validatePasswordMatch() {
-                        if (confirmPasswordInput.value && newPasswordInput.value !== confirmPasswordInput.value) {
-                            confirmPasswordInput.setCustomValidity('Passwords do not match');
-                            confirmPasswordInput.classList.add('is-invalid');
-                        } else {
-                            confirmPasswordInput.setCustomValidity('');
-                            confirmPasswordInput.classList.remove('is-invalid');
-                        }
+                    // Calculate strength
+                    const validChecks = Object.values(checks).filter(Boolean).length;
+                    let strengthClass = '';
+
+                    if (validChecks <= 2) {
+                        strengthClass = 'strength-weak';
+                    } else if (validChecks === 3) {
+                        strengthClass = 'strength-fair';
+                    } else if (validChecks === 4) {
+                        strengthClass = 'strength-good';
+                    } else {
+                        strengthClass = 'strength-strong';
                     }
 
-                    confirmPasswordInput.addEventListener('input', validatePasswordMatch);
-                    newPasswordInput.addEventListener('input', validatePasswordMatch);
+                    passwordStrengthBar.className = 'password-strength-bar ' + strengthClass;
+                });
+            }
+
+            // Password confirmation validation
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            if (newPasswordInput && confirmPasswordInput) {
+                function validatePasswordMatch() {
+                    if (confirmPasswordInput.value && newPasswordInput.value !== confirmPasswordInput.value) {
+                        confirmPasswordInput.setCustomValidity('Passwords do not match');
+                        confirmPasswordInput.classList.add('is-invalid');
+                    } else {
+                        confirmPasswordInput.setCustomValidity('');
+                        confirmPasswordInput.classList.remove('is-invalid');
+                    }
                 }
 
-                // Form submission validation
-                const form = document.getElementById('changePasswordForm');
-                if (form) {
-                    form.addEventListener('submit', function (e) {
-                        const currentPassword = document.getElementById('currentPassword');
-                        const newPassword = document.getElementById('newPassword');
-                        const confirmPassword = document.getElementById('confirmPassword');
+                confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+                newPasswordInput.addEventListener('input', validatePasswordMatch);
+            }
 
-                        // Validate all fields are filled
-                        if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-                            e.preventDefault();
-                            alert('Please fill in all password fields.');
-                            return;
-                        }
+            // Form submission validation
+            const form = document.getElementById('changePasswordForm');
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    const currentPassword = document.getElementById('currentPassword');
+                    const newPassword = document.getElementById('newPassword');
+                    const confirmPassword = document.getElementById('confirmPassword');
 
-                        // Validate password match
-                        if (newPassword.value !== confirmPassword.value) {
-                            e.preventDefault();
-                            alert('New password and confirmation do not match.');
-                            confirmPassword.focus();
-                            return;
-                        }
+                    // Function to show Bootstrap alert
+                    function showBootstrapAlert(message, type) {
+                        // Remove any existing alerts
+                        const existingAlerts = document.querySelectorAll('.alert-validation');
+                        existingAlerts.forEach(alert => alert.remove());
 
-                        // Validate password strength
-                        const password = newPassword.value;
-                        if (password.length < 6) {
-                            e.preventDefault();
-                            alert('Password must be at least 6 characters.');
-                            newPassword.focus();
-                            return;
-                        }
+                        // Create new alert
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = `alert alert-\${type} alert-dismissible fade show alert-validation`;
+                        alertDiv.setAttribute('role', 'alert');
+
+                        // Add icon based on alert type
+                        let icon = 'exclamation-triangle';
+                        if (type === 'success')
+                            icon = 'check-circle';
+
+                        alertDiv.innerHTML = `
+                            <i class="fas fa-${icon} me-2"></i>
+                            \${message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            `;
+
+                        // Insert at the top of the form
+                        form.insertAdjacentElement('beforebegin', alertDiv);
+
+                        // Auto dismiss after 5 seconds
+                        setTimeout(() => {
+                            alertDiv.classList.remove('show');
+                            setTimeout(() => alertDiv.remove(), 150);
+                        }, 5000);
+                    }
+
+                    // Validate all fields are filled
+                    if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
+                        e.preventDefault();
+                        showBootstrapAlert('Please fill in all password fields.', 'danger');
+                        return;
+                    }
+
+                    // Validate password match
+                    if (newPassword.value !== confirmPassword.value) {
+                        e.preventDefault();
+                        showBootstrapAlert('New password and confirmation do not match.', 'danger');
+                        confirmPassword.focus();
+                        return;
+                    }
+
+                    // Validate password strength
+                    const password = newPassword.value;
+                    if (password.length < 6) {
+                        e.preventDefault();
+                        showBootstrapAlert('Password must be at least 6 characters.', 'danger');
+                        newPassword.focus();
+                        return;
+                    }
 
 
-                        // Validate new password is different from current
-                        if (currentPassword.value === newPassword.value) {
-                            e.preventDefault();
-                            alert('New password must be different from current password.');
-                            newPassword.focus();
-                            return;
-                        }
+                    // Validate new password is different from current
+                    if (currentPassword.value === newPassword.value) {
+                        e.preventDefault();
+                        showBootstrapAlert('New password must be different from current password.', 'danger');
+                        newPassword.focus();
+                        return;
+                    }
 
-                        // Show loading state
-                        const submitBtn = form.querySelector('button[type="submit"]');
-                        if (submitBtn) {
-                            submitBtn.disabled = true;
-                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Changing Password...';
-                        }
-                    });
-                }
-            });
-        </script>
-    </body>
+                    // Show loading state
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Changing Password...';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
 
 </html>

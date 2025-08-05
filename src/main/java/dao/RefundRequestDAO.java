@@ -812,4 +812,33 @@ public class RefundRequestDAO extends DBContext {
 
         return hasApproved;
     }
+
+    /**
+     * Counts the number of pending refund requests.
+     *
+     * @return The total number of pending refund requests
+     */
+    public int countPendingRefundRequests() {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = getConnection();
+            String sql = "SELECT COUNT(*) FROM RefundRequests WHERE Status = 'pending'";
+
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+
+        return count;
+    }
 }

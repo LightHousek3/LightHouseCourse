@@ -26,9 +26,9 @@
                     <h2 class="m-0 d-none d-lg-block">Refund Requests Management</h2>
                     <div class="d-flex align-items-center">
                         <a href="${pageContext.request.contextPath}/admin/refunds"
-                       class="btn btn-lg btn-primary me-3">
-                        <i class="fas fa-arrow-left me-2"></i> Back
-                    </a>
+                           class="btn btn-lg btn-primary me-3">
+                            <i class="fas fa-arrow-left me-2"></i> Back
+                        </a>
                     </div>
                 </div>
 
@@ -106,8 +106,16 @@
                                         </div>
                                     </div>
                                     <div class="info-row">
-                                        <div class="info-label">Refund Amount:
+                                        <div class="info-label">Original Amount:
                                             <span class="fw-bold text-success">
+                                                <fmt:formatNumber value="${refundRequest.originalAmount}"
+                                                                  type="number" />đ
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Refund Amount:
+                                            <span class="fw-bold text-info">
                                                 <fmt:formatNumber value="${refundRequest.refundAmount}"
                                                                   type="number" />đ
                                             </span>
@@ -141,7 +149,7 @@
                                         <div class="info-label">Course Name: ${refundRequest.courseName}</div>
                                     </div>
                                     <div class="info-row">
-                                        
+
                                     </div>
                                 </div>
                             </div>

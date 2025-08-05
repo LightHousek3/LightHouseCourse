@@ -157,7 +157,7 @@
                     <c:if test="${param.success eq 'added'}">
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2"></i>
-                            Super User added successfully!
+                            ${sessionScope.role} added successfully!
                             <button type="button" class="btn-close" data-bs-dismiss="alert"
                                     aria-label="Close"></button>
                         </div>
@@ -165,7 +165,7 @@
                     <c:if test="${param.success eq 'updated'}">
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2"></i>
-                            Super User updated successfully!
+                            ${sessionScope.role} updated successfully!
                             <button type="button" class="btn-close" data-bs-dismiss="alert"
                                     aria-label="Close"></button>
                         </div>
@@ -173,7 +173,7 @@
                     <c:if test="${param.success eq 'deleted'}">
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2"></i>
-                            Super User deleted successfully!
+                            ${sessionScope.role} deleted successfully!
                             <button type="button" class="btn-close" data-bs-dismiss="alert"
                                     aria-label="Close"></button>
                         </div>
@@ -189,7 +189,7 @@
                     <c:if test="${param.success eq 'status_changed'}">
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2"></i>
-                            Super User status updated successfully!
+                            ${sessionScope.role} status updated successfully!
                             <button type="button" class="btn-close" data-bs-dismiss="alert"
                                     aria-label="Close"></button>
                         </div>
@@ -213,17 +213,17 @@
                                     <strong>Error:</strong> Please enter a valid email address.
                                 </c:when>
                                 <c:when test="${param.error eq 'delete_failed'}">
-                                    <strong>Error:</strong> Unable to delete user. The user may have related
+                                    <strong>Error:</strong> Unable to delete ${sessionScope.role}. The ${sessionScope.role} may have related
                                     records.
                                 </c:when>
                                 <c:when test="${param.error eq 'email_failed'}">
                                     <strong>Error:</strong> Failed to send email. Please try again.
                                 </c:when>
                                 <c:when test="${param.error eq 'status_toggle_failed'}">
-                                    <strong>Error:</strong> Failed to update user status. Please try again.
+                                    <strong>Error:</strong> Failed to update ${sessionScope.role} status. Please try again.
                                 </c:when>
                                 <c:when test="${param.error eq 'invalid_id'}">
-                                    <strong>Error:</strong> Invalid user ID.
+                                    <strong>Error:</strong> Invalid super user ID.
                                 </c:when>
                                 <c:otherwise>
                                     <strong>Error:</strong> ${param.error}

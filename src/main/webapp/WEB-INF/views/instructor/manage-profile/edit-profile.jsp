@@ -1,12 +1,9 @@
-<%-- 
-    Document   : edit-profile
-    Created on : Jun 25, 2025, 2:27:42 PM
-    Author     : NhiDTY-CE180492
---%>
+<%-- Document : edit-profile Created on : Jun 25, 2025, 2:27:42 PM Author : NhiDTY-CE180492 --%>
 
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,7 +11,6 @@
         <title>Edit Profile - LightHouse Instructor</title>
         <jsp:include page="../common/head.jsp" />
         <style>
-
             .fa-user-edit {
                 color: #0808f9;
             }
@@ -205,7 +201,8 @@
             }
 
             .btn-submit {
-                background: #e91e63;  /* Màu hồng */
+                background: #e91e63;
+                /* Màu hồng */
                 border: none;
                 padding: 10px 20px;
                 border-radius: 8px;
@@ -215,7 +212,8 @@
             }
 
             .btn-submit:hover {
-                background: #c2185b;  /* Màu hồng đậm hơn khi hover */
+                background: #c2185b;
+                /* Màu hồng đậm hơn khi hover */
                 color: white;
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
@@ -226,14 +224,16 @@
                 font-weight: 500;
                 padding: 8px 16px;
                 border-radius: 6px;
-                background: linear-gradient(60deg, #e91e63, #c2185b) !important;  /* Gradient hồng */
+                background: linear-gradient(60deg, #e91e63, #c2185b) !important;
+                /* Gradient hồng */
                 color: white !important;
                 border: none !important;
                 transition: all 0.3s ease;
             }
 
             .header-actions .btn:hover {
-                background: linear-gradient(60deg, #c2185b, #ad1457) !important;  /* Gradient hồng đậm hơn */
+                background: linear-gradient(60deg, #c2185b, #ad1457) !important;
+                /* Gradient hồng đậm hơn */
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
             }
@@ -310,7 +310,7 @@
                 border-radius: 8px;
                 padding: 20px;
                 margin-bottom: 20px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
 
             .instructor-header h2 {
@@ -369,7 +369,8 @@
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 <i class="fas fa-check-circle me-2"></i>
                                 ${successMessage}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
                             </div>
                         </c:if>
 
@@ -377,7 +378,8 @@
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
                                 ${errorMessage}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
                             </div>
                         </c:if>
                         <!-- Header -->
@@ -389,7 +391,8 @@
                                 <h2 class="m-0"><i class="fas fa-user-edit"></i> Edit Profile</h2>
                             </div>
                             <div class="header-actions row">
-                                <a href="${pageContext.request.contextPath}/instructor/profile" class="col-md-6 col-sm-12 btn btn-lg btn-primary">
+                                <a href="${pageContext.request.contextPath}/instructor/profile"
+                                   class="col-md-6 col-sm-12 btn btn-lg btn-primary">
                                     <i class="fas fa-arrow-left me-2"></i> Back to Profile
                                 </a>
                                 <a href="${pageContext.request.contextPath}/instructor/profile/edit"
@@ -401,7 +404,8 @@
 
                         <c:if test="${empty instructor}">
                             <div class="alert alert-danger" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i> Instructor profile not found!
+                                <i class="fas fa-exclamation-triangle me-2"></i> Instructor profile not
+                                found!
                             </div>
                         </c:if>
 
@@ -409,21 +413,31 @@
                             <!-- Content Card -->
                             <div class="content-card">
                                 <div class="card-body">
-                                    <form action="${pageContext.request.contextPath}/instructor/profile" method="post"
-                                          id="editProfileForm">
+                                    <form action="${pageContext.request.contextPath}/instructor/profile"
+                                          method="post" id="editProfileForm">
                                         <input type="hidden" name="action" value="updateProfile">
 
                                         <!-- Profile Image Section -->
                                         <div class="form-section">
-                                            <h3 class="section-title"><i class="fas fa-image me-2"></i> Profile Image</h3>
+                                            <h3 class="section-title"><i class="fas fa-image me-2"></i>
+                                                Profile Image</h3>
                                             <div class="row">
                                                 <div class="col-md-12 mx-auto">
                                                     <div class="avatar-section">
                                                         <c:choose>
                                                             <c:when test="${not empty instructor.avatar}">
-                                                                <img src="${pageContext.request.contextPath}${instructor.avatar}"
-                                                                     alt="Profile Picture" class="avatar-preview"
-                                                                     id="avatarPreview">
+                                                                <c:choose>
+                                                                    <c:when test="${fn:startsWith(instructor.avatar, '/assets')}">
+                                                                        <img src="${pageContext.request.contextPath}${instructor.avatar}"
+                                                                             alt="Instructor Avatar" class="avatar-preview"
+                                                                             id="avatarPreview" referrerpolicy="no-referrer">
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <img src="${instructor.avatar}"
+                                                                             alt="Instructor Avatar" class="avatar-preview"
+                                                                             id="avatarPreview" referrerpolicy="no-referrer">
+                                                                    </c:otherwise>
+                                                                </c:choose>
                                                             </c:when>
                                                             <c:otherwise>
                                                                 <div class="avatar-placeholder"
@@ -434,15 +448,19 @@
                                                         </c:choose>
                                                         <div>
                                                             <label for="avatarInput" class="avatar-upload">
-                                                                <i class="fas fa-upload me-2"></i> Upload New Image
+                                                                <i class="fas fa-upload me-2"></i> Upload
+                                                                New Image
                                                             </label>
-                                                            <input type="file" id="avatarInput" name="avatar"
-                                                                   accept="image/*" style="display: none;">
-                                                            <input type="hidden" id="avatarUrl" name="avatarUrl"
+                                                            <input type="file" id="avatarInput"
+                                                                   name="avatar" accept="image/*"
+                                                                   style="display: none;">
+                                                            <input type="hidden" id="avatarUrl"
+                                                                   name="avatarUrl"
                                                                    value="${instructor.avatar}">
                                                         </div>
                                                         <small class="text-muted d-block mt-2">
-                                                            Recommended: Square image, 500x500 pixels or larger
+                                                            Recommended: Square image, 500x500 pixels or
+                                                            larger
                                                         </small>
                                                     </div>
                                                 </div>
@@ -451,24 +469,29 @@
 
                                         <!-- Account Information Section -->
                                         <div class="form-section">
-                                            <h3 class="section-title"><i class="fas fa-user-shield me-2"></i>
+                                            <h3 class="section-title"><i
+                                                    class="fas fa-user-shield me-2"></i>
                                                 Account Information</h3>
 
 
 
                                             <div class="row g-3">
                                                 <div class="col-md-6">
-                                                    <label for="instructorId" class="form-label">Instructor ID</label>
-                                                    <input type="text" class="form-control" id="instructorId" 
+                                                    <label for="instructorId" class="form-label">Instructor
+                                                        ID</label>
+                                                    <input type="text" class="form-control"
+                                                           id="instructorId"
                                                            value="#${instructor.instructorID}" readonly>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label for="username" class="form-label">Username </label>
+                                                    <label for="username" class="form-label">Username
+                                                    </label>
                                                     <input type="text"
                                                            class="form-control ${not empty usernameError ? 'is-invalid' : ''}"
                                                            id="username" name="username"
                                                            value="${instructor.username}"
-                                                           ${instructor.authProvider ne 'local' ? 'readonly' : ''}>
+                                                           ${instructor.authProvider ne 'local' ? 'readonly'
+                                                             : '' }>
                                                     <c:if test="${not empty usernameError}">
                                                         <div class="invalid-feedback">
                                                             ${usernameError}
@@ -481,7 +504,8 @@
 
                                         <!-- Personal Information Section -->
                                         <div class="form-section">
-                                            <h3 class="section-title"><i class="fas fa-id-card me-2"></i> Personal
+                                            <h3 class="section-title"><i class="fas fa-id-card me-2"></i>
+                                                Personal
                                                 Information</h3>
                                             <div class="row g-3">
                                                 <div class="col-md-6">
@@ -489,7 +513,8 @@
                                                             class="required">*</span></label>
                                                     <input type="text"
                                                            class="form-control ${not empty fullNameError ? 'is-invalid' : ''}"
-                                                           id="fullName" name="fullName" value="${instructor.fullName}">
+                                                           id="fullName" name="fullName"
+                                                           value="${instructor.fullName}">
                                                     <c:if test="${not empty fullNameError}">
                                                         <div class="invalid-feedback">
                                                             ${fullNameError}
@@ -501,7 +526,8 @@
                                                             class="required">*</span></label>
                                                     <input type="email"
                                                            class="form-control ${not empty emailError ? 'is-invalid' : ''}"
-                                                           id="email" name="email" value="${instructor.email}" required>
+                                                           id="email" name="email" value="${instructor.email}"
+                                                           required>
                                                     <c:if test="${not empty emailError}">
                                                         <div class="invalid-feedback">
                                                             ${emailError}
@@ -523,8 +549,10 @@
                                                 <div class="col-md-6">
                                                     <label for="address" class="form-label">Address<span
                                                             class="required">*</span></label>
-                                                    <textarea class="form-control ${not empty addressError ? 'is-invalid' : ''}" 
-                                                              id="address" name="address" rows="3">${instructor.address}</textarea>
+                                                    <textarea
+                                                        class="form-control ${not empty addressError ? 'is-invalid' : ''}"
+                                                        id="address" name="address"
+                                                        rows="3">${instructor.address}</textarea>
                                                     <c:if test="${not empty addressError}">
                                                         <div class="invalid-feedback">
                                                             ${addressError}
@@ -535,9 +563,10 @@
                                                 <div class="col-md-6">
                                                     <label for="biography" class="form-label">Biography<span
                                                             class="required">*</span></label>
-                                                    <textarea class="form-control ${not empty biographyError ? 'is-invalid' : ''}" 
-                                                              id="biography" name="bio" rows="4"
-                                                              placeholder="Write a short biography...">${instructor.biography}</textarea>
+                                                    <textarea
+                                                        class="form-control ${not empty biographyError ? 'is-invalid' : ''}"
+                                                        id="biography" name="bio" rows="4"
+                                                        placeholder="Write a short biography...">${instructor.biography}</textarea>
                                                     <c:if test="${not empty biographyError}">
                                                         <div class="invalid-feedback">
                                                             ${biographyError}
@@ -547,10 +576,13 @@
                                                 </div>
 
                                                 <div class="col-md-6">
-                                                    <label for="specialization" class="form-label">Specialization<span
+                                                    <label for="specialization"
+                                                           class="form-label">Specialization<span
                                                             class="required">*</span></label>
-                                                    <input type="text" class="form-control" id="specialization" name="specialization"
-                                                           placeholder="e.g., Web Development, Data Science" value="${instructor.specialization}">
+                                                    <input type="text" class="form-control"
+                                                           id="specialization" name="specialization"
+                                                           placeholder="e.g., Web Development, Data Science"
+                                                           value="${instructor.specialization}">
                                                 </div>
                                             </div>
                                         </div>

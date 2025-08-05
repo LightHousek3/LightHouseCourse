@@ -781,12 +781,20 @@ public class CustomerDAO extends DBContext {
         Customer existingCustomer = findBySocialId(customer.getAuthProvider(), customer.getAuthProviderId());
 
         if (existingCustomer != null) {
-            // User exists - return the existing user
+            // User exists - check if account is active
+            if (!existingCustomer.isActive()) {
+                return null; // Account is banned
+            }
+            // User exists and is active - return the existing user
             return existingCustomer;
         } else {
             // Check if email exists but not linked to this social account
             Customer emailUser = getCustomerByEmail(customer.getEmail());
             if (emailUser != null) {
+                // Check if account is active
+                if (!emailUser.isActive()) {
+                    return null; // Account is banned
+                }
                 // Update existing user with social details
                 emailUser.setAuthProvider(customer.getAuthProvider());
                 emailUser.setAuthProviderId(customer.getAuthProviderId());

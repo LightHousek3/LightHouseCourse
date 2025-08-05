@@ -25,7 +25,7 @@ import model.SuperUser;
  *
  * @author DangPH - CE180896
  */
-@WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard"})
+@WebServlet(name = "AdminDashboardServlet", urlPatterns = { "/admin/dashboard" })
 public class AdminDashboardServlet extends HttpServlet {
 
     private CourseDAO courseDAO;
@@ -45,10 +45,10 @@ public class AdminDashboardServlet extends HttpServlet {
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -56,30 +56,32 @@ public class AdminDashboardServlet extends HttpServlet {
         // Check if admin is logged in
         HttpSession session = request.getSession();
         SuperUser admin;
-        
+
         try {
             admin = (SuperUser) session.getAttribute("user");
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        
+
         // Get dashboard data
         int totalCourses = courseDAO.countAllCourses(null);
         int totalCustomers = customerDAO.countCustomers();
         int totalInstructors = superUserDAO.countSuperUserWithRole("instructor");
+        int totalPendingRefunds = refundRequestDAO.countPendingRefundRequests();
 
         // Get recent refund requests
         List<RefundRequest> recentRefundRequests = refundRequestDAO.getAllRefundRequestsWithLimit(5);
 
         // Get recent course
-        List<Course> recentCourses = courseDAO.getAllCoursesWithLimit(0, 5, null);
+        List<Course> recentCourses = courseDAO.getAllCoursesWithLimit(0, 5, "date", "DESC");
 
         // Set attributes for the JSP
         request.setAttribute("admin", admin);
         request.setAttribute("totalCourses", totalCourses);
         request.setAttribute("totalCustomers", totalCustomers);
         request.setAttribute("totalInstructors", totalInstructors);
+        request.setAttribute("totalPendingRefunds", totalPendingRefunds);
         request.setAttribute("recentRefundRequests", recentRefundRequests);
         request.setAttribute("recentCourses", recentCourses);
 
@@ -89,10 +91,10 @@ public class AdminDashboardServlet extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)

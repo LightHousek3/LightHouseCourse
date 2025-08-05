@@ -815,7 +815,7 @@
                                                                 <c:forEach var="instructor"
                                                                     items="${item.course.instructors}"
                                                                     varStatus="status">
-                                                                    ${instructor.name}<c:if test="${!status.last}">,
+                                                                    ${instructor.fullName}<c:if test="${!status.last}">,
                                                                     </c:if>
                                                                 </c:forEach>
                                                             </p>

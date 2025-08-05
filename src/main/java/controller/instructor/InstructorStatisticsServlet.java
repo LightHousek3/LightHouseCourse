@@ -97,16 +97,16 @@ public class InstructorStatisticsServlet extends HttpServlet {
                 getMonthlyRatingStatistics(request, response, instructor);
                 break;
             default:
-                showStatisticsPage(request, response);
+                showStatisticsPage(request, response, instructor);
         }
     }
 
-    private void showStatisticsPage(HttpServletRequest request, HttpServletResponse response)
+    private void showStatisticsPage(HttpServletRequest request, HttpServletResponse response, Instructor instructor)
             throws ServletException, IOException {
         try {
             // Get available years for filtering
-            List<Integer> orderYears = orderDetailDAO.getOrderYearsByInstructor(4);
-            List<Integer> ratingYears = ratingDAO.getRatingYearsByInstructor(4);
+            List<Integer> orderYears = orderDetailDAO.getOrderYearsByInstructor(instructor.getInstructorID());
+            List<Integer> ratingYears = ratingDAO.getRatingYearsByInstructor(instructor.getInstructorID());
 
             // Combine and deduplicate years
             Set<Integer> allYears = new HashSet<>();
@@ -137,7 +137,6 @@ public class InstructorStatisticsServlet extends HttpServlet {
             int year = getCurrentYear(request);
 
             try ( PrintWriter out = response.getWriter()) {
-                System.out.println("=== Purchase Statistics ===");
                 Map<String, Integer> data = orderDetailDAO.getCoursePurchaseCountsByYearForInstructor(year, instructor.getInstructorID());
                 Map<String, Object> result = new HashMap<>();
                 result.put("labels", data.keySet().toArray());

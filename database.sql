@@ -78,9 +78,9 @@ CREATE TABLE Courses (
     Description NVARCHAR(MAX),
     Price DECIMAL(10, 2) NOT NULL,
     ImageUrl NVARCHAR(255),
-    Duration NVARCHAR(50), -- e.g., Based on video duration total
-    Level NVARCHAR(20), -- e.g., "Beginner", "Intermediate", "Advanced"
-    ApprovalStatus NVARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
+    Duration NVARCHAR(50),
+    Level NVARCHAR(20), -- e.g., "beginner", "intermediate", "advanced"
+    ApprovalStatus NVARCHAR(20) NOT NULL DEFAULT 'pending', -- pending, approved, rejected
     SubmissionDate DATETIME,  
     ApprovalDate DATETIME,
     RejectionReason NVARCHAR(1000),
@@ -117,7 +117,7 @@ CREATE TABLE CourseCategory (
     CategoryID INT,
     PRIMARY KEY (CourseID, CategoryID),
     FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
-    FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID) ON DELETE CASCADE
+    FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID)
 );
 GO
 
@@ -126,7 +126,7 @@ CREATE TABLE CourseInstructors (
     CourseID INT NOT NULL,
     InstructorID INT NOT NULL,
     PRIMARY KEY (CourseID, InstructorID),
-    FOREIGN KEY (CourseID) REFERENCES Courses(CourseID),
+    FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
     FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID)
 );
 GO
@@ -477,11 +477,11 @@ VALUES
 (2, DATEADD(day, -55, GETDATE()), 1500000, 'completed'),
 (3, DATEADD(day, -50, GETDATE()), 2800000, 'completed'),
 (4, DATEADD(day, -40, GETDATE()), 1700000, 'completed'),
-(5, DATEADD(day, -35, GETDATE()), 2500050, 'completed'),
+(5, DATEADD(day, -35, GETDATE()), 2100000, 'completed'),
 (6, DATEADD(day, -30, GETDATE()), 1300000, 'completed'),
-(7, DATEADD(day, -25, GETDATE()), 1400000, 'completed'),
-(8, DATEADD(day, -20, GETDATE()), 3000000, 'completed'),
-(9, DATEADD(day, -15, GETDATE()), 2290000, 'completed'),
+(7, DATEADD(day, -25, GETDATE()), 980000, 'completed'),
+(8, DATEADD(day, -20, GETDATE()), 1750000, 'completed'),
+(9, DATEADD(day, -15, GETDATE()), 2390000, 'completed'),
 (10, DATEADD(day, -10, GETDATE()), 980000, 'completed'),
 (11, DATEADD(day, -5, GETDATE()), 1300000, 'completed'),
 (12, DATEADD(day, -4, GETDATE()), 1000050, 'pending'),
@@ -489,13 +489,42 @@ VALUES
 (13, DATEADD(day, -3, GETDATE()), 890000, 'pending'),
 (14, DATEADD(day, -2, GETDATE()), 2900000, 'pending');
 
+-- Additional Orders with different statuses
+-- Status values: 'pending', 'completed', 'refund_pending', 'refund_approved', 'refund_rejected'
+INSERT INTO Orders (CustomerID, OrderDate, TotalAmount, Status)
+VALUES 
+(1, DATEADD(day, -58, GETDATE()), 1700000, 'refund_rejected'), -- OrderID 17: Refund was rejected
+(2, DATEADD(day, -53, GETDATE()), 1200000, 'refund_approved'), -- OrderID 18: Refund was approved
+(3, DATEADD(day, -48, GETDATE()), 3100000, 'refund_pending'), -- OrderID 19: Refund is pending
+(4, DATEADD(day, -38, GETDATE()), 1000050, 'refund_rejected'), -- OrderID 20: Refund was rejected
+(5, DATEADD(day, -33, GETDATE()), 950000, 'refund_approved'), -- OrderID 21: Refund was approved
+(1, DATEADD(day, -28, GETDATE()), 890000, 'refund_pending'), -- OrderID 22: Refund is pending
+(7, DATEADD(day, -23, GETDATE()), 1600000, 'refund_approved'), -- OrderID 23: Refund was approved
+(8, DATEADD(day, -18, GETDATE()), 3100000, 'refund_pending'), -- OrderID 24: Refund is pending
+(9, DATEADD(day, -13, GETDATE()), 1800000, 'refund_rejected'), -- OrderID 25: Refund was rejected
+(10, DATEADD(day, -8, GETDATE()), 1250000, 'refund_pending'); -- OrderID 26: Refund is pending
+
 -- Insert OrderDetails
 INSERT INTO OrderDetails (OrderID, CourseID, Price)
 VALUES 
 (1, 1, 1500000), (1, 2, 1200000), (2, 3, 1100050), (3, 1, 1500000), (4, 1, 1500000), 
-(4, 6, 1300000), (5, 4, 1700000), (6, 1, 1500000), (6, 10, 1500000), (7, 6, 1300000), (8, 15, 1400000), 
-(9, 11, 1750000), (10, 9, 890000), (10, 12, 1400000), (11, 15, 980000), (12, 6, 1300000), (13, 5, 1000050), 
+(4, 6, 1300000), (5, 4, 1700000), (6, 1, 1500000), (6, 10, 1600000), (7, 6, 1300000), (8, 15, 980000), 
+(9, 11, 1750000), (10, 9, 890000), (10, 12, 1500000), (11, 15, 980000), (12, 6, 1300000), (13, 5, 1000050), 
 (14, 16, 1100000), (15, 9, 890000), (16, 6, 1300000), (16, 10, 1600000);
+
+-- Additional OrderDetails for new Orders
+INSERT INTO OrderDetails (OrderID, CourseID, Price)
+VALUES 
+(17, 4, 1700000), -- OrderID 17: Customer 1, Course 4
+(18, 2, 1200000), -- OrderID 18: Customer 2, Course 2
+(19, 4, 1700000), (19, 7, 1400000), -- OrderID 19: Customer 3, Course 4 and 7
+(20, 5, 1000050), -- OrderID 20: Customer 4, Course 5
+(21, 8, 950000), -- OrderID 21: Customer 5, Course 8
+(22, 9, 890000), -- OrderID 22: Customer 1, Course 9
+(23, 10, 1600000), -- OrderID 23: Customer 7, Course 10
+(24, 10, 1600000), (24, 12, 1500000), -- OrderID 24: Customer 8, Course 11 and 12
+(25, 13, 1800000), -- OrderID 25: Customer 9, Course 13
+(26, 14, 1250000); -- OrderID 26: Customer 10, Course 14
 
 -- Insert CartItems
 INSERT INTO CartItems (CustomerID, CourseID, Price, CreatedAt)
@@ -593,16 +622,36 @@ VALUES
 -- Insert RefundRequests
 INSERT INTO RefundRequests (OrderID, CustomerID, RequestDate, Status, RefundAmount, Reason, ProcessedDate, AdminMessage, ProcessedBy, RefundPercentage)
 VALUES
-(1, 1, DATEADD(day, -55, GETDATE()), 'rejected', 1200000, 'Course content not as expected', DATEADD(day, -54, GETDATE()), 'Course content aligns with description', 1, 80),
-(3, 1, DATEADD(day, -25, GETDATE()), 'approved', 1200000, 'Found a better course for free', DATEADD(day, -23, GETDATE()), 'Approved as per policy', 1, 80),
-(5, 3, DATEADD(day, -45, GETDATE()), 'rejected', 1500000, 'Too difficult for my level', DATEADD(day, -44, GETDATE()), 'Course difficulty is clearly stated in description', 2, 80),
-(6, 4, DATEADD(day, -38, GETDATE()), 'approved', 1360000, 'Technical issues with course videos', DATEADD(day, -36, GETDATE()), 'Refund approved due to technical issues', 1, 80),
-(8, 6, DATEADD(day, -28, GETDATE()), 'approved', 1040000, 'Content is outdated', DATEADD(day, -25, GETDATE()), 'Approved - content will be updated soon', 3, 80),
-(9, 7, DATEADD(day, -22, GETDATE()), 'rejected', 1400000, 'Found similar content for free', DATEADD(day, -20, GETDATE()), 'Free content is not as comprehensive', 2, 80),
-(11, 9, DATEADD(day, -10, GETDATE()), 'pending', 712000, 'Course not as advanced as described', NULL, NULL, NULL, 80),
-(12, 10, DATEADD(day, -8, GETDATE()), 'pending', 1200000, 'Not what I was looking for', NULL, NULL, NULL, 80),
-(13, 12, DATEADD(day, -3, GETDATE()), 'pending', 1000050, 'Changed my mind', NULL, NULL, NULL, 80),
-(15, 14, DATEADD(day, -1, GETDATE()), 'pending', 1600000, 'Financial reasons', NULL, NULL, NULL, 80);
+-- For newly added orders with refund statuses
+-- OrderID 17 (refund_rejected) - Customer 1 requested refund for Course 3
+(17, 1, DATEADD(day, -56, GETDATE()), 'rejected', 1360000, 'Course content not as expected', DATEADD(day, -55, GETDATE()), 'Course content aligns with description', 1, 80),
+
+-- OrderID 18 (refund_approved) - Customer 2 requested refund for Course 2
+(18, 2, DATEADD(day, -50, GETDATE()), 'approved', 960000, 'Found a better course for free', DATEADD(day, -48, GETDATE()), 'Approved as per policy', 1, 80),
+
+-- OrderID 19 (refund_pending) - Customer 3 requested refund for Course 4 and 7
+(19, 3, DATEADD(day, -45, GETDATE()), 'pending', 2480000, 'Content is too basic for my needs', NULL, NULL, NULL, 80),
+
+-- OrderID 20 (refund_rejected) - Customer 4 requested refund for Course 5
+(20, 4, DATEADD(day, -36, GETDATE()), 'rejected', 800040, 'Too difficult for my level', DATEADD(day, -35, GETDATE()), 'Course difficulty is clearly stated in description', 2, 80),
+
+-- OrderID 21 (refund_approved) - Customer 5 requested refund for Course 8
+(21, 5, DATEADD(day, -31, GETDATE()), 'approved', 760000, 'Technical issues with course videos', DATEADD(day, -30, GETDATE()), 'Refund approved due to technical issues', 1, 80),
+
+-- OrderID 22 (refund_pending) - Customer 6 requested refund for Course 9
+(22, 6, DATEADD(day, -26, GETDATE()), 'pending', 712000, 'Changed career path', NULL, NULL, NULL, 80),
+
+-- OrderID 23 (refund_approved) - Customer 7 requested refund for Course 10
+(23, 7, DATEADD(day, -21, GETDATE()), 'approved', 1280000, 'Content is outdated', DATEADD(day, -20, GETDATE()), 'Approved - content will be updated soon', 3, 80),
+
+-- OrderID 24 (refund_pending) - Customer 8 requested refund for Course 11 and 12
+(24, 8, DATEADD(day, -16, GETDATE()), 'pending', 2480000, 'Found similar content for free', NULL, NULL, NULL, 80),
+
+-- OrderID 25 (refund_rejected) - Customer 9 requested refund for Course 13
+(25, 9, DATEADD(day, -11, GETDATE()), 'rejected', 1440000, 'Not what I expected', DATEADD(day, -10, GETDATE()), 'Course content matches description', 2, 80),
+
+-- OrderID 26 (refund_pending) - Customer 10 requested refund for Course 14
+(26, 10, DATEADD(day, -6, GETDATE()), 'pending', 1000000, 'Financial reasons', NULL, NULL, NULL, 80);
 
 -- Insert Discussions
 INSERT INTO Discussions (CourseID, LessonID, AuthorID, AuthorType, Content, IsResolved)
@@ -1226,16 +1275,37 @@ VALUES
 -- Insert PaymentTransactions
 INSERT INTO PaymentTransactions (OrderID, RefundRequestID, TransactionType, Provider, ProviderTransactionID, BankAccountInfo)
 VALUES
-(1, NULL, 'payment', 'VNPAY', 'PAYID-MX123456', 'user@example.com'),
-(2, NULL, 'payment', 'VNPAY', 'ch_3K123456789', '****1234'),
-(3, 2, 'refund', 'VNPAY', 'REF-123456789', 'user@example.com'),
-(4, NULL, 'payment', 'VNPAY', 'ch_3K123456790', '****5678'),
-(5, 3, 'refund', 'VNPAY', 'REF-123456790', 'student3@example.com'),
-(6, 4, 'refund', 'VNPAY', 're_3K123456791', '****9012'),
-(7, NULL, 'payment', 'VNPAY', 'PAYID-MX123457', 'student5@example.com'),
-(8, 5, 'refund', 'VNPAY', 're_3K123456792', '****3456'),
-(9, NULL, 'payment', 'VNPAY', 'PAYID-MX123458', 'mike.smith@example.com'),
-(10, NULL, 'payment', 'VNPAY', 'ch_3K123456793', '****7890');
+-- Payment transactions for all original orders
+(1, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230101-000001', 'john.doe@example.com'), -- OrderID 1 (completed)
+(2, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230115-000002', 'john.doe@example.com'), -- OrderID 2 (completed)
+(3, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230105-000003', 'jane.smith@example.com'), -- OrderID 3 (completed)
+(4, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230110-000004', 'robert.johnson@example.com'), -- OrderID 4 (completed)
+(5, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230120-000005', 'emily.williams@example.com'), -- OrderID 5 (completed)
+(6, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230125-000006', 'michael.brown@example.com'), -- OrderID 6 (completed)
+(7, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230130-000007', 'sarah.jones@example.com'), -- OrderID 7 (completed)
+(8, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230205-000008', 'david.wilson@example.com'), -- OrderID 8 (completed)
+(9, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230210-000009', 'jennifer.taylor@example.com'), -- OrderID 9 (completed)
+(10, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230215-000010', 'thomas.anderson@example.com'), -- OrderID 10 (completed)
+(11, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230220-000011', 'lisa.martinez@example.com'), -- OrderID 11 (completed)
+(12, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230225-000012', 'daniel.garcia@example.com'), -- OrderID 12 (completed)
+(14, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230226-000014', 'susan.miller@example.com'), -- OrderID 14 (completed)
+
+-- Payment transactions for new orders
+(17, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230102-000017', 'john.doe@example.com'), -- OrderID 17 (refund_rejected)
+(18, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230107-000018', 'jane.smith@example.com'), -- OrderID 18 (refund_approved)
+(19, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230112-000019', 'robert.johnson@example.com'), -- OrderID 19 (refund_pending)
+(20, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230122-000020', 'emily.williams@example.com'), -- OrderID 20 (refund_rejected)
+(21, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230127-000021', 'michael.brown@example.com'), -- OrderID 21 (refund_approved)
+(22, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230132-000022', 'sarah.jones@example.com'), -- OrderID 22 (refund_pending)
+(23, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230207-000023', 'david.wilson@example.com'), -- OrderID 23 (refund_approved)
+(24, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230212-000024', 'jennifer.taylor@example.com'), -- OrderID 24 (refund_pending)
+(25, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230217-000025', 'thomas.anderson@example.com'), -- OrderID 25 (refund_rejected)
+(26, NULL, 'payment', 'VNPAY', 'VNPAY-PAY-20230222-000026', 'lisa.martinez@example.com'), -- OrderID 26 (refund_pending)
+
+-- Refund transactions for approved refunds
+(NULL, 1, 'refund', 'VNPAY', 'VNPAY-REF-20230109-000001', 'jane.smith@example.com'), -- RefundID 1 (OrderID 18)
+(NULL, 2, 'refund', 'VNPAY', 'VNPAY-REF-20230129-000002', 'michael.brown@example.com'), -- RefundID 2 (OrderID 21)
+(NULL, 3, 'refund', 'VNPAY', 'VNPAY-REF-20230209-000003', 'david.wilson@example.com'); -- RefundID 3 (OrderID 23)
 
 -- Insert LessonItems
 INSERT INTO LessonItems (LessonID, OrderIndex, ItemType, ItemID)
@@ -2221,12 +2291,28 @@ VALUES
 (6, 6, GETDATE(), 90.00, 0), -- Customer 6, Course 6, 90% complete
 (11, 6, DATEADD(day, -2, GETDATE()), 100.00, 1), -- Customer 11, Course 6, 100% complete
 (9, 9, DATEADD(day, -4, GETDATE()), 88.87, 0), -- Customer 9, Course 9, 88.87% complete
-(5, 10, NULL, 0.00, 0), -- Customer 5, Course 10, 0% complete
+(5, 10, GETDATE(), 0.00, 0), -- Customer 5, Course 10, 0% complete
 (8, 11, DATEADD(day, -2, GETDATE()), 83.33, 0), -- Customer 8, Course 11, 83.33% complete
 (9, 12, DATEADD(day, -3, GETDATE()), 83.33, 0), -- Customer 9, Course 12, 83.33% complete
 (7, 15, DATEADD(day, -4, GETDATE()), 80.00, 0), -- Customer 7, Course 15, 80% complete
 (10, 15, DATEADD(day, -4, GETDATE()), 80.00, 0), -- Customer 10, Course 15, 80% complete
 (12, 16, DATEADD(day, -3, GETDATE()), 83.33, 0); -- Customer 12, Course 16, 83.33% complete
+
+-- For refund request
+INSERT INTO CourseProgress (CustomerID, CourseID, LastAccessDate, CompletionPercentage, IsCompleted)
+VALUES
+(1, 4, GETDATE(), 0.00, 0), -- Customer 1, Course 4, 0% complete
+(1, 9, GETDATE(), 0.00, 0), -- Customer 1, Course 9, 0% complete
+(2, 2, GETDATE(), 0.00, 0), -- Customer 2, Course 2, 0% complete
+(3, 4, GETDATE(), 0.00, 0), -- Customer 3, Course 4, 0% complete
+(3, 7, GETDATE(), 0.00, 0), -- Customer 3, Course 7, 0% complete
+(4, 5, GETDATE(), 0.00, 0), -- Customer 4, Course 5, 0% complete
+(5, 8, GETDATE(), 0.00, 0), -- Customer 5, Course 8, 0% complete
+(7, 10, GETDATE(), 0.00, 0), -- Customer 7, Course 10, 0% complete
+(8, 10, GETDATE(), 0.00, 0), -- Customer 8, Course 10, 0% complete
+(8, 12, GETDATE(), 0.00, 0), -- Customer 8, Course 12, 0% complete
+(9, 13, GETDATE(), 0.00, 0), -- Customer 9, Course 13, 0% complete
+(10, 14, GETDATE(), 0.00, 0); -- Customer 10, Course 14, 0% complete
 
 -- Insert into LessonProgress
 -- CourseID 1 (12 lessons, LessonID 1-12)

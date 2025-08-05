@@ -195,11 +195,12 @@
                         <c:choose>
                             <c:when test="${not empty user.avatar}">
                                 <c:choose>
-                                    <c:when test="${fn:startsWith(avatar, 'https')}">
-                                        <img src="${user.avatar}" alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer">
+                                    <c:when test="${fn:startsWith(user.avatar, '/assets')}">
+                                        <img src="${pageContext.request.contextPath}${user.avatar}" 
+                                             alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer" referrerpolicy="no-referrer">
                                     </c:when>
                                     <c:otherwise>
-                                        <img src="${pageContext.request.contextPath}${user.avatar}" alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer">
+                                        <img src="${user.avatar}" alt="Customer Avatar" class="profile-avatar mb-3" id="avatarCustomer" referrerpolicy="no-referrer">
                                     </c:otherwise>
                                 </c:choose>
                             </c:when>

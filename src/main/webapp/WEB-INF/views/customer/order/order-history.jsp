@@ -57,6 +57,16 @@
                 color: #6327d3;
             }
 
+            .status-refund_rejected {
+                background-color: #c9ddd9;
+                color: #ca1e36;
+            }
+
+            .status-refund_approved {
+                background-color: #d5ffb9;
+                color: #0e495c;
+            }
+
             .nav-tabs .nav-link.active {
                 border-color: var(--primary-color);
                 color: var(--primary-color);
@@ -225,6 +235,14 @@
                                             <c:when test="${order.status eq 'refund_pending'}">
                                                 <span
                                                     class="status-badge status-refund_pending me-3">Refund Pending</span>
+                                            </c:when>
+                                            <c:when test="${order.status eq 'refund_rejected'}">
+                                                <span
+                                                    class="status-badge status-refund_rejected me-3">Refund Rejected</span>
+                                            </c:when>
+                                            <c:when test="${order.status eq 'refund_approved'}">
+                                                <span
+                                                    class="status-badge status-refund_approved me-3">Refund Approved</span>
                                             </c:when>
                                         </c:choose>
                                         <span class="fw-bold">
